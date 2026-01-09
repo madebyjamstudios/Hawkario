@@ -221,9 +221,9 @@ button:disabled {
 .live-preview-wrapper {
   border: 1px solid #333;
   border-radius: 8px;
-  padding: 8px;
   background: #0a0a0a;
-  min-height: 60px;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
   overflow: hidden;
 }
 
