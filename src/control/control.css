@@ -298,26 +298,36 @@ button:disabled {
 .preset-list {
   height: calc(100% - 96px);
   overflow: auto;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .preset-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
-  border-bottom: 1px dashed #333;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #141414 100%);
+  border: 1px solid #333;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease;
 }
 
-.preset-item:last-child {
-  border-bottom: none;
+.preset-item:hover {
+  background: linear-gradient(135deg, #222 0%, #1a1a1a 100%);
+  border-color: #444;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .preset-name {
-  color: #eee;
-  font-size: 13px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .preset-actions {
@@ -454,27 +464,31 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  background: #1a1a1a;
-  border: 2px dashed #444;
-  border-radius: 8px;
-  color: #888;
-  font-size: 13px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #1f6feb 0%, #1a5fd4 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .add-timer-btn:hover {
-  background: #222;
-  border-color: #1f6feb;
-  color: #58a6ff;
+  background: linear-gradient(135deg, #388bfd 0%, #1f6feb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(31, 111, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .add-timer-btn:active {
-  background: #1a1a1a;
+  background: linear-gradient(135deg, #1a5fd4 0%, #1650b8 100%);
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(31, 111, 235, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Header */
