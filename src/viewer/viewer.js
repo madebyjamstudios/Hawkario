@@ -22,7 +22,7 @@ const state = {
   style: {
     fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
     fontWeight: '600',
-    fontSizeVw: 40,
+    fontSizeVw: 25,
     color: '#ffffff',
     opacity: 1,
     strokeWidth: 2,

@@ -327,13 +327,15 @@ button:disabled {
   padding: 4px;
 }
 
-/* Timer Progress Bar */
+/* Timer Progress Bar (non-interactive indicator) */
 .timer-progress-container {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 4px;
   width: 100%;
+  pointer-events: none;
+  user-select: none;
 }
 
 .timer-progress-container.hidden {
@@ -383,15 +385,47 @@ button:disabled {
   transition: all 0.15s ease;
   max-width: 100%;
   box-sizing: border-box;
+  position: relative;
 }
 
 .preset-item.dragging {
-  opacity: 0.5;
-  transform: scale(0.98);
+  opacity: 0.4;
+  transform: scale(0.95);
 }
 
-.preset-item.drag-over {
-  border-top: 2px solid #1f6feb;
+/* Drag drop indicators */
+.preset-item.drag-above {
+  transform: translateY(8px);
+  transition: transform 0.15s ease;
+}
+
+.preset-item.drag-above::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #1f6feb;
+  border-radius: 2px;
+  box-shadow: 0 0 8px #1f6feb;
+}
+
+.preset-item.drag-below {
+  transform: translateY(-8px);
+  transition: transform 0.15s ease;
+}
+
+.preset-item.drag-below::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #1f6feb;
+  border-radius: 2px;
+  box-shadow: 0 0 8px #1f6feb;
 }
 
 /* Drag handle / number indicator */
@@ -644,6 +678,35 @@ header {
   flex-shrink: 0;
 }
 
+.header-spacer {
+  flex: 1;
+}
+
+.header-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-settings-btn:hover {
+  background: #222;
+  border-color: #444;
+  color: #fff;
+}
+
+.header-settings-btn:active {
+  background: #333;
+}
+
 /* Footer */
 footer {
   padding: 6px 14px;
@@ -855,4 +918,45 @@ h3 {
 
 .collapsible-section.collapsed .section-content {
   display: none;
+}
+
+/* App Settings Modal */
+.app-settings-modal {
+  max-width: 420px;
+}
+
+.settings-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #333;
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.settings-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 12px 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.settings-hint {
+  font-size: 11px;
+  color: #666;
+  margin: -8px 0 12px 0;
+}
+
+.settings-row {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.settings-row button {
+  flex: 1;
 }

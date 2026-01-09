@@ -69,17 +69,34 @@ const els = {
   elapsedTime: document.getElementById('elapsedTime'),
   remainingTime: document.getElementById('remainingTime'),
   progressFill: document.getElementById('progressFill'),
-  exportPresets: document.getElementById('exportPresets'),
-  importPresets: document.getElementById('importPresets'),
   importFile: document.getElementById('importFile'),
   addTimer: document.getElementById('addTimer'),
 
-  // Modal
+  // Timer Modal
   settingsModal: document.getElementById('settingsModal'),
   modalTitle: document.getElementById('modalTitle'),
   modalClose: document.getElementById('modalClose'),
   modalCancel: document.getElementById('modalCancel'),
-  modalSave: document.getElementById('modalSave')
+  modalSave: document.getElementById('modalSave'),
+
+  // App Settings Modal
+  appSettingsBtn: document.getElementById('appSettingsBtn'),
+  appSettingsModal: document.getElementById('appSettingsModal'),
+  appSettingsClose: document.getElementById('appSettingsClose'),
+  appSettingsSave: document.getElementById('appSettingsSave'),
+  settingsExport: document.getElementById('settingsExport'),
+  settingsImport: document.getElementById('settingsImport'),
+
+  // App Settings Fields
+  todFormat: document.getElementById('todFormat'),
+  defaultMode: document.getElementById('defaultMode'),
+  defaultDuration: document.getElementById('defaultDuration'),
+  defaultFormat: document.getElementById('defaultFormat'),
+  defaultFontSize: document.getElementById('defaultFontSize'),
+  defaultFontColor: document.getElementById('defaultFontColor'),
+  defaultWarnEnabled: document.getElementById('defaultWarnEnabled'),
+  defaultWarnTime: document.getElementById('defaultWarnTime'),
+  defaultEndSound: document.getElementById('defaultEndSound')
 };
 
 // State
@@ -117,6 +134,124 @@ const ICONS = {
 function showToast(message, type = 'info') {
   // Notifications disabled per user request
   return;
+}
+
+// ============ App Settings ============
+
+const APP_SETTINGS_KEY = 'hawkario:appSettings';
+
+const DEFAULT_APP_SETTINGS = {
+  todFormat: '24h',
+  defaults: {
+    mode: 'countdown',
+    durationSec: 600,
+    format: 'MM:SS',
+    fontSizeVw: 25,
+    fontColor: '#ffffff',
+    warnEnabled: true,
+    warnSeconds: 60,
+    endSoundEnabled: true
+  }
+};
+
+function loadAppSettings() {
+  try {
+    const saved = localStorage.getItem(APP_SETTINGS_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return { ...DEFAULT_APP_SETTINGS, ...parsed, defaults: { ...DEFAULT_APP_SETTINGS.defaults, ...parsed.defaults } };
+    }
+  } catch (e) {
+    console.error('Failed to load app settings:', e);
+  }
+  return DEFAULT_APP_SETTINGS;
+}
+
+function saveAppSettings(settings) {
+  try {
+    localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Failed to save app settings:', e);
+  }
+}
+
+function openAppSettings() {
+  const settings = loadAppSettings();
+
+  // Populate form fields
+  els.todFormat.value = settings.todFormat;
+  els.defaultMode.value = settings.defaults.mode;
+  els.defaultDuration.value = secondsToHMS(settings.defaults.durationSec);
+  els.defaultFormat.value = settings.defaults.format;
+  els.defaultFontSize.value = settings.defaults.fontSizeVw;
+  els.defaultFontColor.value = settings.defaults.fontColor;
+  els.defaultWarnEnabled.value = settings.defaults.warnEnabled ? 'on' : 'off';
+  els.defaultWarnTime.value = secondsToHMS(settings.defaults.warnSeconds);
+  els.defaultEndSound.value = settings.defaults.endSoundEnabled ? 'on' : 'off';
+
+  els.appSettingsModal.classList.remove('hidden');
+}
+
+function closeAppSettings() {
+  els.appSettingsModal.classList.add('hidden');
+}
+
+function saveAppSettingsFromForm() {
+  const settings = {
+    todFormat: els.todFormat.value,
+    defaults: {
+      mode: els.defaultMode.value,
+      durationSec: parseHMS(els.defaultDuration.value),
+      format: els.defaultFormat.value,
+      fontSizeVw: parseInt(els.defaultFontSize.value, 10) || 25,
+      fontColor: els.defaultFontColor.value,
+      warnEnabled: els.defaultWarnEnabled.value === 'on',
+      warnSeconds: parseHMS(els.defaultWarnTime.value),
+      endSoundEnabled: els.defaultEndSound.value === 'on'
+    }
+  };
+
+  saveAppSettings(settings);
+  closeAppSettings();
+}
+
+function getDefaultTimerConfig() {
+  const settings = loadAppSettings();
+  const d = settings.defaults;
+
+  return {
+    mode: d.mode,
+    durationSec: d.durationSec,
+    format: d.format,
+    style: {
+      fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      fontWeight: '600',
+      fontSizeVw: d.fontSizeVw,
+      color: d.fontColor,
+      opacity: 1,
+      strokeWidth: 2,
+      strokeColor: '#000000',
+      textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+      align: 'center',
+      letterSpacing: 0,
+      bgMode: 'transparent',
+      bgColor: '#000000',
+      bgOpacity: 0
+    },
+    warn: {
+      enabled: d.warnEnabled,
+      seconds: d.warnSeconds,
+      colorEnabled: true,
+      color: '#ff3333',
+      flashEnabled: false,
+      flashRateMs: 500
+    },
+    sound: {
+      warnEnabled: false,
+      endEnabled: d.endSoundEnabled,
+      volume: 0.7
+    }
+  };
 }
 
 // ============ Timer Progress Bar ============
@@ -682,41 +817,92 @@ function renderPresetList() {
 
     dragHandle.append(numberSpan, dragIcon);
 
-    // Drag events
+    // Drag events with snappy visual feedback
     row.addEventListener('dragstart', (e) => {
       row.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', idx);
+
+      // Set drag image to be smaller
+      const rect = row.getBoundingClientRect();
+      e.dataTransfer.setDragImage(row, rect.width / 2, rect.height / 2);
+
+      // Store dragging index globally
+      window._dragFromIndex = idx;
     });
 
     row.addEventListener('dragend', () => {
       row.classList.remove('dragging');
-      // Remove all drag-over classes
-      document.querySelectorAll('.preset-item.drag-over').forEach(el => {
-        el.classList.remove('drag-over');
+      // Remove all drag indicators
+      document.querySelectorAll('.preset-item').forEach(el => {
+        el.classList.remove('drag-above', 'drag-below');
       });
+      // Remove placeholder
+      const placeholder = document.querySelector('.drag-placeholder');
+      if (placeholder) placeholder.remove();
+
+      window._dragFromIndex = null;
     });
 
     row.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      row.classList.add('drag-over');
+
+      const fromIndex = window._dragFromIndex;
+      if (fromIndex === null || fromIndex === idx) return;
+
+      // Clear all other indicators
+      document.querySelectorAll('.preset-item').forEach(el => {
+        if (el !== row) {
+          el.classList.remove('drag-above', 'drag-below');
+        }
+      });
+
+      // Show where item will be inserted
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+
+      if (e.clientY < midY) {
+        row.classList.add('drag-above');
+        row.classList.remove('drag-below');
+      } else {
+        row.classList.add('drag-below');
+        row.classList.remove('drag-above');
+      }
     });
 
-    row.addEventListener('dragleave', () => {
-      row.classList.remove('drag-over');
+    row.addEventListener('dragleave', (e) => {
+      // Only remove if actually leaving the element
+      if (!row.contains(e.relatedTarget)) {
+        row.classList.remove('drag-above', 'drag-below');
+      }
     });
 
     row.addEventListener('drop', (e) => {
       e.preventDefault();
-      row.classList.remove('drag-over');
+      row.classList.remove('drag-above', 'drag-below');
 
       const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      const toIndex = idx;
+      let toIndex = idx;
+
+      // Adjust index based on drop position
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY > midY && fromIndex < idx) {
+        // Dropping below, no adjustment needed
+      } else if (e.clientY <= midY && fromIndex > idx) {
+        // Dropping above, no adjustment needed
+      }
 
       if (fromIndex !== toIndex) {
         const presets = loadPresets();
         const [moved] = presets.splice(fromIndex, 1);
+
+        // Adjust toIndex if we removed from before it
+        if (fromIndex < toIndex) {
+          toIndex--;
+        }
+
         presets.splice(toIndex, 0, moved);
         savePresets(presets);
 
@@ -895,39 +1081,7 @@ function showPresetMenu(idx, preset, anchorEl) {
 function createDefaultPreset() {
   const presets = loadPresets();
   if (presets.length === 0) {
-    const defaultConfig = {
-      mode: 'countdown',
-      durationSec: 600, // 10 minutes
-      format: 'MM:SS',
-      style: {
-        fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-        fontWeight: '600',
-        fontSizeVw: 40,
-        color: '#ffffff',
-        opacity: 1,
-        strokeWidth: 2,
-        strokeColor: '#000000',
-        textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-        align: 'center',
-        letterSpacing: 0,
-        bgMode: 'transparent',
-        bgColor: '#000000',
-        bgOpacity: 0
-      },
-      warn: {
-        enabled: true,
-        seconds: 60,
-        colorEnabled: true,
-        color: '#ff3333',
-        flashEnabled: false,
-        flashRateMs: 500
-      },
-      sound: {
-        warnEnabled: false,
-        endEnabled: true,
-        volume: 0.7
-      }
-    };
+    const defaultConfig = getDefaultTimerConfig();
 
     presets.push({
       name: 'Timer 1',
@@ -1064,12 +1218,24 @@ function setupEventListeners() {
   });
 
 
+  // App Settings
+  els.appSettingsBtn.addEventListener('click', openAppSettings);
+  els.appSettingsClose.addEventListener('click', closeAppSettings);
+  els.appSettingsSave.addEventListener('click', saveAppSettingsFromForm);
+  els.settingsExport.addEventListener('click', handleExportPresets);
+  els.settingsImport.addEventListener('click', () => els.importFile.click());
+
+  // Close app settings on backdrop click
+  els.appSettingsModal.addEventListener('click', (e) => {
+    if (e.target === els.appSettingsModal) {
+      closeAppSettings();
+    }
+  });
+
   // Preset controls
-  els.exportPresets.addEventListener('click', handleExportPresets);
-  els.importPresets.addEventListener('click', () => els.importFile.click());
   els.importFile.addEventListener('change', handleImportPresets);
   els.addTimer.addEventListener('click', () => {
-    // Auto-create timer with defaults (no modal)
+    // Auto-create timer with defaults from app settings
     const presets = loadPresets();
     let counter = 1;
     let name = `Timer ${counter}`;
@@ -1078,44 +1244,10 @@ function setupEventListeners() {
       name = `Timer ${counter}`;
     }
 
-    const defaultConfig = {
-      mode: 'countdown',
-      durationSec: 600,
-      format: 'MM:SS',
-      style: {
-        fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-        fontWeight: '600',
-        fontSizeVw: 40,
-        color: '#ffffff',
-        opacity: 1,
-        strokeWidth: 2,
-        strokeColor: '#000000',
-        textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-        align: 'center',
-        letterSpacing: 0,
-        bgMode: 'transparent',
-        bgColor: '#000000',
-        bgOpacity: 0
-      },
-      warn: {
-        enabled: true,
-        seconds: 60,
-        colorEnabled: true,
-        color: '#ff3333',
-        flashEnabled: false,
-        flashRateMs: 500
-      },
-      sound: {
-        warnEnabled: false,
-        endEnabled: true,
-        volume: 0.7
-      }
-    };
-
+    const defaultConfig = getDefaultTimerConfig();
     presets.push({ name, config: defaultConfig });
     savePresets(presets);
     renderPresetList();
-    showToast(`Added "${name}"`);
   });
 
   // Modal controls
