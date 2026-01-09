@@ -157,7 +157,7 @@ const DEFAULT_APP_SETTINGS = {
     mode: 'countdown',
     durationSec: 600,
     format: 'MM:SS',
-    fontSizeVw: 25,
+    fontSizeVw: 30,
     fontColor: '#ffffff',
     warnEnabled: true,
     warnSeconds: 60,
@@ -216,7 +216,7 @@ function saveAppSettingsFromForm() {
       mode: els.defaultMode.value,
       durationSec: parseHMS(els.defaultDuration.value),
       format: els.defaultFormat.value,
-      fontSizeVw: parseInt(els.defaultFontSize.value, 10) || 25,
+      fontSizeVw: parseInt(els.defaultFontSize.value, 10) || 30,
       fontColor: els.defaultFontColor.value,
       warnEnabled: els.defaultWarnEnabled.value === 'on',
       warnSeconds: parseHMS(els.defaultWarnTime.value),
@@ -549,7 +549,7 @@ function restorePreviewWidth() {
  */
 function updatePreviewScale() {
   const previewWidth = els.previewWrapper.offsetWidth || 300;
-  const fontSizeVw = parseFloat(els.fontSize.value) || 25;
+  const fontSizeVw = parseFloat(els.fontSize.value) || 30;
 
   // Scale font size: vw units mean percentage of width
   const scaledFontSize = (fontSizeVw / 100) * previewWidth;
