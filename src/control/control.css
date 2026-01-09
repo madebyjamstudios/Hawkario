@@ -292,6 +292,7 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   padding: calc(14px * var(--timer-scale, 1)) 16px;
+  padding-left: calc(8px * var(--timer-scale, 1));
   background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
   border: none;
   border-radius: calc(12px * var(--timer-scale, 1));
@@ -299,6 +300,59 @@ button:disabled {
   transition: all 0.15s ease;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+.preset-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.preset-item.drag-over {
+  border-top: 2px solid #1f6feb;
+}
+
+/* Drag handle / number indicator */
+.preset-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+  cursor: grab;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.preset-drag-handle:active {
+  cursor: grabbing;
+}
+
+.preset-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  transition: opacity 0.2s ease;
+}
+
+.preset-drag-icon {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: #888;
+}
+
+.preset-drag-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.preset-item:hover .preset-number {
+  opacity: 0;
+}
+
+.preset-item:hover .preset-drag-icon {
+  opacity: 1;
 }
 
 .preset-item:hover {

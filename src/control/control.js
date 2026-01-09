@@ -97,6 +97,7 @@ let isBlackedOut = false;
 
 // SVG Icons
 const ICONS = {
+  drag: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="5" width="16" height="2" rx="1"/><rect x="4" y="11" width="16" height="2" rx="1"/><rect x="4" y="17" width="16" height="2" rx="1"/></svg>',
   reset: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></svg>',
   clock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
   settings: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
@@ -672,6 +673,73 @@ function renderPresetList() {
     const row = document.createElement('div');
     const isSelected = activePresetIndex === idx;
     row.className = isSelected ? 'preset-item selected' : 'preset-item';
+    row.draggable = true;
+    row.dataset.index = idx;
+
+    // Drag handle with number/hamburger icon
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'preset-drag-handle';
+
+    const numberSpan = document.createElement('span');
+    numberSpan.className = 'preset-number';
+    numberSpan.textContent = idx + 1;
+
+    const dragIcon = document.createElement('span');
+    dragIcon.className = 'preset-drag-icon';
+    dragIcon.innerHTML = ICONS.drag;
+
+    dragHandle.append(numberSpan, dragIcon);
+
+    // Drag events
+    row.addEventListener('dragstart', (e) => {
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', idx);
+    });
+
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      // Remove all drag-over classes
+      document.querySelectorAll('.preset-item.drag-over').forEach(el => {
+        el.classList.remove('drag-over');
+      });
+    });
+
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      row.classList.add('drag-over');
+    });
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over');
+    });
+
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+
+      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const toIndex = idx;
+
+      if (fromIndex !== toIndex) {
+        const presets = loadPresets();
+        const [moved] = presets.splice(fromIndex, 1);
+        presets.splice(toIndex, 0, moved);
+        savePresets(presets);
+
+        // Update activePresetIndex if needed
+        if (activePresetIndex === fromIndex) {
+          activePresetIndex = toIndex;
+        } else if (fromIndex < activePresetIndex && toIndex >= activePresetIndex) {
+          activePresetIndex--;
+        } else if (fromIndex > activePresetIndex && toIndex <= activePresetIndex) {
+          activePresetIndex++;
+        }
+
+        renderPresetList();
+      }
+    });
 
     // Name with pencil edit icon
     const name = document.createElement('div');
@@ -761,7 +829,7 @@ function renderPresetList() {
     };
 
     actions.append(selectResetBtn, editBtn, playBtn, moreBtn);
-    row.append(name, actions);
+    row.append(dragHandle, name, actions);
     els.presetList.appendChild(row);
   });
 }
