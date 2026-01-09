@@ -518,6 +518,9 @@ function doResize(e) {
   const containerWidth = els.previewSection.offsetWidth;
   const newWidth = Math.max(150, Math.min(containerWidth, startWidth + widthDelta));
   els.previewWrapper.style.width = newWidth + 'px';
+
+  // Update preview text scaling in real-time
+  updatePreviewScale();
 }
 
 function stopResize() {
@@ -536,6 +539,26 @@ function restorePreviewWidth() {
   if (saved) {
     els.previewWrapper.style.width = saved + 'px';
   }
+  // Apply scaling after restoring width
+  requestAnimationFrame(() => updatePreviewScale());
+}
+
+/**
+ * Update preview text scale based on current preview width
+ * This makes the preview behave like resizing a real window
+ */
+function updatePreviewScale() {
+  const previewWidth = els.previewWrapper.offsetWidth || 300;
+  const fontSizeVw = parseFloat(els.fontSize.value) || 25;
+
+  // Scale font size: vw units mean percentage of width
+  const scaledFontSize = (fontSizeVw / 100) * previewWidth;
+  els.livePreviewTimer.style.fontSize = scaledFontSize + 'px';
+
+  // Scale stroke width proportionally
+  const strokeWidth = parseInt(els.strokeWidth.value, 10) || 0;
+  const scaledStroke = (strokeWidth / 100) * previewWidth * 0.05;
+  els.livePreviewTimer.style.webkitTextStrokeWidth = Math.max(0, scaledStroke) + 'px';
 }
 
 // ============ Preview ============
@@ -561,24 +584,14 @@ function applyLivePreviewStyle() {
   els.livePreview.style.background = bg;
   els.livePreviewTimer.style.fontFamily = els.fontFamily.value;
   els.livePreviewTimer.style.fontWeight = els.fontWeight.value;
-
-  // Calculate scaled font size based on preview box width
-  // vw units are relative to viewport, so we scale based on preview width
-  const previewWidth = els.livePreview.offsetWidth || 200;
-  const fontSizeVw = parseFloat(els.fontSize.value) || 10;
-  const scaledFontSize = (fontSizeVw / 100) * previewWidth;
-  els.livePreviewTimer.style.fontSize = scaledFontSize + 'px';
-
-  // Scale stroke width proportionally too
-  const strokeWidth = parseInt(els.strokeWidth.value, 10) || 0;
-  const scaledStroke = Math.max(0.5, (strokeWidth / 100) * previewWidth * 0.1);
-  els.livePreviewTimer.style.webkitTextStrokeWidth = scaledStroke + 'px';
-
   els.livePreviewTimer.style.color = els.fontColor.value;
   els.livePreviewTimer.style.opacity = els.opacity.value;
   els.livePreviewTimer.style.webkitTextStrokeColor = els.strokeColor.value;
   els.livePreviewTimer.style.textShadow = els.shadow.value;
   els.livePreviewTimer.style.letterSpacing = els.letterSpacing.value + 'em';
+
+  // Use unified scaling function for font size and stroke
+  updatePreviewScale();
 }
 
 /**
