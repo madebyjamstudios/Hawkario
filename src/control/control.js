@@ -136,16 +136,12 @@ function updateTimerScale(scale) {
 }
 
 function checkSliderVisibility() {
-  // Show slider only when timers overflow the container
   const list = els.presetList;
-  const container = els.presetListContainer;
+  if (!list) return;
 
-  if (!list || !container) return;
-
-  // Check if content overflows
-  const hasOverflow = list.scrollHeight > list.clientHeight;
-
-  if (hasOverflow) {
+  // Show slider if there are 3+ timers (likely to need resizing)
+  const presetCount = loadPresets().length;
+  if (presetCount >= 3) {
     els.sizeSliderContainer.classList.remove('hidden');
   } else {
     els.sizeSliderContainer.classList.add('hidden');
@@ -155,8 +151,9 @@ function checkSliderVisibility() {
 function restoreTimerScale() {
   const savedScale = localStorage.getItem(TIMER_SCALE_KEY);
   if (savedScale) {
-    els.timerSizeSlider.value = savedScale;
-    updateTimerScale(savedScale);
+    const scale = parseFloat(savedScale);
+    els.timerSizeSlider.value = scale;
+    updateTimerScale(scale);
   }
 }
 
