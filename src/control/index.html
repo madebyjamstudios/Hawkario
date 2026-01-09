@@ -35,156 +35,182 @@
           </div>
           <div class="kv">
             <label for="duration">Duration (HH:MM:SS)</label>
-            <input id="duration" type="text" value="00:20:00" />
+            <input id="duration" type="text" value="00:10:00" />
           </div>
           <div class="kv">
             <label for="format">Format</label>
             <select id="format">
               <option value="H:MM:SS">H:MM:SS</option>
-              <option value="MM:SS">MM:SS</option>
+              <option value="MM:SS" selected>MM:SS</option>
               <option value="SS">SS</option>
             </select>
           </div>
 
-          <div class="space"></div>
-          <h3>Typography</h3>
-          <div class="kv">
-            <label for="fontFamily">Font</label>
-            <input id="fontFamily" type="text" value="Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif" />
+          <div class="collapsible-section" data-section="typography">
+            <h3 class="section-header">
+              <span>Typography</span>
+              <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </h3>
+            <div class="section-content">
+              <div class="kv">
+                <label for="fontFamily">Font</label>
+                <input id="fontFamily" type="text" value="Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif" />
+              </div>
+              <div class="kv">
+                <label for="fontWeight">Weight</label>
+                <select id="fontWeight">
+                  <option>400</option>
+                  <option>500</option>
+                  <option selected>600</option>
+                  <option>700</option>
+                  <option>800</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="fontSize">Size (vw)</label>
+                <input id="fontSize" type="number" min="1" max="50" step="0.5" value="10" />
+              </div>
+              <div class="kv">
+                <label for="fontColor">Color</label>
+                <input id="fontColor" type="color" value="#ffffff" />
+              </div>
+              <div class="kv">
+                <label for="opacity">Opacity</label>
+                <input id="opacity" type="range" min="0" max="1" step="0.01" value="1" />
+              </div>
+              <div class="kv">
+                <label for="strokeWidth">Stroke (px)</label>
+                <input id="strokeWidth" type="number" min="0" max="10" step="1" value="2" />
+              </div>
+              <div class="kv">
+                <label for="strokeColor">Stroke color</label>
+                <input id="strokeColor" type="color" value="#000000" />
+              </div>
+              <div class="kv">
+                <label for="shadow">Shadow</label>
+                <input id="shadow" type="text" value="0 2px 10px rgba(0,0,0,0.5)" />
+              </div>
+              <div class="kv">
+                <label for="align">Align</label>
+                <select id="align">
+                  <option value="center">Center</option>
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="letterSpacing">Spacing (em)</label>
+                <input id="letterSpacing" type="number" step="0.01" value="0" />
+              </div>
+            </div>
           </div>
-          <div class="kv">
-            <label for="fontWeight">Weight</label>
-            <select id="fontWeight">
-              <option>400</option>
-              <option>500</option>
-              <option selected>600</option>
-              <option>700</option>
-              <option>800</option>
-            </select>
-          </div>
-          <div class="kv">
-            <label for="fontSize">Size (vw)</label>
-            <input id="fontSize" type="number" min="1" max="50" step="0.5" value="10" />
-          </div>
-          <div class="kv">
-            <label for="fontColor">Color</label>
-            <input id="fontColor" type="color" value="#ffffff" />
-          </div>
-          <div class="kv">
-            <label for="opacity">Opacity</label>
-            <input id="opacity" type="range" min="0" max="1" step="0.01" value="1" />
-          </div>
-          <div class="kv">
-            <label for="strokeWidth">Stroke (px)</label>
-            <input id="strokeWidth" type="number" min="0" max="10" step="1" value="2" />
-          </div>
-          <div class="kv">
-            <label for="strokeColor">Stroke color</label>
-            <input id="strokeColor" type="color" value="#000000" />
-          </div>
-          <div class="kv">
-            <label for="shadow">Shadow</label>
-            <input id="shadow" type="text" value="0 2px 10px rgba(0,0,0,0.5)" />
-          </div>
-          <div class="kv">
-            <label for="align">Align</label>
-            <select id="align">
-              <option value="center">Center</option>
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-            </select>
-          </div>
-          <div class="kv">
-            <label for="letterSpacing">Spacing (em)</label>
-            <input id="letterSpacing" type="number" step="0.01" value="0" />
-          </div>
-        </div>
 
-        <div class="space"></div>
-        <h3>Background</h3>
-        <div class="stack">
-          <div class="kv">
-            <label for="bgMode">Mode</label>
-            <select id="bgMode">
-              <option value="transparent" selected>Transparent</option>
-              <option value="solid">Solid</option>
-            </select>
+          <div class="collapsible-section" data-section="background">
+            <h3 class="section-header">
+              <span>Background</span>
+              <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </h3>
+            <div class="section-content">
+              <div class="kv">
+                <label for="bgMode">Mode</label>
+                <select id="bgMode">
+                  <option value="transparent" selected>Transparent</option>
+                  <option value="solid">Solid</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="bgColor">Color</label>
+                <input id="bgColor" type="color" value="#000000" />
+              </div>
+              <div class="kv">
+                <label for="bgOpacity">Opacity</label>
+                <input id="bgOpacity" type="range" min="0" max="1" step="0.01" value="0" />
+              </div>
+            </div>
           </div>
-          <div class="kv">
-            <label for="bgColor">Color</label>
-            <input id="bgColor" type="color" value="#000000" />
-          </div>
-          <div class="kv">
-            <label for="bgOpacity">Opacity</label>
-            <input id="bgOpacity" type="range" min="0" max="1" step="0.01" value="0" />
-          </div>
-        </div>
 
-        <div class="space"></div>
-        <h3>Warnings</h3>
-        <div class="stack">
-          <div class="kv">
-            <label for="warnEnable">Enable</label>
-            <select id="warnEnable">
-              <option value="off">Off</option>
-              <option value="on" selected>On</option>
-            </select>
+          <div class="collapsible-section" data-section="warnings">
+            <h3 class="section-header">
+              <span>Warnings</span>
+              <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </h3>
+            <div class="section-content">
+              <div class="kv">
+                <label for="warnEnable">Enable</label>
+                <select id="warnEnable">
+                  <option value="off">Off</option>
+                  <option value="on" selected>On</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="warnTime">Warn at</label>
+                <input id="warnTime" type="text" value="00:02:00" />
+              </div>
+              <div class="kv">
+                <label for="warnColorEnable">Turn red</label>
+                <select id="warnColorEnable">
+                  <option value="off">Off</option>
+                  <option value="on" selected>On</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="warnColor">Color</label>
+                <input id="warnColor" type="color" value="#ff3333" />
+              </div>
+              <div class="kv">
+                <label for="warnFlashEnable">Flash</label>
+                <select id="warnFlashEnable">
+                  <option value="off" selected>Off</option>
+                  <option value="on">On</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="flashRate">Rate (ms)</label>
+                <input id="flashRate" type="number" min="100" max="2000" step="50" value="500" />
+              </div>
+            </div>
           </div>
-          <div class="kv">
-            <label for="warnTime">Warn at</label>
-            <input id="warnTime" type="text" value="00:02:00" />
-          </div>
-          <div class="kv">
-            <label for="warnColorEnable">Turn red</label>
-            <select id="warnColorEnable">
-              <option value="off">Off</option>
-              <option value="on" selected>On</option>
-            </select>
-          </div>
-          <div class="kv">
-            <label for="warnColor">Color</label>
-            <input id="warnColor" type="color" value="#ff3333" />
-          </div>
-          <div class="kv">
-            <label for="warnFlashEnable">Flash</label>
-            <select id="warnFlashEnable">
-              <option value="off" selected>Off</option>
-              <option value="on">On</option>
-            </select>
-          </div>
-          <div class="kv">
-            <label for="flashRate">Rate (ms)</label>
-            <input id="flashRate" type="number" min="100" max="2000" step="50" value="500" />
-          </div>
-        </div>
 
-        <div class="space"></div>
-        <h3>Sound Alerts</h3>
-        <div class="stack">
-          <div class="kv">
-            <label for="soundWarnEnable">Warning sound</label>
-            <select id="soundWarnEnable">
-              <option value="off" selected>Off</option>
-              <option value="on">On</option>
-            </select>
+          <div class="collapsible-section" data-section="sound">
+            <h3 class="section-header">
+              <span>Sound Alerts</span>
+              <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </h3>
+            <div class="section-content">
+              <div class="kv">
+                <label for="soundWarnEnable">Warning sound</label>
+                <select id="soundWarnEnable">
+                  <option value="off" selected>Off</option>
+                  <option value="on">On</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="soundEndEnable">End sound</label>
+                <select id="soundEndEnable">
+                  <option value="off">Off</option>
+                  <option value="on" selected>On</option>
+                </select>
+              </div>
+              <div class="kv">
+                <label for="soundVolume">Volume</label>
+                <input id="soundVolume" type="range" min="0" max="1" step="0.1" value="0.7" />
+              </div>
+            </div>
           </div>
-          <div class="kv">
-            <label for="soundEndEnable">End sound</label>
-            <select id="soundEndEnable">
-              <option value="off">Off</option>
-              <option value="on" selected>On</option>
-            </select>
-          </div>
-          <div class="kv">
-            <label for="soundVolume">Volume</label>
-            <input id="soundVolume" type="range" min="0" max="1" step="0.1" value="0.7" />
-          </div>
-        </div>
 
-        <div class="space"></div>
-        <h3>Preview</h3>
-        <div class="preview">
-          <div id="preview" class="timer-preview">00:20:00</div>
+        <h3>Live Output Preview</h3>
+        <div class="live-preview-wrapper">
+          <div id="livePreview" class="live-preview">
+            <div id="livePreviewTimer" class="timer-preview">10:00</div>
+          </div>
         </div>
 
         <div class="space"></div>
@@ -192,22 +218,36 @@
           <button id="startBtn">Start</button>
           <button id="pauseBtn" class="secondary" disabled>Pause</button>
           <button id="resetBtn" class="secondary">Reset</button>
+          <button id="blackoutBtn" class="blackout-btn">Blackout</button>
+        </div>
+        <div class="row">
           <button id="openOutput">Open Output Window</button>
           <button id="goFullscreen" class="secondary">Fullscreen Output</button>
         </div>
       </section>
 
+      <!-- Resize Handle -->
+      <div class="resize-handle" id="resizeHandle"></div>
+
       <!-- Right: Presets -->
-      <section class="panel">
+      <section class="panel" id="presetsPanel">
+        <button class="collapse-toggle" id="collapseToggle" title="Toggle presets panel">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
         <h2>Presets</h2>
-        <div class="row">
-          <input id="presetName" type="text" placeholder="Preset name" />
-          <button id="savePreset">Save</button>
-          <button id="exportPresets" class="secondary">Export</button>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
-          <button id="importPresets" class="secondary">Import</button>
+        <div class="presets-content">
+          <div class="row">
+            <input id="presetName" type="text" placeholder="Preset name" />
+            <button id="savePreset">Save</button>
+            <button id="exportPresets" class="secondary">Export</button>
+            <input id="importFile" type="file" accept="application/json" style="display:none" />
+            <button id="importPresets" class="secondary">Import</button>
+          </div>
+          <div id="presetList" class="preset-list"></div>
+          <button id="addTimer" class="add-timer-btn">+ Add Timer</button>
         </div>
-        <div id="presetList" class="preset-list"></div>
       </section>
     </div>
   </main>
