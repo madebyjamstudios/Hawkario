@@ -84,11 +84,11 @@ function triggerFlash() {
   const originalStroke = timerEl.style.webkitTextStrokeColor;
   const originalStrokeWidth = timerEl.style.webkitTextStrokeWidth;
 
-  // Apply flash style - yellow with white stroke border
+  // Apply flash style - yellow with white stroke border, compact tight glow
   timerEl.style.color = '#ffeb3b';
   timerEl.style.webkitTextStrokeColor = '#ffffff';
   timerEl.style.webkitTextStrokeWidth = '3px';
-  timerEl.style.textShadow = '0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(255,235,59,0.6)';
+  timerEl.style.textShadow = '0 0 8px rgba(255,255,255,1), 0 0 15px rgba(255,235,59,0.9)';
   timerEl.style.transition = 'all 0.5s ease-out';
 
   // Slowly fade back to original over 2 seconds

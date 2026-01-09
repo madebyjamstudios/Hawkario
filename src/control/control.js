@@ -1305,10 +1305,10 @@ function setupEventListeners() {
     els.flashBtn.classList.add('flashing');
     setTimeout(() => els.flashBtn.classList.remove('flashing'), 1500);
 
-    // Flash live preview - yellow with white stroke, slow fade
+    // Flash live preview - yellow with white stroke, compact tight glow
     els.livePreviewTimer.style.color = '#ffeb3b';
     els.livePreviewTimer.style.webkitTextStrokeColor = '#ffffff';
-    els.livePreviewTimer.style.textShadow = '0 0 20px rgba(255,255,255,0.8), 0 0 40px rgba(255,235,59,0.6)';
+    els.livePreviewTimer.style.textShadow = '0 0 8px rgba(255,255,255,1), 0 0 15px rgba(255,235,59,0.9)';
     els.livePreviewTimer.style.transition = 'all 0.5s ease-out';
 
     // Slowly fade back to original
