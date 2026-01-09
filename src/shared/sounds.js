@@ -1,5 +1,5 @@
 /**
- * Hawkario - Sound Utilities
+ * Hawkario Timer - Sound Utilities
  * Audio alerts using Web Audio API
  */
 

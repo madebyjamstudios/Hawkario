@@ -1,4 +1,4 @@
-# Hawkario
+# Hawkario Timer
 
 Professional countdown timer with customizable display for broadcasts and presentations.
 
@@ -40,7 +40,7 @@ npm run build:dmg
 
 ## Usage
 
-1. Launch Hawkario with `npm start`
+1. Launch Hawkario Timer with `npm start`
 2. Configure your timer settings in the control window
 3. Click **Open Output Window** to open the display
 4. Press **F** in the output window for fullscreen
@@ -68,7 +68,7 @@ npm run build:dmg
 ## Project Structure
 
 ```
-Hawkario/
+HawkarioTimer/
 ├── main.js              # Electron main process
 ├── preload.js           # Secure IPC bridge
 ├── src/

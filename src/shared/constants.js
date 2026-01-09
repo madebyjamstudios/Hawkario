@@ -1,5 +1,5 @@
 /**
- * Hawkario - Shared Constants
+ * Hawkario Timer - Shared Constants
  */
 
 // Local storage keys

@@ -1,5 +1,5 @@
 /**
- * Hawkario - Preload Script
+ * Hawkario Timer - Preload Script
  * Secure IPC bridge between renderer processes and main process
  */
 

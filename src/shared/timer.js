@@ -1,5 +1,5 @@
 /**
- * Hawkario - Timer Utilities
+ * Hawkario Timer -Timer Utilities
  * Shared functions for time parsing and formatting
  */
 

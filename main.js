@@ -1,5 +1,5 @@
 /**
- * Hawkario - Main Process
+ * Hawkario Timer -Main Process
  * Electron main process with IPC message broker
  */
 
@@ -32,7 +32,7 @@ function createMainWindow() {
     minWidth: 280,
     minHeight: 400,
     center: true,
-    title: 'Hawkario',
+    title: 'Hawkario Timer',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -71,7 +71,7 @@ function createOutputWindow() {
     height: targetDisplay.bounds.height,
     x: targetDisplay.bounds.x,
     y: targetDisplay.bounds.y,
-    title: 'Hawkario - Output',
+    title: 'Hawkario Timer - Output',
     fullscreen: hasSecondaryDisplay, // Auto-fullscreen on secondary display
     webPreferences: {
       nodeIntegration: false,
@@ -181,7 +181,7 @@ ipcMain.handle('dialog:confirm', async (_event, options) => {
 
 const menuTemplate = [
   {
-    label: 'Hawkario',
+    label: 'Hawkario Timer',
     submenu: [
       { role: 'about' },
       { type: 'separator' },

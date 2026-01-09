@@ -1,5 +1,5 @@
 /**
- * Hawkario - Control Window
+ * Hawkario Timer -Control Window
  * Main controller for timer configuration and preset management
  */
 

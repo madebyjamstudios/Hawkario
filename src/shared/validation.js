@@ -1,5 +1,5 @@
 /**
- * Hawkario - Input Validation
+ * Hawkario Timer - Input Validation
  * Validates and sanitizes user input
  */
 

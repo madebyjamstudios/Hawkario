@@ -1,5 +1,5 @@
 /**
- * Hawkario - Viewer Window
+ * Hawkario Timer -Viewer Window
  * Output display for the timer
  */
 
