@@ -115,11 +115,11 @@ function triggerFlash() {
     timerEl.style.textShadow = '0 0 8px rgba(255,255,255,1), 0 0 15px rgba(255,255,255,0.8)';
 
     setTimeout(() => {
-      // Fade OUT to grey (high contrast)
-      timerEl.style.color = '#444444';
+      // Fade OUT to grey (high contrast - visible grey)
+      timerEl.style.color = '#555555';
       timerEl.style.textShadow = 'none';
-      timerEl.style.webkitTextStrokeColor = '#333333';
-      timerEl.style.webkitTextStrokeWidth = '1px';
+      timerEl.style.webkitTextStrokeColor = '#444444';
+      timerEl.style.webkitTextStrokeWidth = '0px';
 
       setTimeout(() => {
         flashCount++;

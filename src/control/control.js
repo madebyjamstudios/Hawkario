@@ -1198,7 +1198,13 @@ function createDefaultPreset() {
       config: defaultConfig
     });
     savePresets(presets);
-    applyConfig(defaultConfig);
+  }
+
+  // Auto-select first timer on startup
+  if (presets.length > 0 && activePresetIndex === null) {
+    activePresetIndex = 0;
+    const firstPreset = presets[0];
+    applyConfig(firstPreset.config);
   }
 }
 
@@ -1340,12 +1346,12 @@ function setupEventListeners() {
       els.livePreviewTimer.style.textShadow = '0 0 8px rgba(255,255,255,1), 0 0 15px rgba(255,255,255,0.8)';
 
       setTimeout(() => {
-        // Fade OUT to grey - button fades off, timer fades to dark grey
+        // Fade OUT to grey - button fades off, timer fades to visible grey
         els.flashBtn.classList.remove('flashing');
-        els.livePreviewTimer.style.color = '#444444';
+        els.livePreviewTimer.style.color = '#555555';
         els.livePreviewTimer.style.textShadow = 'none';
-        els.livePreviewTimer.style.webkitTextStrokeColor = '#333333';
-        els.livePreviewTimer.style.webkitTextStrokeWidth = '1px';
+        els.livePreviewTimer.style.webkitTextStrokeColor = '#444444';
+        els.livePreviewTimer.style.webkitTextStrokeWidth = '0px';
 
         setTimeout(() => {
           flashCount++;
