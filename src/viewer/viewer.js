@@ -3,7 +3,7 @@
  * Output display for the timer
  */
 
-import { formatTime, hexToRgba } from '../shared/timer.js';
+import { formatTime, formatTimeOfDay, hexToRgba } from '../shared/timer.js';
 import { playWarningSound, playEndSound, initAudio } from '../shared/sounds.js';
 
 // DOM Elements
@@ -140,15 +140,39 @@ function applyWarningState(active) {
  * Main render loop
  */
 function render() {
-  let elapsed;
-  let remainingSec;
+  let displayText = '';
+  let elapsed = 0;
+  let remainingSec = 0;
+
+  // Handle hidden mode
+  if (state.mode === 'hidden') {
+    timerEl.style.visibility = 'hidden';
+    requestAnimationFrame(render);
+    return;
+  } else {
+    timerEl.style.visibility = 'visible';
+  }
+
+  // Handle Time of Day modes
+  if (state.mode === 'tod') {
+    displayText = formatTimeOfDay(state.format);
+    applyWarningState(false);
+    timerEl.textContent = displayText;
+    requestAnimationFrame(render);
+    return;
+  }
+
+  // Handle countdown/countup with optional ToD
+  const isCountdown = state.mode === 'countdown' || state.mode === 'countdown-tod';
+  const isCountup = state.mode === 'countup' || state.mode === 'countup-tod';
+  const showToD = state.mode === 'countdown-tod' || state.mode === 'countup-tod';
 
   if (!state.running || state.startedAt === null) {
     // Timer is idle
-    elapsed = state.mode === 'countdown' ? state.durationSec * 1000 : 0;
+    elapsed = isCountdown ? state.durationSec * 1000 : 0;
     remainingSec = Math.floor(elapsed / 1000);
 
-    const warnActiveIdle = state.mode === 'countdown' &&
+    const warnActiveIdle = isCountdown &&
       state.warn.enabled &&
       remainingSec <= state.warn.seconds &&
       remainingSec > 0;
@@ -159,7 +183,7 @@ function render() {
     const now = Date.now();
     const base = now - state.startedAt + state.pausedAcc;
 
-    if (state.mode === 'countdown') {
+    if (isCountdown) {
       elapsed = Math.max(0, (state.durationSec * 1000) - base);
       remainingSec = Math.floor(elapsed / 1000);
 
@@ -187,7 +211,7 @@ function render() {
         playWarningSound(state.sound.volume);
         warningSoundPlayed = true;
       }
-    } else {
+    } else if (isCountup) {
       // Count up mode
       elapsed = base;
       remainingSec = Math.floor(elapsed / 1000);
@@ -195,7 +219,15 @@ function render() {
     }
   }
 
-  timerEl.textContent = formatTime(elapsed, state.format);
+  // Format display text
+  displayText = formatTime(elapsed, state.format);
+
+  // Add Time of Day if needed
+  if (showToD) {
+    displayText += '  |  ' + formatTimeOfDay(state.format);
+  }
+
+  timerEl.textContent = displayText;
   requestAnimationFrame(render);
 }
 

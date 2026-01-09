@@ -3,7 +3,7 @@
  * Main controller for timer configuration and preset management
  */
 
-import { parseHMS, secondsToHMS, formatTime, hexToRgba, debounce } from '../shared/timer.js';
+import { parseHMS, secondsToHMS, formatTime, formatTimeOfDay, hexToRgba, debounce } from '../shared/timer.js';
 import { validateConfig, validatePresets, safeJSONParse } from '../shared/validation.js';
 import { STORAGE_KEYS } from '../shared/constants.js';
 
@@ -213,6 +213,10 @@ function saveModal() {
 function updateModalPreview() {
   if (!els.modalPreview || !els.modalPreviewTimer) return;
 
+  const mode = els.mode.value;
+  const format = els.format.value;
+  const durationSec = parseHMS(els.duration.value);
+
   const bgOpacity = parseFloat(els.bgOpacity.value) || 0;
   const bg = els.bgMode.value === 'solid'
     ? hexToRgba(els.bgColor.value, bgOpacity)
@@ -229,12 +233,28 @@ function updateModalPreview() {
   els.modalPreviewTimer.style.textShadow = els.shadow.value;
   els.modalPreviewTimer.style.letterSpacing = els.letterSpacing.value + 'em';
 
-  // Update displayed time
-  const durationSec = parseHMS(els.duration.value);
-  els.modalPreviewTimer.textContent = formatTime(
-    els.mode.value === 'countdown' ? durationSec * 1000 : 0,
-    els.format.value
-  );
+  // Update displayed time based on mode
+  let displayText = '';
+  const isCountdown = mode === 'countdown' || mode === 'countdown-tod';
+  const showToD = mode === 'countdown-tod' || mode === 'countup-tod';
+
+  if (mode === 'hidden') {
+    els.modalPreviewTimer.style.visibility = 'hidden';
+    return;
+  } else {
+    els.modalPreviewTimer.style.visibility = 'visible';
+  }
+
+  if (mode === 'tod') {
+    displayText = formatTimeOfDay(format);
+  } else {
+    displayText = formatTime(isCountdown ? durationSec * 1000 : 0, format);
+    if (showToD) {
+      displayText += '  |  ' + formatTimeOfDay(format);
+    }
+  }
+
+  els.modalPreviewTimer.textContent = displayText;
 }
 
 // ============ Collapsible Settings Sections ============
@@ -373,6 +393,7 @@ function applyLivePreviewStyle() {
 function renderLivePreview() {
   const mode = els.mode.value;
   const durationSec = parseHMS(els.duration.value);
+  const format = els.format.value;
   const warnEnabled = els.warnEnable.value === 'on';
   const warnSeconds = parseHMS(els.warnTime.value);
   const warnColorEnabled = els.warnColorEnable.value === 'on';
@@ -380,19 +401,47 @@ function renderLivePreview() {
   const warnFlashEnabled = els.warnFlashEnable.value === 'on';
   const flashRateMs = parseInt(els.flashRate.value, 10) || 500;
 
-  let elapsed;
-  let remainingSec;
+  let displayText = '';
+  let elapsed = 0;
+  let remainingSec = 0;
+
+  // Handle hidden mode
+  if (mode === 'hidden') {
+    els.livePreviewTimer.style.visibility = 'hidden';
+    els.timerProgressContainer.classList.add('hidden');
+    requestAnimationFrame(renderLivePreview);
+    return;
+  } else {
+    els.livePreviewTimer.style.visibility = 'visible';
+  }
+
+  // Handle Time of Day only mode
+  if (mode === 'tod') {
+    displayText = formatTimeOfDay(format);
+    els.livePreviewTimer.textContent = displayText;
+    els.livePreviewTimer.style.color = els.fontColor.value;
+    els.livePreviewTimer.style.opacity = els.opacity.value;
+    els.livePreview.classList.remove('warning');
+    els.timerProgressContainer.classList.add('hidden');
+    requestAnimationFrame(renderLivePreview);
+    return;
+  }
+
+  // Determine mode type
+  const isCountdown = mode === 'countdown' || mode === 'countdown-tod';
+  const isCountup = mode === 'countup' || mode === 'countup-tod';
+  const showToD = mode === 'countdown-tod' || mode === 'countup-tod';
 
   if (!isRunning || timerState.startedAt === null) {
     // Timer is idle
-    elapsed = mode === 'countdown' ? durationSec * 1000 : 0;
+    elapsed = isCountdown ? durationSec * 1000 : 0;
     remainingSec = Math.floor(elapsed / 1000);
   } else {
     // Timer is running
     const now = Date.now();
     const base = now - timerState.startedAt + timerState.pausedAcc;
 
-    if (mode === 'countdown') {
+    if (isCountdown) {
       elapsed = Math.max(0, (durationSec * 1000) - base);
       remainingSec = Math.floor(elapsed / 1000);
 
@@ -402,23 +451,33 @@ function renderLivePreview() {
         isRunning = false;
         renderPresetList(); // Update button states
       }
-    } else {
+    } else if (isCountup) {
       // Count up mode
       elapsed = base;
       remainingSec = Math.floor(elapsed / 1000);
     }
   }
 
+  // Format display text
+  displayText = formatTime(elapsed, format);
+  if (showToD) {
+    displayText += '  |  ' + formatTimeOfDay(format);
+  }
+
   // Update display
-  els.livePreviewTimer.textContent = formatTime(elapsed, els.format.value);
+  els.livePreviewTimer.textContent = displayText;
 
-  // Update progress bar
-  const totalMs = durationSec * 1000;
-  const elapsedMs = mode === 'countdown' ? totalMs - elapsed : elapsed;
-  updateProgressBar(elapsedMs, totalMs);
+  // Update progress bar (only for countdown modes)
+  if (isCountdown) {
+    const totalMs = durationSec * 1000;
+    const elapsedMs = totalMs - elapsed;
+    updateProgressBar(elapsedMs, totalMs);
+  } else {
+    els.timerProgressContainer.classList.add('hidden');
+  }
 
-  // Warning state
-  const warnActive = mode === 'countdown' &&
+  // Warning state (only for countdown modes)
+  const warnActive = isCountdown &&
     warnEnabled &&
     remainingSec <= warnSeconds &&
     remainingSec > 0 &&

@@ -101,6 +101,31 @@ export function hexToRgba(hex, opacity = 1) {
 }
 
 /**
+ * Format current time of day
+ * @param {string} format - Display format ('H:MM:SS', 'MM:SS', 'SS')
+ * @returns {string} Formatted time string
+ */
+export function formatTimeOfDay(format = 'H:MM:SS') {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+
+  const pad = n => String(n).padStart(2, '0');
+
+  switch (format) {
+    case 'H:MM:SS':
+      return `${h}:${pad(m)}:${pad(s)}`;
+    case 'MM:SS':
+      return `${pad(m)}:${pad(s)}`;
+    case 'SS':
+      return String(s);
+    default:
+      return `${h}:${pad(m)}:${pad(s)}`;
+  }
+}
+
+/**
  * Create a debounced function
  * @param {Function} fn - Function to debounce
  * @param {number} delay - Delay in milliseconds
