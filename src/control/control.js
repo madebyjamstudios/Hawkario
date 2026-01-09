@@ -9,7 +9,7 @@ import { STORAGE_KEYS } from '../shared/constants.js';
 
 // DOM Elements
 const els = {
-  // Timer settings
+  // Timer settings (in modal)
   mode: document.getElementById('mode'),
   duration: document.getElementById('duration'),
   format: document.getElementById('format'),
@@ -44,9 +44,13 @@ const els = {
   soundEndEnable: document.getElementById('soundEndEnable'),
   soundVolume: document.getElementById('soundVolume'),
 
-  // Live Preview
+  // Live Preview (main window)
   livePreview: document.getElementById('livePreview'),
   livePreviewTimer: document.getElementById('livePreviewTimer'),
+
+  // Modal Preview
+  modalPreview: document.getElementById('modalPreview'),
+  modalPreviewTimer: document.getElementById('modalPreviewTimer'),
 
   // Controls
   startBtn: document.getElementById('startBtn'),
@@ -58,18 +62,18 @@ const els = {
 
   // Presets
   presetName: document.getElementById('presetName'),
-  savePreset: document.getElementById('savePreset'),
   presetList: document.getElementById('presetList'),
   exportPresets: document.getElementById('exportPresets'),
   importPresets: document.getElementById('importPresets'),
   importFile: document.getElementById('importFile'),
   addTimer: document.getElementById('addTimer'),
 
-  // Layout
-  resizeHandle: document.getElementById('resizeHandle'),
-  presetsPanel: document.getElementById('presetsPanel'),
-  collapseToggle: document.getElementById('collapseToggle'),
-  grid: document.querySelector('.grid')
+  // Modal
+  settingsModal: document.getElementById('settingsModal'),
+  modalTitle: document.getElementById('modalTitle'),
+  modalClose: document.getElementById('modalClose'),
+  modalCancel: document.getElementById('modalCancel'),
+  modalSave: document.getElementById('modalSave')
 };
 
 // State
@@ -94,7 +98,8 @@ const ICONS = {
   more: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
   clone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
   delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-  add: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+  add: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  pencil: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>'
 };
 
 // ============ Toast Notifications ============
@@ -118,87 +123,87 @@ function showToast(message, type = 'info') {
   }, 2500);
 }
 
-// ============ Layout Management ============
+// ============ Modal Management ============
 
-const PRESETS_WIDTH_KEY = 'hawkario:presetsWidth';
-const PRESETS_COLLAPSED_KEY = 'hawkario:presetsCollapsed';
-const MIN_PRESETS_WIDTH = 200;
-const COLLAPSE_THRESHOLD = 150;
+function openModal(presetIndex = null) {
+  editingPresetIndex = presetIndex;
 
-function setupResizeHandle() {
-  let isDragging = false;
-  let startX = 0;
-  let startWidth = 0;
-
-  const onMouseDown = (e) => {
-    isDragging = true;
-    startX = e.clientX;
-    startWidth = els.presetsPanel.offsetWidth;
-    els.resizeHandle.classList.add('dragging');
-    els.grid.classList.add('resizing');
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  };
-
-  const onMouseMove = (e) => {
-    if (!isDragging) return;
-
-    const delta = startX - e.clientX;
-    let newWidth = startWidth + delta;
-
-    // Check for collapse threshold
-    if (newWidth < COLLAPSE_THRESHOLD) {
-      els.presetsPanel.classList.add('collapsed');
-      localStorage.setItem(PRESETS_COLLAPSED_KEY, 'true');
-      return;
+  if (presetIndex !== null) {
+    // Editing existing preset
+    const presets = loadPresets();
+    const preset = presets[presetIndex];
+    els.modalTitle.textContent = 'Edit Timer';
+    els.presetName.value = preset.name;
+    applyConfig(preset.config);
+  } else {
+    // Creating new preset
+    els.modalTitle.textContent = 'New Timer';
+    const presets = loadPresets();
+    let counter = 1;
+    let name = `Timer ${counter}`;
+    while (presets.some(p => p.name === name)) {
+      counter++;
+      name = `Timer ${counter}`;
     }
-
-    // Uncollapse if dragging wider
-    if (els.presetsPanel.classList.contains('collapsed') && newWidth >= MIN_PRESETS_WIDTH) {
-      els.presetsPanel.classList.remove('collapsed');
-      localStorage.setItem(PRESETS_COLLAPSED_KEY, 'false');
-    }
-
-    // Enforce minimum width
-    newWidth = Math.max(MIN_PRESETS_WIDTH, newWidth);
-
-    els.grid.style.setProperty('--presets-width', newWidth + 'px');
-    localStorage.setItem(PRESETS_WIDTH_KEY, newWidth);
-  };
-
-  const onMouseUp = () => {
-    if (!isDragging) return;
-    isDragging = false;
-    els.resizeHandle.classList.remove('dragging');
-    els.grid.classList.remove('resizing');
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  };
-
-  els.resizeHandle.addEventListener('mousedown', onMouseDown);
-  document.addEventListener('mousemove', onMouseMove);
-  document.addEventListener('mouseup', onMouseUp);
-}
-
-function setupCollapseToggle() {
-  els.collapseToggle.addEventListener('click', () => {
-    const isCollapsed = els.presetsPanel.classList.toggle('collapsed');
-    localStorage.setItem(PRESETS_COLLAPSED_KEY, isCollapsed ? 'true' : 'false');
-  });
-}
-
-function restoreLayoutState() {
-  // Restore presets panel width
-  const savedWidth = localStorage.getItem(PRESETS_WIDTH_KEY);
-  if (savedWidth) {
-    els.grid.style.setProperty('--presets-width', savedWidth + 'px');
+    els.presetName.value = name;
   }
 
-  // Restore collapsed state
-  const isCollapsed = localStorage.getItem(PRESETS_COLLAPSED_KEY) === 'true';
-  if (isCollapsed) {
-    els.presetsPanel.classList.add('collapsed');
+  els.settingsModal.classList.remove('hidden');
+  els.presetName.focus();
+  els.presetName.select();
+  updateModalPreview();
+}
+
+function closeModal() {
+  els.settingsModal.classList.add('hidden');
+  editingPresetIndex = null;
+}
+
+function saveModal() {
+  const name = els.presetName.value.trim() || 'Timer';
+  const config = getCurrentConfig();
+  const presets = loadPresets();
+
+  if (editingPresetIndex !== null) {
+    // Update existing preset
+    presets[editingPresetIndex] = { name, config };
+    showToast(`Updated "${name}"`, 'success');
+  } else {
+    // Create new preset
+    presets.push({ name, config });
+    showToast(`Created "${name}"`, 'success');
   }
+
+  savePresets(presets);
+  renderPresetList();
+  closeModal();
+}
+
+function updateModalPreview() {
+  if (!els.modalPreview || !els.modalPreviewTimer) return;
+
+  const bgOpacity = parseFloat(els.bgOpacity.value) || 0;
+  const bg = els.bgMode.value === 'solid'
+    ? hexToRgba(els.bgColor.value, bgOpacity)
+    : 'transparent';
+
+  els.modalPreview.style.background = bg;
+  els.modalPreviewTimer.style.fontFamily = els.fontFamily.value;
+  els.modalPreviewTimer.style.fontWeight = els.fontWeight.value;
+  els.modalPreviewTimer.style.fontSize = els.fontSize.value + 'vw';
+  els.modalPreviewTimer.style.color = els.fontColor.value;
+  els.modalPreviewTimer.style.opacity = els.opacity.value;
+  els.modalPreviewTimer.style.webkitTextStrokeWidth = els.strokeWidth.value + 'px';
+  els.modalPreviewTimer.style.webkitTextStrokeColor = els.strokeColor.value;
+  els.modalPreviewTimer.style.textShadow = els.shadow.value;
+  els.modalPreviewTimer.style.letterSpacing = els.letterSpacing.value + 'em';
+
+  // Update displayed time
+  const durationSec = parseHMS(els.duration.value);
+  els.modalPreviewTimer.textContent = formatTime(
+    els.mode.value === 'countdown' ? durationSec * 1000 : 0,
+    els.format.value
+  );
 }
 
 // ============ Collapsible Settings Sections ============
@@ -502,13 +507,25 @@ function renderPresetList() {
   list.forEach((preset, idx) => {
     const row = document.createElement('div');
     row.className = 'preset-item';
-    if (editingPresetIndex === idx) {
-      row.classList.add('editing');
-    }
 
+    // Name with pencil edit icon
     const name = document.createElement('div');
     name.className = 'preset-name';
-    name.textContent = preset.name;
+    name.title = 'Click to edit name';
+    name.onclick = (e) => {
+      e.stopPropagation();
+      openModal(idx);
+    };
+
+    const nameText = document.createElement('span');
+    nameText.className = 'preset-name-text';
+    nameText.textContent = preset.name;
+
+    const editIcon = document.createElement('span');
+    editIcon.className = 'edit-icon';
+    editIcon.innerHTML = ICONS.pencil;
+
+    name.append(nameText, editIcon);
 
     const actions = document.createElement('div');
     actions.className = 'preset-actions';
@@ -518,7 +535,8 @@ function renderPresetList() {
     resetBtn.className = 'icon-btn';
     resetBtn.innerHTML = ICONS.reset;
     resetBtn.title = 'Load & Reset';
-    resetBtn.onclick = () => {
+    resetBtn.onclick = (e) => {
+      e.stopPropagation();
       applyConfig(preset.config);
       sendCommand('reset');
       showToast(`Loaded "${preset.name}"`);
@@ -528,13 +546,10 @@ function renderPresetList() {
     const editBtn = document.createElement('button');
     editBtn.className = 'icon-btn';
     editBtn.innerHTML = ICONS.settings;
-    editBtn.title = 'Edit preset';
-    editBtn.onclick = () => {
-      editingPresetIndex = idx;
-      applyConfig(preset.config);
-      els.presetName.value = preset.name;
-      renderPresetList();
-      showToast(`Editing "${preset.name}"`, 'info');
+    editBtn.title = 'Edit settings';
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      openModal(idx);
     };
 
     // Play button (play icon, green)
@@ -542,7 +557,8 @@ function renderPresetList() {
     playBtn.className = 'icon-btn play-btn';
     playBtn.innerHTML = ICONS.play;
     playBtn.title = 'Load & Start';
-    playBtn.onclick = () => {
+    playBtn.onclick = (e) => {
+      e.stopPropagation();
       applyConfig(preset.config);
       sendCommand('start');
       showToast(`Started "${preset.name}"`);
@@ -628,68 +644,6 @@ function showPresetMenu(idx, preset, anchorEl) {
     }
   };
   setTimeout(() => document.addEventListener('click', closeMenu), 0);
-}
-
-function handleSavePreset() {
-  const name = els.presetName.value.trim() || 'Preset';
-  const config = getCurrentConfig();
-  const list = loadPresets();
-
-  if (editingPresetIndex !== null) {
-    // Update existing preset
-    list[editingPresetIndex] = { name, config };
-    savePresets(list);
-    editingPresetIndex = null;
-    showToast(`Updated "${name}"`, 'success');
-  } else {
-    // Create new preset
-    list.push({ name, config });
-    savePresets(list);
-    showToast(`Saved "${name}"`, 'success');
-  }
-
-  renderPresetList();
-  els.presetName.value = '';
-  updateSaveButtonText();
-}
-
-function updateSaveButtonText() {
-  if (els.savePreset) {
-    els.savePreset.textContent = editingPresetIndex !== null ? 'Update' : 'Save';
-  }
-}
-
-function cancelEdit() {
-  editingPresetIndex = null;
-  els.presetName.value = '';
-  renderPresetList();
-  updateSaveButtonText();
-}
-
-function handleAddTimer() {
-  // Generate a unique name (Timer 1, Timer 2, etc.)
-  const presets = loadPresets();
-  let counter = 1;
-  let name = `Timer ${counter}`;
-  while (presets.some(p => p.name === name)) {
-    counter++;
-    name = `Timer ${counter}`;
-  }
-
-  // Create preset with current config
-  const config = getCurrentConfig();
-  presets.push({ name, config });
-  savePresets(presets);
-  renderPresetList();
-
-  // Enter edit mode for the new preset
-  editingPresetIndex = presets.length - 1;
-  els.presetName.value = name;
-  els.presetName.focus();
-  els.presetName.select();
-  renderPresetList();
-  updateSaveButtonText();
-  showToast('Timer added - rename and save');
 }
 
 function createDefaultPreset() {
@@ -796,7 +750,7 @@ function handleImportPresets(e) {
 // ============ Event Listeners ============
 
 function setupEventListeners() {
-  // Input change listeners (debounced)
+  // Input change listeners (debounced) - update both live and modal preview
   const inputEls = [
     els.mode, els.duration, els.format,
     els.fontFamily, els.fontWeight, els.fontSize, els.fontColor,
@@ -810,9 +764,13 @@ function setupEventListeners() {
 
   inputEls.forEach(el => {
     if (el) {
-      el.addEventListener('input', debouncedPreview);
+      el.addEventListener('input', () => {
+        debouncedPreview();
+        updateModalPreview();
+      });
       el.addEventListener('change', () => {
         applyPreview();
+        updateModalPreview();
         // Send config update to output window
         if (outputWindowReady) {
           sendCommand('config');
@@ -838,11 +796,32 @@ function setupEventListeners() {
   });
 
   // Preset controls
-  els.savePreset.addEventListener('click', handleSavePreset);
   els.exportPresets.addEventListener('click', handleExportPresets);
   els.importPresets.addEventListener('click', () => els.importFile.click());
   els.importFile.addEventListener('change', handleImportPresets);
-  els.addTimer.addEventListener('click', handleAddTimer);
+  els.addTimer.addEventListener('click', () => openModal(null));
+
+  // Modal controls
+  els.modalClose.addEventListener('click', closeModal);
+  els.modalCancel.addEventListener('click', closeModal);
+  els.modalSave.addEventListener('click', saveModal);
+
+  // Close modal on backdrop click
+  els.settingsModal.addEventListener('click', (e) => {
+    if (e.target === els.settingsModal) {
+      closeModal();
+    }
+  });
+
+  // Save on Enter key in preset name
+  els.presetName.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      saveModal();
+    }
+    if (e.key === 'Escape') {
+      closeModal();
+    }
+  });
 
   // Keyboard shortcuts from main process
   window.hawkario.onKeyboardShortcut((shortcut) => {
@@ -879,22 +858,12 @@ function setupEventListeners() {
     els.blackoutBtn.classList.toggle('active', isBlackedOut);
     els.blackoutBtn.textContent = isBlackedOut ? 'Blackout ON' : 'Blackout';
   });
-
-  // Save preset on Enter key
-  els.presetName.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      handleSavePreset();
-    }
-  });
 }
 
 // ============ Initialization ============
 
 function init() {
-  // Restore layout state first
-  restoreLayoutState();
-  setupResizeHandle();
-  setupCollapseToggle();
+  // Setup collapsible sections in modal
   setupCollapsibleSections();
 
   // Create default preset on first launch
