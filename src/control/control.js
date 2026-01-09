@@ -137,27 +137,20 @@ function updateTimerScale(scale) {
 }
 
 function findMaxSafeScale() {
-  // Find the maximum scale before content overflows horizontally
+  // Calculate max scale based on window/container width
   const list = els.presetList;
-  if (!list || !list.children.length) return 1.5;
+  if (!list || !list.children.length) return 2;
 
   const containerWidth = list.clientWidth;
-  const currentScale = parseFloat(els.timerSizeSlider.value) || 1;
 
-  // Check each preset item for overflow
-  let maxScale = 1.5;
-  for (const item of list.children) {
-    if (item.classList.contains('preset-item')) {
-      const itemWidth = item.scrollWidth;
-      if (itemWidth > containerWidth) {
-        // Already overflowing, calculate safe scale
-        const safeScale = currentScale * (containerWidth / itemWidth) * 0.98;
-        maxScale = Math.min(maxScale, safeScale);
-      }
-    }
-  }
+  // Base calculation: wider container = more zoom allowed
+  // At 280px (min width), max scale ~0.8
+  // At 400px, max scale ~1.0
+  // At 600px+, max scale can go higher
+  const baseMaxScale = containerWidth / 350;
 
-  return Math.max(0.5, maxScale);
+  // Clamp between 0.5 and 2.5
+  return Math.max(0.5, Math.min(2.5, baseMaxScale));
 }
 
 function updateSliderMax() {
@@ -1049,7 +1042,10 @@ function init() {
   setTimeout(checkSliderVisibility, 100);
 
   // Recheck on window resize
-  window.addEventListener('resize', debounce(checkSliderVisibility, 100));
+  window.addEventListener('resize', debounce(() => {
+    checkSliderVisibility();
+    updateSliderMax();
+  }, 100));
 
   // Start live preview render loop
   renderLivePreview();
