@@ -61,16 +61,18 @@ function createOutputWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
 
   // If multiple displays, prefer secondary for output
-  const targetDisplay = displays.length > 1
+  const hasSecondaryDisplay = displays.length > 1;
+  const targetDisplay = hasSecondaryDisplay
     ? displays.find(d => d.id !== primaryDisplay.id) || primaryDisplay
     : primaryDisplay;
 
   outputWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    x: targetDisplay.bounds.x + 100,
-    y: targetDisplay.bounds.y + 100,
+    width: targetDisplay.bounds.width,
+    height: targetDisplay.bounds.height,
+    x: targetDisplay.bounds.x,
+    y: targetDisplay.bounds.y,
     title: 'Hawkario - Output',
+    fullscreen: hasSecondaryDisplay, // Auto-fullscreen on secondary display
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

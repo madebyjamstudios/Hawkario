@@ -63,6 +63,9 @@ const els = {
   // Presets
   presetName: document.getElementById('presetName'),
   presetList: document.getElementById('presetList'),
+  presetListContainer: document.querySelector('.preset-list-container'),
+  sizeSliderContainer: document.getElementById('sizeSliderContainer'),
+  timerSizeSlider: document.getElementById('timerSizeSlider'),
   exportPresets: document.getElementById('exportPresets'),
   importPresets: document.getElementById('importPresets'),
   importFile: document.getElementById('importFile'),
@@ -121,6 +124,40 @@ function showToast(message, type = 'info') {
     toast.classList.add('fade-out');
     setTimeout(() => toast.remove(), 200);
   }, 2500);
+}
+
+// ============ Timer Size Slider ============
+
+const TIMER_SCALE_KEY = 'hawkario:timerScale';
+
+function updateTimerScale(scale) {
+  els.presetList.style.setProperty('--timer-scale', scale);
+  localStorage.setItem(TIMER_SCALE_KEY, scale);
+}
+
+function checkSliderVisibility() {
+  // Show slider only when timers overflow the container
+  const list = els.presetList;
+  const container = els.presetListContainer;
+
+  if (!list || !container) return;
+
+  // Check if content overflows
+  const hasOverflow = list.scrollHeight > list.clientHeight;
+
+  if (hasOverflow) {
+    els.sizeSliderContainer.classList.remove('hidden');
+  } else {
+    els.sizeSliderContainer.classList.add('hidden');
+  }
+}
+
+function restoreTimerScale() {
+  const savedScale = localStorage.getItem(TIMER_SCALE_KEY);
+  if (savedScale) {
+    els.timerSizeSlider.value = savedScale;
+    updateTimerScale(savedScale);
+  }
 }
 
 // ============ Modal Management ============
@@ -605,6 +642,9 @@ function renderPresetList() {
     row.append(name, actions);
     els.presetList.appendChild(row);
   });
+
+  // Check if slider should be visible after rendering
+  setTimeout(checkSliderVisibility, 50);
 }
 
 // Dropdown menu for preset actions
@@ -822,6 +862,12 @@ function setupEventListeners() {
     window.hawkario.fullscreenOutput();
   });
 
+  // Timer size slider
+  els.timerSizeSlider.addEventListener('input', (e) => {
+    updateTimerScale(e.target.value);
+    checkSliderVisibility();
+  });
+
   // Preset controls
   els.exportPresets.addEventListener('click', handleExportPresets);
   els.importPresets.addEventListener('click', () => els.importFile.click());
@@ -941,6 +987,9 @@ function init() {
   // Setup collapsible sections in modal
   setupCollapsibleSections();
 
+  // Restore timer scale
+  restoreTimerScale();
+
   // Create default preset on first launch
   createDefaultPreset();
 
@@ -948,6 +997,12 @@ function init() {
   applyPreview();
   renderPresetList();
   updateControlStates();
+
+  // Check if slider should be visible after a short delay (for layout to settle)
+  setTimeout(checkSliderVisibility, 100);
+
+  // Recheck on window resize
+  window.addEventListener('resize', debounce(checkSliderVisibility, 100));
 
   // Start live preview render loop
   renderLivePreview();

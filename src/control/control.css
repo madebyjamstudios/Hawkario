@@ -180,23 +180,66 @@ button:disabled {
 }
 
 /* Presets */
+.preset-list-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
 .preset-list {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: calc(8px * var(--timer-scale, 1));
   padding: 4px;
+}
+
+/* Size slider */
+.size-slider-container {
+  padding: 8px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.size-slider-container.hidden {
+  display: none;
+}
+
+.size-slider-container input[type="range"] {
+  flex: 1;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.size-slider-container input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #888;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.size-slider-container input[type="range"]::-webkit-slider-thumb:hover {
+  background: #aaa;
 }
 
 .preset-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  padding: calc(14px * var(--timer-scale, 1)) calc(16px * var(--timer-scale, 1));
   background: linear-gradient(135deg, #1a5fd4 0%, #1550b8 100%);
   border: none;
-  border-radius: 12px;
+  border-radius: calc(12px * var(--timer-scale, 1));
   box-shadow: 0 2px 8px rgba(21, 80, 184, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: all 0.15s ease;
 }
@@ -209,9 +252,9 @@ button:disabled {
 .preset-name {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: calc(8px * var(--timer-scale, 1));
   color: #fff;
-  font-size: 16px;
+  font-size: calc(16px * var(--timer-scale, 1));
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -241,7 +284,7 @@ button:disabled {
 
 .preset-actions {
   display: flex;
-  gap: 6px;
+  gap: calc(6px * var(--timer-scale, 1));
 }
 
 /* Icon buttons for preset actions */
@@ -249,12 +292,12 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: calc(32px * var(--timer-scale, 1));
+  height: calc(32px * var(--timer-scale, 1));
   padding: 0;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  border-radius: calc(8px * var(--timer-scale, 1));
   color: #fff;
   cursor: pointer;
   transition: all 0.15s ease;
