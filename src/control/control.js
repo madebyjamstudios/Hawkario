@@ -92,7 +92,7 @@ let isBlackedOut = false;
 // SVG Icons
 const ICONS = {
   reset: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
-  settings: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>',
+  settings: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
   play: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
   pause: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>',
   more: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
@@ -799,7 +799,55 @@ function setupEventListeners() {
   els.exportPresets.addEventListener('click', handleExportPresets);
   els.importPresets.addEventListener('click', () => els.importFile.click());
   els.importFile.addEventListener('change', handleImportPresets);
-  els.addTimer.addEventListener('click', () => openModal(null));
+  els.addTimer.addEventListener('click', () => {
+    // Auto-create timer with defaults (no modal)
+    const presets = loadPresets();
+    let counter = 1;
+    let name = `Timer ${counter}`;
+    while (presets.some(p => p.name === name)) {
+      counter++;
+      name = `Timer ${counter}`;
+    }
+
+    const defaultConfig = {
+      mode: 'countdown',
+      durationSec: 600,
+      format: 'MM:SS',
+      style: {
+        fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+        fontWeight: '600',
+        fontSizeVw: 40,
+        color: '#ffffff',
+        opacity: 1,
+        strokeWidth: 2,
+        strokeColor: '#000000',
+        textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+        align: 'center',
+        letterSpacing: 0,
+        bgMode: 'transparent',
+        bgColor: '#000000',
+        bgOpacity: 0
+      },
+      warn: {
+        enabled: true,
+        seconds: 60,
+        colorEnabled: true,
+        color: '#ff3333',
+        flashEnabled: false,
+        flashRateMs: 500
+      },
+      sound: {
+        warnEnabled: false,
+        endEnabled: true,
+        volume: 0.7
+      }
+    };
+
+    presets.push({ name, config: defaultConfig });
+    savePresets(presets);
+    renderPresetList();
+    showToast(`Added "${name}"`);
+  });
 
   // Modal controls
   els.modalClose.addEventListener('click', closeModal);

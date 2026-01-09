@@ -339,7 +339,7 @@ button:disabled {
   width: 100%;
   padding: 16px;
   background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
-  border: none;
+  border: 1px solid transparent;
   border-radius: 12px;
   color: #fff;
   font-size: 15px;
@@ -351,20 +351,22 @@ button:disabled {
 
 .add-timer-btn:hover {
   background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .add-timer-btn:active {
   background: linear-gradient(135deg, #2a2a2a 0%, #222 100%);
-  transform: translateY(0);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Header */
 header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 14px;
-  position: relative;
 }
 
 .brand {
@@ -373,9 +375,7 @@ header {
 }
 
 .hawk-icon {
-  position: absolute;
-  right: 14px;
-  top: 12px;
+  flex-shrink: 0;
 }
 
 /* Footer */
