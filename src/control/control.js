@@ -1723,24 +1723,36 @@ function setupDragListeners() {
       item.style.display !== 'none'
     );
 
-    // Find target position based on cursor Y
-    // Trigger swap early (15% into target) for responsive feel
-    let targetIndex = visibleItems.length; // Default to end
-
+    // Find which timer the cursor is hovering over
+    let hoveredIndex = -1;
     for (let i = 0; i < visibleItems.length; i++) {
       const item = visibleItems[i];
       const rect = item.getBoundingClientRect();
-      // Use 15% threshold instead of 50% for quicker swap response
-      const triggerY = rect.top + rect.height * 0.15;
 
-      if (e.clientY < triggerY) {
-        targetIndex = i;
+      if (e.clientY >= rect.top && e.clientY <= rect.bottom &&
+          e.clientX >= rect.left && e.clientX <= rect.right) {
+        hoveredIndex = i;
         break;
       }
     }
 
-    // Only move placeholder if target changed
-    if (targetIndex !== dragState.currentIndex && dragState.placeholderEl) {
+    // Update hover highlight on timers during drag
+    visibleItems.forEach((item, i) => {
+      if (i === hoveredIndex) {
+        item.classList.add('drag-hover');
+      } else {
+        item.classList.remove('drag-hover');
+      }
+    });
+
+    // Determine target index based on hover
+    let targetIndex = dragState.currentIndex;
+    if (hoveredIndex !== -1) {
+      targetIndex = hoveredIndex;
+    }
+
+    // Only move placeholder if target changed and we're hovering a timer
+    if (targetIndex !== dragState.currentIndex && dragState.placeholderEl && hoveredIndex !== -1) {
       // Remove placeholder from current position
       dragState.placeholderEl.remove();
 
@@ -1776,6 +1788,11 @@ function setupDragListeners() {
       dragState.ghostEl.remove();
       dragState.ghostEl = null;
     }
+
+    // Remove drag-hover class from all items
+    els.presetList.querySelectorAll('.drag-hover').forEach(item => {
+      item.classList.remove('drag-hover');
+    });
 
     // Calculate final index based on placeholder position
     let finalIndex = 0;
