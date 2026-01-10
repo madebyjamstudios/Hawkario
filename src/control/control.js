@@ -370,7 +370,7 @@ function getDefaultTimerConfig() {
       enabled: d.warnEnabled,
       seconds: d.warnSeconds,
       colorEnabled: true,
-      color: '#ff3333',
+      color: '#E64A19',
       flashEnabled: false,
       flashRateMs: 500
     },
@@ -815,13 +815,13 @@ function renderLivePreview() {
   // Color states based on percentage remaining (only for countdown modes)
   // Normal (white): > 20% remaining
   // Warning (yellow): 10-20% remaining
-  // Danger (red): < 10% remaining
+  // Danger (orange): < 10% remaining
   if (isCountdown && durationSec > 0) {
     const percentRemaining = (remainingSec / durationSec) * 100;
 
     if (percentRemaining <= 10 && remainingSec > 0) {
-      // Danger state - red
-      els.livePreviewTimer.style.color = '#ff3333';
+      // Danger state - orange
+      els.livePreviewTimer.style.color = '#E64A19';
       els.livePreview.classList.add('danger');
       els.livePreview.classList.remove('warning');
 
@@ -925,7 +925,7 @@ function applyConfig(config) {
     els.warnEnable.value = config.warn.enabled ? 'on' : 'off';
     els.warnTime.value = secondsToHMS(config.warn.seconds || 120);
     els.warnColorEnable.value = config.warn.colorEnabled ? 'on' : 'off';
-    els.warnColor.value = config.warn.color || '#ff3333';
+    els.warnColor.value = config.warn.color || '#E64A19';
     els.warnFlashEnable.value = config.warn.flashEnabled ? 'on' : 'off';
     els.flashRate.value = config.warn.flashRateMs || 500;
   }

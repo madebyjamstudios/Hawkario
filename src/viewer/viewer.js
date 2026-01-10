@@ -38,7 +38,7 @@ const state = {
     enabled: false,
     seconds: 120,
     colorEnabled: true,
-    color: '#ff3333',
+    color: '#E64A19',
     flashEnabled: false,
     flashRateMs: 500,
     soundEnabled: false
@@ -202,8 +202,8 @@ function applyColorState(remainingSec, durationSec) {
   const percentRemaining = (remainingSec / durationSec) * 100;
 
   if (percentRemaining <= 10) {
-    // Danger state - red
-    timerEl.style.color = '#ff3333';
+    // Danger state - orange
+    timerEl.style.color = '#E64A19';
     timerEl.classList.add('danger');
 
     // Flash effect in danger zone if enabled

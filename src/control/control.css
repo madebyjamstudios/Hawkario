@@ -286,28 +286,28 @@ button:disabled {
 
 .blackout-btn.active {
   background: #1a1a1a;
-  border-color: #f85149;
+  border-color: #E64A19;
 }
 
 .blackout-btn.active .blackout-indicator {
-  background: #f85149;
-  box-shadow: 0 0 8px #f85149, 0 0 16px #f85149, 0 0 24px #f85149;
-  border-color: #f85149;
+  background: #E64A19;
+  box-shadow: 0 0 8px #E64A19, 0 0 16px #E64A19, 0 0 24px #E64A19;
+  border-color: #E64A19;
   animation: indicator-pulse 0.5s ease;
 }
 
 @keyframes indicator-pulse {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 #f85149;
+    box-shadow: 0 0 0 #E64A19;
   }
   50% {
     transform: scale(1.5);
-    box-shadow: 0 0 12px #f85149, 0 0 24px #f85149, 0 0 36px #f85149;
+    box-shadow: 0 0 12px #E64A19, 0 0 24px #E64A19, 0 0 36px #E64A19;
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 8px #f85149, 0 0 16px #f85149, 0 0 24px #f85149;
+    box-shadow: 0 0 8px #E64A19, 0 0 16px #E64A19, 0 0 24px #E64A19;
   }
 }
 
@@ -728,13 +728,13 @@ button:disabled {
 
 /* Pause button - red */
 .icon-btn.pause-btn {
-  background: #da3633;
-  border-color: #f85149;
+  background: #E64A19;
+  border-color: #E64A19;
 }
 
 .icon-btn.pause-btn:hover {
-  background: #f85149;
-  border-color: #ff6b6b;
+  background: #E64A19;
+  border-color: #FF5722;
 }
 
 /* Preset dropdown menu */
@@ -775,11 +775,11 @@ button:disabled {
 }
 
 .menu-item.delete {
-  color: #f85149;
+  color: #E64A19;
 }
 
 .menu-item.delete svg {
-  stroke: #f85149;
+  stroke: #E64A19;
   opacity: 1;
 }
 
@@ -1033,7 +1033,7 @@ footer small {
 }
 
 .toast.error {
-  background: #da3633;
+  background: #E64A19;
 }
 
 .toast.fade-out {
@@ -1211,16 +1211,16 @@ h3 {
 }
 
 button.danger {
-  background: #d32f2f;
+  background: #E64A19;
   color: #fff;
 }
 
 button.danger:hover {
-  background: #e53935;
+  background: #FF5722;
 }
 
 button.danger:active {
-  background: #c62828;
+  background: #BF360C;
 }
 
 /* Quick Edit Popup */

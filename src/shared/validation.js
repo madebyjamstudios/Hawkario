@@ -85,7 +85,7 @@ export function validateWarning(warn) {
     enabled: Boolean(warn.enabled),
     seconds: validateNumber(warn.seconds, 120, 0, 359999),
     colorEnabled: Boolean(warn.colorEnabled),
-    color: validateHexColor(warn.color, '#ff3333'),
+    color: validateHexColor(warn.color, '#E64A19'),
     flashEnabled: Boolean(warn.flashEnabled),
     flashRateMs: validateNumber(warn.flashRateMs, 500, 100, 2000),
     soundEnabled: Boolean(warn.soundEnabled)
@@ -171,7 +171,7 @@ function getDefaultWarning() {
     enabled: true,
     seconds: 120,
     colorEnabled: true,
-    color: '#ff3333',
+    color: '#E64A19',
     flashEnabled: false,
     flashRateMs: 500,
     soundEnabled: false

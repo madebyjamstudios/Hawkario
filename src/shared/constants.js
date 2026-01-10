@@ -2,6 +2,14 @@
  * Hawkario Timer - Shared Constants
  */
 
+// Brand colors (from Hawkario icon)
+export const BRAND_COLORS = {
+  orange: '#E64A19',
+  orangeLight: '#FF5722',
+  orangeDark: '#BF360C',
+  overtimeRed: '#ff3333'  // Exception: overtime stays red
+};
+
 // Local storage keys
 export const STORAGE_KEYS = {
   PRESETS: 'hawkario-presets-v1',
@@ -45,7 +53,7 @@ export const DEFAULT_CONFIG = {
     enabled: true,
     seconds: 120,
     colorEnabled: true,
-    color: '#ff3333',
+    color: '#E64A19',
     flashEnabled: false,
     flashRateMs: 500,
     soundEnabled: false
