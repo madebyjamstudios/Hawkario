@@ -11,7 +11,9 @@ import { STORAGE_KEYS } from '../shared/constants.js';
 const els = {
   // Timer settings (in modal)
   mode: document.getElementById('mode'),
-  duration: document.getElementById('duration'),
+  durationHours: document.getElementById('duration-hours'),
+  durationMinutes: document.getElementById('duration-minutes'),
+  durationSeconds: document.getElementById('duration-seconds'),
   format: document.getElementById('format'),
 
   // Typography
@@ -91,7 +93,9 @@ const els = {
   todFormat: document.getElementById('todFormat'),
   confirmDelete: document.getElementById('confirmDelete'),
   defaultMode: document.getElementById('defaultMode'),
-  defaultDuration: document.getElementById('defaultDuration'),
+  defaultDurationHours: document.getElementById('defaultDuration-hours'),
+  defaultDurationMinutes: document.getElementById('defaultDuration-minutes'),
+  defaultDurationSeconds: document.getElementById('defaultDuration-seconds'),
   defaultFormat: document.getElementById('defaultFormat'),
   defaultFontSize: document.getElementById('defaultFontSize'),
   defaultFontColor: document.getElementById('defaultFontColor'),
@@ -110,6 +114,39 @@ const els = {
   confirmCancel: document.getElementById('confirmCancel'),
   confirmDeleteBtn: document.getElementById('confirmDeleteBtn')
 };
+
+// Helper functions for duration inputs (H:M:S)
+function getDurationSeconds() {
+  const h = parseInt(els.durationHours.value, 10) || 0;
+  const m = parseInt(els.durationMinutes.value, 10) || 0;
+  const s = parseInt(els.durationSeconds.value, 10) || 0;
+  return h * 3600 + m * 60 + s;
+}
+
+function setDurationInputs(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  els.durationHours.value = h;
+  els.durationMinutes.value = m;
+  els.durationSeconds.value = s;
+}
+
+function getDefaultDurationSeconds() {
+  const h = parseInt(els.defaultDurationHours.value, 10) || 0;
+  const m = parseInt(els.defaultDurationMinutes.value, 10) || 0;
+  const s = parseInt(els.defaultDurationSeconds.value, 10) || 0;
+  return h * 3600 + m * 60 + s;
+}
+
+function setDefaultDurationInputs(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  els.defaultDurationHours.value = h;
+  els.defaultDurationMinutes.value = m;
+  els.defaultDurationSeconds.value = s;
+}
 
 // State
 let isRunning = false;
@@ -265,7 +302,7 @@ async function openAppSettings() {
   els.todFormat.value = settings.todFormat;
   els.confirmDelete.value = settings.confirmDelete ? 'on' : 'off';
   els.defaultMode.value = settings.defaults.mode;
-  els.defaultDuration.value = secondsToHMS(settings.defaults.durationSec);
+  setDefaultDurationInputs(settings.defaults.durationSec);
   els.defaultFormat.value = settings.defaults.format;
   els.defaultFontSize.value = settings.defaults.fontSizeVw;
   els.defaultFontColor.value = settings.defaults.fontColor;
@@ -291,7 +328,7 @@ function saveAppSettingsFromForm() {
     confirmDelete: els.confirmDelete.value === 'on',
     defaults: {
       mode: els.defaultMode.value,
-      durationSec: parseHMS(els.defaultDuration.value),
+      durationSec: getDefaultDurationSeconds(),
       format: els.defaultFormat.value,
       fontSizeVw: parseInt(els.defaultFontSize.value, 10) || 35,
       fontColor: els.defaultFontColor.value,
@@ -496,7 +533,7 @@ function updateModalPreview() {
 
   const mode = els.mode.value;
   const format = els.format.value;
-  const durationSec = parseHMS(els.duration.value);
+  const durationSec = getDurationSeconds();
 
   const bgOpacity = parseFloat(els.bgOpacity.value) || 0;
   const bg = els.bgMode.value === 'solid'
@@ -708,7 +745,7 @@ function applyLivePreviewStyle() {
  */
 function renderLivePreview() {
   const mode = els.mode.value;
-  const durationSec = parseHMS(els.duration.value);
+  const durationSec = getDurationSeconds();
   const format = els.format.value;
   const warnEnabled = els.warnEnable.value === 'on';
   const warnSeconds = parseHMS(els.warnTime.value);
@@ -892,7 +929,7 @@ function renderLivePreview() {
 function getCurrentConfig() {
   return {
     mode: els.mode.value,
-    durationSec: parseHMS(els.duration.value),
+    durationSec: getDurationSeconds(),
     format: els.format.value,
     style: {
       fontFamily: els.fontFamily.value,
@@ -929,7 +966,7 @@ function applyConfig(config) {
   if (!config) return;
 
   els.mode.value = config.mode || 'countdown';
-  els.duration.value = secondsToHMS(config.durationSec || 1200);
+  setDurationInputs(config.durationSec || 1200);
   els.format.value = config.format || 'MM:SS';
 
   if (config.style) {
@@ -1496,7 +1533,7 @@ function handleImportPresets(e) {
 function setupEventListeners() {
   // Input change listeners (debounced) - update both live and modal preview
   const inputEls = [
-    els.mode, els.duration, els.format,
+    els.mode, els.durationHours, els.durationMinutes, els.durationSeconds, els.format,
     els.fontFamily, els.fontWeight, els.fontSize, els.fontColor,
     els.opacity, els.strokeWidth, els.strokeColor, els.shadow,
     els.align, els.letterSpacing,
