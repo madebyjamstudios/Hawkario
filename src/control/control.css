@@ -1047,8 +1047,11 @@ footer small {
   background: #15803d;
 }
 
-/* Modal preview */
+/* Modal preview - sticky at top while settings scroll */
 .modal-preview-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   border: 1px solid #333;
   border-radius: 10px;
   background: #0a0a0a;
