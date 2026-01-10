@@ -707,9 +707,17 @@ function renderLivePreview() {
   const isCountup = mode === 'countup' || mode === 'countup-tod';
   const showToD = mode === 'countdown-tod' || mode === 'countup-tod';
 
-  if (!isRunning || timerState.startedAt === null) {
-    // Timer is idle
+  if (!isRunning && timerState.pausedAcc === 0 && timerState.startedAt === null) {
+    // Timer has never been started - show initial state
     elapsed = isCountdown ? durationSec * 1000 : 0;
+    remainingSec = Math.floor(elapsed / 1000);
+  } else if (!isRunning && timerState.pausedAcc > 0) {
+    // Timer is paused - show paused time
+    if (isCountdown) {
+      elapsed = Math.max(0, (durationSec * 1000) - timerState.pausedAcc);
+    } else {
+      elapsed = timerState.pausedAcc;
+    }
     remainingSec = Math.floor(elapsed / 1000);
   } else {
     // Timer is running
