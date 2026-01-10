@@ -311,27 +311,25 @@ button:disabled {
   }
 }
 
-/* Blackout button transitioning state - grey stripes animation */
+/* Blackout button transitioning state - grey stripes fade animation */
 .blackout-btn::before {
   content: '';
   position: absolute;
-  inset: -100%;
+  inset: 0;
   background: repeating-linear-gradient(
     45deg,
     transparent,
     transparent 4px,
-    rgba(100, 100, 100, 0.35) 4px,
-    rgba(100, 100, 100, 0.35) 8px
+    rgba(100, 100, 100, 0.4) 4px,
+    rgba(100, 100, 100, 0.4) 8px
   );
   z-index: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.1s ease;
-  animation: stripe-slide 0.25s linear infinite;
 }
 
 .blackout-btn.transitioning::before {
-  opacity: 1;
+  animation: stripe-fade 0.6s ease-in-out infinite;
 }
 
 .blackout-btn > * {
@@ -339,12 +337,12 @@ button:disabled {
   z-index: 1;
 }
 
-@keyframes stripe-slide {
-  0% {
-    transform: translate(0, 0);
+@keyframes stripe-fade {
+  0%, 100% {
+    opacity: 0;
   }
-  100% {
-    transform: translate(11.3px, 11.3px);
+  50% {
+    opacity: 1;
   }
 }
 
