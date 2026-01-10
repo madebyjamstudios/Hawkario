@@ -119,9 +119,23 @@ let activePresetIndex = null; // Track which preset is currently playing
 const timerState = {
   startedAt: null,
   pausedAcc: 0,
-  ended: false
+  ended: false,
+  overtime: false,
+  overtimeStartedAt: null
 };
 let isBlackedOut = false;
+
+// Drag state for timer reordering (mouse-based drag system)
+const dragState = {
+  isDragging: false,
+  fromIndex: null,
+  draggedRow: null,
+  ghostEl: null,
+  placeholderEl: null,
+  grabOffsetX: 0,
+  grabOffsetY: 0,
+  originalHeight: 0
+};
 
 // SVG Icons
 const ICONS = {
@@ -136,7 +150,8 @@ const ICONS = {
   clone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
   delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
   add: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-  pencil: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>'
+  pencil: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',
+  link: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>'
 };
 
 // ============ Toast Notifications (disabled) ============
@@ -653,8 +668,29 @@ function renderLivePreview() {
       // Check if timer ended
       if (elapsed === 0 && !timerState.ended) {
         timerState.ended = true;
-        isRunning = false;
-        renderPresetList(); // Update button states
+
+        // Check for linked next timer
+        const presets = loadPresets();
+        const currentPreset = presets[activePresetIndex];
+
+        if (currentPreset?.linkedToNext && activePresetIndex < presets.length - 1) {
+          // Auto-play next linked timer after short delay
+          isRunning = false;
+          const nextIdx = activePresetIndex + 1;
+          const nextPreset = presets[nextIdx];
+          activePresetIndex = nextIdx;
+          applyConfig(nextPreset.config);
+
+          setTimeout(() => {
+            sendCommand('start');
+            renderPresetList();
+          }, 500);
+        } else {
+          // Start overtime mode - keep running but count up
+          timerState.overtime = true;
+          timerState.overtimeStartedAt = Date.now();
+          renderPresetList(); // Update button states
+        }
       }
     } else if (isCountup) {
       // Count up mode
@@ -664,7 +700,19 @@ function renderLivePreview() {
   }
 
   // Format display text
-  displayText = formatTime(elapsed, format);
+  if (timerState.overtime && timerState.overtimeStartedAt) {
+    // Overtime mode - show +M:SS in red
+    const overtimeMs = Date.now() - timerState.overtimeStartedAt;
+    const overtimeSec = Math.floor(overtimeMs / 1000);
+    const mins = Math.floor(overtimeSec / 60);
+    const secs = overtimeSec % 60;
+    displayText = '+' + mins + ':' + String(secs).padStart(2, '0');
+    els.livePreviewTimer.classList.add('overtime');
+  } else {
+    displayText = formatTime(elapsed, format);
+    els.livePreviewTimer.classList.remove('overtime');
+  }
+
   if (showToD) {
     displayText += '  |  ' + formatTimeOfDay(format);
   }
@@ -815,6 +863,8 @@ function sendCommand(command) {
       timerState.startedAt = Date.now();
       timerState.pausedAcc = 0;
       timerState.ended = false;
+      timerState.overtime = false;
+      timerState.overtimeStartedAt = null;
       break;
 
     case 'pause':
@@ -829,6 +879,8 @@ function sendCommand(command) {
       timerState.startedAt = null;
       timerState.pausedAcc = 0;
       timerState.ended = false;
+      timerState.overtime = false;
+      timerState.overtimeStartedAt = null;
       renderPresetList(); // Update button states
       break;
   }
@@ -870,6 +922,18 @@ function savePresets(list) {
   }
 }
 
+/**
+ * Toggle link between a preset and the next one
+ */
+function toggleLink(idx) {
+  const presets = loadPresets();
+  if (idx >= 0 && idx < presets.length - 1) {
+    presets[idx].linkedToNext = !presets[idx].linkedToNext;
+    savePresets(presets);
+    renderPresetList();
+  }
+}
+
 function renderPresetList() {
   const list = loadPresets();
   els.presetList.innerHTML = '';
@@ -886,7 +950,6 @@ function renderPresetList() {
     const row = document.createElement('div');
     const isSelected = activePresetIndex === idx;
     row.className = isSelected ? 'preset-item selected' : 'preset-item';
-    row.draggable = true;
     row.dataset.index = idx;
 
     // Drag handle with number/hamburger icon
@@ -903,115 +966,50 @@ function renderPresetList() {
 
     dragHandle.append(numberSpan, dragIcon);
 
-    // Drag events with snappy visual feedback
-    row.addEventListener('dragstart', (e) => {
+    // Mouse-based drag - start drag on mousedown on drag handle
+    dragHandle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const rect = row.getBoundingClientRect();
+      dragState.grabOffsetX = e.clientX - rect.left;
+      dragState.grabOffsetY = e.clientY - rect.top;
+      dragState.originalHeight = rect.height;
+      dragState.isDragging = true;
+      dragState.fromIndex = idx;
+      dragState.draggedRow = row;
+
+      // Create ghost element
+      const ghost = row.cloneNode(true);
+      ghost.className = 'preset-item drag-ghost';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.position = 'fixed';
+      ghost.style.left = (e.clientX - dragState.grabOffsetX) + 'px';
+      ghost.style.top = (e.clientY - dragState.grabOffsetY) + 'px';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.zIndex = '1000';
+      ghost.style.margin = '0';
+      document.body.appendChild(ghost);
+      dragState.ghostEl = ghost;
+
+      // Create placeholder
+      const placeholder = document.createElement('div');
+      placeholder.className = 'drag-placeholder';
+      placeholder.style.height = dragState.originalHeight + 'px';
+      dragState.placeholderEl = placeholder;
+
+      // Hide original and insert placeholder
       row.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', idx);
-
-      // Set drag image to be smaller
-      const rect = row.getBoundingClientRect();
-      e.dataTransfer.setDragImage(row, rect.width / 2, rect.height / 2);
-
-      // Store dragging index globally
-      window._dragFromIndex = idx;
+      row.parentNode.insertBefore(placeholder, row);
     });
 
-    row.addEventListener('dragend', () => {
-      row.classList.remove('dragging');
-      // Remove all drag indicators
-      document.querySelectorAll('.preset-item').forEach(el => {
-        el.classList.remove('drag-above', 'drag-below');
-      });
-      // Remove placeholder
-      const placeholder = document.querySelector('.drag-placeholder');
-      if (placeholder) placeholder.remove();
-
-      window._dragFromIndex = null;
-    });
-
-    row.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-
-      const fromIndex = window._dragFromIndex;
-      if (fromIndex === null || fromIndex === idx) return;
-
-      // Clear all other indicators
-      document.querySelectorAll('.preset-item').forEach(el => {
-        if (el !== row) {
-          el.classList.remove('drag-above', 'drag-below');
-        }
-      });
-
-      // Show where item will be inserted
-      const rect = row.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-
-      if (e.clientY < midY) {
-        row.classList.add('drag-above');
-        row.classList.remove('drag-below');
-      } else {
-        row.classList.add('drag-below');
-        row.classList.remove('drag-above');
-      }
-    });
-
-    row.addEventListener('dragleave', (e) => {
-      // Only remove if actually leaving the element
-      if (!row.contains(e.relatedTarget)) {
-        row.classList.remove('drag-above', 'drag-below');
-      }
-    });
-
-    row.addEventListener('drop', (e) => {
-      e.preventDefault();
-      row.classList.remove('drag-above', 'drag-below');
-
-      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      let toIndex = idx;
-
-      // Adjust index based on drop position
-      const rect = row.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (e.clientY > midY && fromIndex < idx) {
-        // Dropping below, no adjustment needed
-      } else if (e.clientY <= midY && fromIndex > idx) {
-        // Dropping above, no adjustment needed
-      }
-
-      if (fromIndex !== toIndex) {
-        const presets = loadPresets();
-        const [moved] = presets.splice(fromIndex, 1);
-
-        // Adjust toIndex if we removed from before it
-        if (fromIndex < toIndex) {
-          toIndex--;
-        }
-
-        presets.splice(toIndex, 0, moved);
-        savePresets(presets);
-
-        // Update activePresetIndex if needed
-        if (activePresetIndex === fromIndex) {
-          activePresetIndex = toIndex;
-        } else if (fromIndex < activePresetIndex && toIndex >= activePresetIndex) {
-          activePresetIndex--;
-        } else if (fromIndex > activePresetIndex && toIndex <= activePresetIndex) {
-          activePresetIndex++;
-        }
-
-        renderPresetList();
-      }
-    });
-
-    // Name with pencil edit icon
+    // Name with pencil edit icon - opens quick edit popup
     const name = document.createElement('div');
     name.className = 'preset-name';
     name.title = 'Click to edit name';
     name.onclick = (e) => {
       e.stopPropagation();
-      openModal(idx);
+      showQuickEditPopup(idx, preset, name);
     };
 
     const nameText = document.createElement('span');
@@ -1095,6 +1093,24 @@ function renderPresetList() {
     actions.append(selectResetBtn, editBtn, playBtn, moreBtn);
     row.append(dragHandle, name, actions);
     els.presetList.appendChild(row);
+
+    // Add link zone between timers (except after last one)
+    if (idx < list.length - 1) {
+      const linkZone = document.createElement('div');
+      linkZone.className = 'link-zone';
+      if (preset.linkedToNext) {
+        linkZone.classList.add('linked');
+      }
+
+      const linkIcon = document.createElement('div');
+      linkIcon.className = 'link-icon';
+      linkIcon.innerHTML = ICONS.link;
+
+      linkZone.appendChild(linkIcon);
+      linkZone.addEventListener('click', () => toggleLink(idx));
+
+      els.presetList.appendChild(linkZone);
+    }
   });
 }
 
@@ -1186,6 +1202,75 @@ function showPresetMenu(idx, preset, anchorEl) {
     }
   };
   setTimeout(() => document.addEventListener('click', closeMenu), 0);
+}
+
+// Quick edit popup for timer name
+function showQuickEditPopup(idx, preset, anchorEl) {
+  // Remove any existing popup
+  const existing = document.querySelector('.quick-edit-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.className = 'quick-edit-popup';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = preset.name;
+  input.placeholder = 'Timer name';
+
+  const buttons = document.createElement('div');
+  buttons.className = 'quick-edit-buttons';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cancel-btn';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => popup.remove();
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'save-btn';
+  saveBtn.textContent = 'Save';
+  saveBtn.onclick = () => {
+    const newName = input.value.trim() || 'Timer';
+    const presets = loadPresets();
+    presets[idx].name = newName;
+    savePresets(presets);
+    renderPresetList();
+    popup.remove();
+  };
+
+  buttons.append(cancelBtn, saveBtn);
+  popup.append(input, buttons);
+
+  // Position popup near the anchor element
+  const rect = anchorEl.getBoundingClientRect();
+  popup.style.top = `${rect.bottom + 6}px`;
+  popup.style.left = `${rect.left}px`;
+
+  document.body.appendChild(popup);
+
+  // Focus and select the input
+  input.focus();
+  input.select();
+
+  // Save on Enter, cancel on Escape
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveBtn.click();
+    }
+    if (e.key === 'Escape') {
+      popup.remove();
+    }
+  });
+
+  // Close on click outside
+  const closePopup = (e) => {
+    if (!popup.contains(e.target) && e.target !== anchorEl && !anchorEl.contains(e.target)) {
+      popup.remove();
+      document.removeEventListener('click', closePopup);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closePopup), 0);
 }
 
 function createDefaultPreset() {
@@ -1297,70 +1382,65 @@ function setupEventListeners() {
 
   // Blackout button (toggle) with stripe animation
   els.blackoutBtn.addEventListener('click', () => {
-    // Add transitioning stripes for 1 second
+    // Add transitioning stripes for 0.5s (match fade duration)
     els.blackoutBtn.classList.add('transitioning');
     setTimeout(() => {
       els.blackoutBtn.classList.remove('transitioning');
-    }, 1000);
+    }, 500);
 
     window.hawkario.toggleBlackout();
   });
 
-  // Flash button (synced with viewer): fade to white glow → fade to grey × 3
+  // Flash button (synced with viewer): glow → grey → repeat 3 times
   els.flashBtn.addEventListener('click', () => {
     // Store original styles for live preview
-    const originalColor = els.livePreviewTimer.style.color;
-    const originalShadow = els.livePreviewTimer.style.textShadow;
-    const originalStroke = els.livePreviewTimer.style.webkitTextStrokeColor;
-    const originalStrokeWidth = els.livePreviewTimer.style.webkitTextStrokeWidth;
-    const originalTransition = els.livePreviewTimer.style.transition;
+    const originalColor = els.livePreviewTimer.style.color || '';
+    const originalShadow = els.livePreviewTimer.style.textShadow || '';
+    const originalStroke = els.livePreviewTimer.style.webkitTextStrokeColor || '';
+    const originalStrokeWidth = els.livePreviewTimer.style.webkitTextStrokeWidth || '';
+
+    // Timing (match viewer.js)
+    const glowDuration = 400;
+    const greyDuration = 300;
 
     let flashCount = 0;
     const maxFlashes = 3;
-    const fadeDuration = 300;  // 0.3s fade transition
-    const holdDuration = 200;  // 0.2s hold at peak
 
-    // Enable smooth transitions on timer
-    els.livePreviewTimer.style.transition = 'color 0.3s ease, text-shadow 0.3s ease, -webkit-text-stroke-color 0.3s ease';
-
-    const doFlash = () => {
-      if (flashCount >= maxFlashes) {
-        // Fade back to original
-        els.livePreviewTimer.style.color = originalColor;
-        els.livePreviewTimer.style.textShadow = originalShadow;
-        els.livePreviewTimer.style.webkitTextStrokeColor = originalStroke;
-        els.livePreviewTimer.style.webkitTextStrokeWidth = originalStrokeWidth;
-
-        // Remove transition after final fade completes
-        setTimeout(() => {
-          els.livePreviewTimer.style.transition = originalTransition;
-        }, fadeDuration);
-        return;
-      }
-
-      // Fade IN to white glow - button fades to yellow, timer fades to white
+    const showGlow = () => {
+      // White glow effect
       els.flashBtn.classList.add('flashing');
       els.livePreviewTimer.style.color = '#ffffff';
       els.livePreviewTimer.style.webkitTextStrokeColor = '#ffffff';
       els.livePreviewTimer.style.webkitTextStrokeWidth = '2px';
-      els.livePreviewTimer.style.textShadow = '0 0 8px rgba(255,255,255,1), 0 0 15px rgba(255,255,255,0.8)';
+      els.livePreviewTimer.style.textShadow = '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff';
 
-      setTimeout(() => {
-        // Fade OUT to grey - button fades off, timer fades to visible grey
-        els.flashBtn.classList.remove('flashing');
-        els.livePreviewTimer.style.color = '#555555';
-        els.livePreviewTimer.style.textShadow = 'none';
-        els.livePreviewTimer.style.webkitTextStrokeColor = '#444444';
-        els.livePreviewTimer.style.webkitTextStrokeWidth = '0px';
-
-        setTimeout(() => {
-          flashCount++;
-          doFlash();
-        }, fadeDuration + holdDuration);
-      }, fadeDuration + holdDuration);
+      setTimeout(showGrey, glowDuration);
     };
 
-    doFlash();
+    const showGrey = () => {
+      // Grey text - no glow
+      els.flashBtn.classList.remove('flashing');
+      els.livePreviewTimer.style.color = '#666666';
+      els.livePreviewTimer.style.webkitTextStrokeColor = '#666666';
+      els.livePreviewTimer.style.webkitTextStrokeWidth = '0px';
+      els.livePreviewTimer.style.textShadow = 'none';
+
+      flashCount++;
+
+      if (flashCount < maxFlashes) {
+        setTimeout(showGlow, greyDuration);
+      } else {
+        // Done flashing, restore original
+        setTimeout(() => {
+          els.livePreviewTimer.style.color = originalColor;
+          els.livePreviewTimer.style.textShadow = originalShadow;
+          els.livePreviewTimer.style.webkitTextStrokeColor = originalStroke;
+          els.livePreviewTimer.style.webkitTextStrokeWidth = originalStrokeWidth;
+        }, greyDuration);
+      }
+    };
+
+    showGlow();
     window.hawkario.sendTimerCommand('flash', getCurrentConfig());
   });
 
@@ -1423,12 +1503,15 @@ function setupEventListeners() {
     }
   });
 
-  // Save on Enter key in preset name
-  els.presetName.addEventListener('keydown', (e) => {
+  // Global keyboard shortcuts for settings modal (Enter to save, Escape to cancel)
+  els.settingsModal.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
+      // Save on Enter from anywhere in the modal
+      e.preventDefault();
       saveModal();
     }
     if (e.key === 'Escape') {
+      e.preventDefault();
       closeModal();
     }
   });
@@ -1457,15 +1540,144 @@ function setupEventListeners() {
   // Output window ready notification
   window.hawkario.onOutputWindowReady(() => {
     outputWindowReady = true;
-    // Send current config to new window
-    sendCommand('reset');
-    showToast('Output window ready', 'success');
+    // Sync current timer state to new window
+    const config = getCurrentConfig();
+    config.timerState = {
+      startedAt: timerState.startedAt,
+      pausedAcc: timerState.pausedAcc,
+      ended: timerState.ended,
+      overtime: timerState.overtime,
+      overtimeStartedAt: timerState.overtimeStartedAt
+    };
+    config.isRunning = isRunning;
+    window.hawkario.sendTimerCommand('sync', config);
+  });
+
+  // Output window closed notification
+  window.hawkario.onOutputWindowClosed(() => {
+    outputWindowReady = false;
   });
 
   // Blackout toggle listener
   window.hawkario.onBlackoutToggle(() => {
     isBlackedOut = !isBlackedOut;
     els.blackoutBtn.classList.toggle('active', isBlackedOut);
+  });
+}
+
+// ============ Drag and Drop ============
+
+/**
+ * Setup global mouse-based drag listeners
+ */
+function setupDragListeners() {
+  // Update ghost position and handle drop targets on mousemove
+  document.addEventListener('mousemove', (e) => {
+    if (!dragState.isDragging || !dragState.ghostEl) return;
+
+    // Move ghost to follow cursor
+    dragState.ghostEl.style.left = (e.clientX - dragState.grabOffsetX) + 'px';
+    dragState.ghostEl.style.top = (e.clientY - dragState.grabOffsetY) + 'px';
+
+    // Find which preset item we're hovering over
+    const items = els.presetList.querySelectorAll('.preset-item:not(.dragging)');
+    let targetItem = null;
+    let insertBefore = true;
+
+    for (const item of items) {
+      const rect = item.getBoundingClientRect();
+      if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        targetItem = item;
+        // Determine if we should insert before or after
+        const midY = rect.top + rect.height / 2;
+        insertBefore = e.clientY < midY;
+        break;
+      }
+    }
+
+    // Move placeholder to target position
+    if (targetItem && dragState.placeholderEl) {
+      if (insertBefore) {
+        targetItem.parentNode.insertBefore(dragState.placeholderEl, targetItem);
+      } else {
+        targetItem.parentNode.insertBefore(dragState.placeholderEl, targetItem.nextSibling);
+      }
+    } else if (dragState.placeholderEl) {
+      // If below all items, append to end
+      const listRect = els.presetList.getBoundingClientRect();
+      if (e.clientY > listRect.top) {
+        const lastItem = items[items.length - 1];
+        if (lastItem) {
+          const lastRect = lastItem.getBoundingClientRect();
+          if (e.clientY > lastRect.bottom) {
+            els.presetList.appendChild(dragState.placeholderEl);
+          }
+        }
+      }
+    }
+  });
+
+  // Finish drag on mouseup
+  document.addEventListener('mouseup', () => {
+    if (!dragState.isDragging) return;
+
+    // Remove ghost
+    if (dragState.ghostEl) {
+      dragState.ghostEl.remove();
+      dragState.ghostEl = null;
+    }
+
+    // Calculate final index based on placeholder position
+    let finalIndex = 0;
+    const allItems = els.presetList.querySelectorAll('.preset-item:not(.dragging), .drag-placeholder');
+    allItems.forEach((item, i) => {
+      if (item === dragState.placeholderEl) {
+        finalIndex = i;
+      }
+    });
+
+    // Remove placeholder
+    if (dragState.placeholderEl) {
+      dragState.placeholderEl.remove();
+      dragState.placeholderEl = null;
+    }
+
+    // Remove dragging class
+    if (dragState.draggedRow) {
+      dragState.draggedRow.classList.remove('dragging');
+    }
+
+    // Reorder if position changed
+    const fromIndex = dragState.fromIndex;
+    if (fromIndex !== null && fromIndex !== finalIndex) {
+      const presets = loadPresets();
+      const [moved] = presets.splice(fromIndex, 1);
+
+      // Adjust finalIndex if we removed from before it
+      let toIndex = finalIndex;
+      if (fromIndex < finalIndex) {
+        toIndex--;
+      }
+
+      presets.splice(toIndex, 0, moved);
+      savePresets(presets);
+
+      // Update activePresetIndex if needed
+      if (activePresetIndex === fromIndex) {
+        activePresetIndex = toIndex;
+      } else if (fromIndex < activePresetIndex && toIndex >= activePresetIndex) {
+        activePresetIndex--;
+      } else if (fromIndex > activePresetIndex && toIndex <= activePresetIndex) {
+        activePresetIndex++;
+      }
+    }
+
+    // Reset drag state
+    dragState.isDragging = false;
+    dragState.fromIndex = null;
+    dragState.draggedRow = null;
+
+    renderPresetList();
   });
 }
 
@@ -1481,6 +1693,9 @@ function init() {
 
   // Setup custom confirm dialog
   setupConfirmDialog();
+
+  // Setup global drag listeners for ghost positioning
+  setupDragListeners();
 
   // Create default preset on first launch
   createDefaultPreset();

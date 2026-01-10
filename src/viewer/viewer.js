@@ -54,11 +54,18 @@ const state = {
 let warningSoundPlayed = false;
 let endSoundPlayed = false;
 
+// Overtime state (when timer ends without linked next timer)
+let isOvertime = false;
+let overtimeStartedAt = null;
+
+// Flash animation state
+let isFlashing = false;
+
 // Blackout state
 let isBlackedOut = false;
 const blackoutEl = document.createElement('div');
 blackoutEl.className = 'blackout-overlay';
-blackoutEl.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;opacity:0;pointer-events:none;transition:opacity 1s ease;';
+blackoutEl.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.5s ease;';
 document.body.appendChild(blackoutEl);
 
 /**
@@ -76,59 +83,60 @@ function toggleBlackout() {
 }
 
 /**
- * Flash the timer: fade to white glow → fade to grey × 3 times
+ * Flash the timer: glow → grey → repeat 3 times
+ * Sequence: static → glow → grey → glow → grey → glow → grey → back to original
  */
 function triggerFlash() {
   const originalColor = timerEl.style.color;
   const originalShadow = timerEl.style.textShadow;
   const originalStroke = timerEl.style.webkitTextStrokeColor;
   const originalStrokeWidth = timerEl.style.webkitTextStrokeWidth;
-  const originalTransition = timerEl.style.transition;
+
+  // Mark as flashing to prevent applyWarningState from overriding
+  isFlashing = true;
+
+  // Timing
+  const glowDuration = 400;  // How long to show white glow
+  const greyDuration = 300;  // How long to show grey
 
   let flashCount = 0;
   const maxFlashes = 3;
-  const fadeDuration = 300;  // 0.3s fade transition
-  const holdDuration = 200;  // 0.2s hold at peak
 
-  // Enable smooth transitions
-  timerEl.style.transition = 'color 0.3s ease, text-shadow 0.3s ease, -webkit-text-stroke-color 0.3s ease';
-
-  const doFlash = () => {
-    if (flashCount >= maxFlashes) {
-      // Fade back to original
-      timerEl.style.color = originalColor;
-      timerEl.style.textShadow = originalShadow;
-      timerEl.style.webkitTextStrokeColor = originalStroke;
-      timerEl.style.webkitTextStrokeWidth = originalStrokeWidth;
-
-      // Remove transition after final fade completes
-      setTimeout(() => {
-        timerEl.style.transition = originalTransition;
-      }, fadeDuration);
-      return;
-    }
-
-    // Fade IN to white glow
+  const showGlow = () => {
+    // White glow effect
     timerEl.style.color = '#ffffff';
     timerEl.style.webkitTextStrokeColor = '#ffffff';
     timerEl.style.webkitTextStrokeWidth = '2px';
-    timerEl.style.textShadow = '0 0 8px rgba(255,255,255,1), 0 0 15px rgba(255,255,255,0.8)';
+    timerEl.style.textShadow = '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff';
 
-    setTimeout(() => {
-      // Fade OUT to grey (high contrast - visible grey)
-      timerEl.style.color = '#555555';
-      timerEl.style.textShadow = 'none';
-      timerEl.style.webkitTextStrokeColor = '#444444';
-      timerEl.style.webkitTextStrokeWidth = '0px';
-
-      setTimeout(() => {
-        flashCount++;
-        doFlash();
-      }, fadeDuration + holdDuration);
-    }, fadeDuration + holdDuration);
+    setTimeout(showGrey, glowDuration);
   };
 
-  doFlash();
+  const showGrey = () => {
+    // Grey text - no glow, just grey
+    timerEl.style.color = '#666666';
+    timerEl.style.webkitTextStrokeColor = '#666666';
+    timerEl.style.webkitTextStrokeWidth = '0px';
+    timerEl.style.textShadow = 'none';
+
+    flashCount++;
+
+    if (flashCount < maxFlashes) {
+      setTimeout(showGlow, greyDuration);
+    } else {
+      // Done flashing, restore original after brief grey display
+      setTimeout(() => {
+        timerEl.style.color = originalColor;
+        timerEl.style.textShadow = originalShadow;
+        timerEl.style.webkitTextStrokeColor = originalStroke;
+        timerEl.style.webkitTextStrokeWidth = originalStrokeWidth;
+        isFlashing = false;
+      }, greyDuration);
+    }
+  };
+
+  // Start with glow
+  showGlow();
 }
 
 /**
@@ -176,6 +184,9 @@ function applyStyle(style) {
  * Apply warning state styling
  */
 function applyWarningState(active) {
+  // Skip color changes during flash animation
+  if (isFlashing) return;
+
   if (active) {
     // Color change
     if (state.warn.colorEnabled) {
@@ -250,9 +261,12 @@ function render() {
       remainingSec = Math.floor(elapsed / 1000);
 
       // Check if timer ended
-      if (elapsed === 0) {
-        state.running = false;
+      if (elapsed === 0 && !isOvertime) {
+        // Start overtime mode
+        isOvertime = true;
+        overtimeStartedAt = Date.now();
         timerEl.classList.add('ended');
+        timerEl.classList.add('overtime');
 
         // Play end sound
         if (!endSoundPlayed && state.sound.endEnabled) {
@@ -282,7 +296,16 @@ function render() {
   }
 
   // Format display text
-  displayText = formatTime(elapsed, state.format);
+  if (isOvertime && overtimeStartedAt) {
+    // Overtime mode - show +M:SS
+    const overtimeMs = Date.now() - overtimeStartedAt;
+    const overtimeSec = Math.floor(overtimeMs / 1000);
+    const mins = Math.floor(overtimeSec / 60);
+    const secs = overtimeSec % 60;
+    displayText = '+' + mins + ':' + String(secs).padStart(2, '0');
+  } else {
+    displayText = formatTime(elapsed, state.format);
+  }
 
   // Add Time of Day if needed
   if (showToD) {
@@ -327,7 +350,9 @@ function handleTimerUpdate(data) {
       state.pausedAcc = 0;
       warningSoundPlayed = false;
       endSoundPlayed = false;
-      timerEl.classList.remove('ended');
+      isOvertime = false;
+      overtimeStartedAt = null;
+      timerEl.classList.remove('ended', 'overtime');
       break;
 
     case 'pause':
@@ -343,7 +368,9 @@ function handleTimerUpdate(data) {
       state.pausedAcc = 0;
       warningSoundPlayed = false;
       endSoundPlayed = false;
-      timerEl.classList.remove('ended');
+      isOvertime = false;
+      overtimeStartedAt = null;
+      timerEl.classList.remove('ended', 'overtime');
       applyWarningState(false);
       break;
 
@@ -354,6 +381,25 @@ function handleTimerUpdate(data) {
     case 'flash':
       // Flash the timer white a few times
       triggerFlash();
+      break;
+
+    case 'sync':
+      // Sync full timer state from control window
+      if (config.timerState) {
+        state.startedAt = config.timerState.startedAt;
+        state.pausedAcc = config.timerState.pausedAcc || 0;
+        isOvertime = config.timerState.overtime || false;
+        overtimeStartedAt = config.timerState.overtimeStartedAt || null;
+        if (config.timerState.ended) {
+          timerEl.classList.add('ended');
+        }
+        if (isOvertime) {
+          timerEl.classList.add('overtime');
+        }
+      }
+      state.running = config.isRunning || false;
+      warningSoundPlayed = true; // Don't replay sounds on sync
+      endSoundPlayed = true;
       break;
   }
 }

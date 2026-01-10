@@ -84,21 +84,18 @@ function createOutputWindow() {
 
   outputWindow.webContents.on('did-finish-load', () => {
     // Notify control window that output is ready
+    // Control window will send a sync command with current timer state
     if (mainWindow) {
       mainWindow.webContents.send('window:output-ready');
-    }
-
-    // Send last config if we have one
-    if (lastTimerConfig) {
-      outputWindow.webContents.send('timer:update', {
-        command: 'reset',
-        config: lastTimerConfig
-      });
     }
   });
 
   outputWindow.on('closed', () => {
     outputWindow = null;
+    // Notify control window that output is closed
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window:output-closed');
+    }
   });
 }
 

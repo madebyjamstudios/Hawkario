@@ -31,6 +31,10 @@ contextBridge.exposeInMainWorld('hawkario', {
     ipcRenderer.on('window:output-ready', () => callback());
   },
 
+  onOutputWindowClosed: (callback) => {
+    ipcRenderer.on('window:output-closed', () => callback());
+  },
+
   // Keyboard shortcuts from output window
   sendKeyboardShortcut: (shortcut) => {
     ipcRenderer.send('keyboard:shortcut', shortcut);
@@ -66,6 +70,7 @@ contextBridge.exposeInMainWorld('hawkario', {
   removeAllListeners: () => {
     ipcRenderer.removeAllListeners('timer:update');
     ipcRenderer.removeAllListeners('window:output-ready');
+    ipcRenderer.removeAllListeners('window:output-closed');
     ipcRenderer.removeAllListeners('keyboard:shortcut');
     ipcRenderer.removeAllListeners('blackout:toggle');
   }
