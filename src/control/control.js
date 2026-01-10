@@ -53,6 +53,8 @@ const els = {
   elapsedTime: document.getElementById('elapsedTime'),
   remainingTime: document.getElementById('remainingTime'),
   progressFill: document.getElementById('progressFill'),
+  progressSegments: document.getElementById('progressSegments'),
+  progressIndicator: document.getElementById('progressIndicator'),
   importFile: document.getElementById('importFile'),
   addTimer: document.getElementById('addTimer'),
 
@@ -616,25 +618,133 @@ function getDefaultTimerConfig() {
 // ============ Timer Progress Bar ============
 
 /**
- * Update the progress bar with elapsed/remaining time
- * @param {number} elapsedMs - Elapsed time in milliseconds
- * @param {number} totalMs - Total duration in milliseconds
+ * Get the chain of linked timers that includes the active timer
+ * Returns array of { index, preset, durationMs } from chain start to end
  */
-function updateProgressBar(elapsedMs, totalMs) {
+function getLinkedTimerChain() {
+  const presets = loadPresets();
+  if (activePresetIndex === null || presets.length === 0) return [];
+
+  // Find the start of the chain (first timer that leads to active timer)
+  let chainStart = activePresetIndex;
+  for (let i = activePresetIndex - 1; i >= 0; i--) {
+    if (presets[i].linkedToNext) {
+      chainStart = i;
+    } else {
+      break;
+    }
+  }
+
+  // Build chain from start to end (following links)
+  const chain = [];
+  let idx = chainStart;
+  while (idx < presets.length) {
+    const preset = presets[idx];
+    chain.push({
+      index: idx,
+      preset: preset,
+      durationMs: (preset.config?.durationSec || 0) * 1000
+    });
+
+    if (preset.linkedToNext && idx < presets.length - 1) {
+      idx++;
+    } else {
+      break;
+    }
+  }
+
+  return chain;
+}
+
+// Track last rendered segment count to avoid unnecessary DOM updates
+let lastSegmentCount = 0;
+
+/**
+ * Update the progress bar with elapsed/remaining time
+ * Shows segments for linked timers and positions indicator accordingly
+ * @param {number} currentElapsedMs - Elapsed time in current timer (milliseconds)
+ * @param {number} currentTotalMs - Current timer's total duration (milliseconds)
+ */
+function updateProgressBar(currentElapsedMs, currentTotalMs) {
   // Show empty state when no timer is active
   if (activePresetIndex === null || (!isRunning && timerState.startedAt === null)) {
     els.progressFill.style.width = '0%';
+    els.progressIndicator.style.left = '0%';
     els.elapsedTime.textContent = '00:00';
     els.remainingTime.textContent = '00:00';
+    // Clear segments
+    if (lastSegmentCount !== 0) {
+      els.progressSegments.innerHTML = '';
+      lastSegmentCount = 0;
+    }
     return;
   }
 
-  const remainingMs = Math.max(0, totalMs - elapsedMs);
-  const progressPercent = Math.min(100, (elapsedMs / totalMs) * 100);
+  const chain = getLinkedTimerChain();
+
+  // If no chain or single timer, use simple progress
+  if (chain.length <= 1) {
+    const remainingMs = Math.max(0, currentTotalMs - currentElapsedMs);
+    const progressPercent = Math.min(100, (currentElapsedMs / currentTotalMs) * 100);
+
+    els.progressFill.style.width = progressPercent + '%';
+    els.progressIndicator.style.left = progressPercent + '%';
+    els.elapsedTime.textContent = formatTime(currentElapsedMs, 'MM:SS');
+    els.remainingTime.textContent = formatTime(remainingMs, 'MM:SS');
+
+    // Clear segments for single timer
+    if (lastSegmentCount !== 0) {
+      els.progressSegments.innerHTML = '';
+      lastSegmentCount = 0;
+    }
+    return;
+  }
+
+  // Calculate total duration of chain
+  const totalChainMs = chain.reduce((sum, t) => sum + t.durationMs, 0);
+
+  // Calculate cumulative elapsed time
+  // Sum up all completed timers before active + current timer's elapsed
+  let cumulativeElapsedMs = 0;
+  let activeIndexInChain = -1;
+
+  for (let i = 0; i < chain.length; i++) {
+    if (chain[i].index === activePresetIndex) {
+      activeIndexInChain = i;
+      break;
+    }
+    // Add full duration of completed timers
+    cumulativeElapsedMs += chain[i].durationMs;
+  }
+
+  // Add current timer's elapsed time
+  cumulativeElapsedMs += currentElapsedMs;
+
+  const totalRemainingMs = Math.max(0, totalChainMs - cumulativeElapsedMs);
+  const progressPercent = Math.min(100, (cumulativeElapsedMs / totalChainMs) * 100);
 
   els.progressFill.style.width = progressPercent + '%';
-  els.elapsedTime.textContent = formatTime(elapsedMs, 'MM:SS');
-  els.remainingTime.textContent = formatTime(remainingMs, 'MM:SS');
+  els.progressIndicator.style.left = progressPercent + '%';
+  els.elapsedTime.textContent = formatTime(cumulativeElapsedMs, 'MM:SS');
+  els.remainingTime.textContent = formatTime(totalRemainingMs, 'MM:SS');
+
+  // Render segment dividers (only if count changed)
+  if (chain.length !== lastSegmentCount) {
+    els.progressSegments.innerHTML = '';
+
+    // Add dividers between segments (not at 0% or 100%)
+    let cumulativePercent = 0;
+    for (let i = 0; i < chain.length - 1; i++) {
+      cumulativePercent += (chain[i].durationMs / totalChainMs) * 100;
+
+      const divider = document.createElement('div');
+      divider.className = 'segment-divider';
+      divider.style.left = cumulativePercent + '%';
+      els.progressSegments.appendChild(divider);
+    }
+
+    lastSegmentCount = chain.length;
+  }
 }
 
 // ============ Modal Management ============
