@@ -591,10 +591,10 @@ button:disabled {
   top: -12px;
   height: 12px;
   width: 2px;
-  background: linear-gradient(to bottom, transparent 0%, #4ade80 100%);
+  background: linear-gradient(to bottom, transparent 0%, #555 100%);
   transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 1;
+  transition: background 0.3s ease;
   pointer-events: none;
   z-index: 5;
 }
@@ -607,23 +607,33 @@ button:disabled {
   top: 100%;
   height: 12px;
   width: 2px;
-  background: linear-gradient(to bottom, #4ade80 0%, transparent 100%);
+  background: linear-gradient(to bottom, #555 0%, transparent 100%);
   transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 1;
+  transition: background 0.3s ease;
   pointer-events: none;
   z-index: 5;
 }
 
-/* Show lines on hover (preview at 40% opacity) */
-.link-zone:hover::before,
-.link-zone:hover::after {
-  opacity: 0.4;
+/* Show green lines on hover (preview) */
+.link-zone:hover::before {
+  background: linear-gradient(to bottom, transparent 0%, #4ade80 100%);
+  opacity: 0.6;
 }
 
-/* Solid lines when linked - stays visible at 100% */
-.link-zone.linked::before,
+.link-zone:hover::after {
+  background: linear-gradient(to bottom, #4ade80 0%, transparent 100%);
+  opacity: 0.6;
+}
+
+/* Solid green lines when linked */
+.link-zone.linked::before {
+  background: linear-gradient(to bottom, transparent 0%, #4ade80 100%);
+  opacity: 1 !important;
+}
+
 .link-zone.linked::after {
+  background: linear-gradient(to bottom, #4ade80 0%, transparent 100%);
   opacity: 1 !important;
 }
 
