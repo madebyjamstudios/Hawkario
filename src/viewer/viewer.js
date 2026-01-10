@@ -118,11 +118,19 @@ function triggerFlash() {
   const maxFlashes = 3;
 
   const showGlow = () => {
-    // White glow effect (compact but strong)
+    // Scale glow based on viewport width (larger window = larger glow)
+    const vw = window.innerWidth / 100;
+    const glowScale = Math.max(1, vw * 0.15); // Scale factor based on viewport
+    const strokeWidth = Math.max(1, glowScale * 0.5);
+    const blur1 = Math.round(glowScale * 2);
+    const blur2 = Math.round(glowScale * 4);
+    const blur3 = Math.round(glowScale * 8);
+
+    // White glow effect (scales with viewport)
     timerEl.style.color = '#ffffff';
     timerEl.style.webkitTextStrokeColor = '#ffffff';
-    timerEl.style.webkitTextStrokeWidth = '1px';
-    timerEl.style.textShadow = '0 0 2px #fff, 0 0 4px #fff, 0 0 8px rgba(255,255,255,0.9)';
+    timerEl.style.webkitTextStrokeWidth = strokeWidth + 'px';
+    timerEl.style.textShadow = `0 0 ${blur1}px #fff, 0 0 ${blur2}px #fff, 0 0 ${blur3}px rgba(255,255,255,0.9)`;
 
     setTimeout(showGrey, glowDuration);
   };
