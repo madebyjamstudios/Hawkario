@@ -311,7 +311,7 @@ button:disabled {
   }
 }
 
-/* Blackout button transitioning state - grey stripes fade animation */
+/* Blackout button transitioning state - grey stripes with smooth fade */
 .blackout-btn::before {
   content: '';
   position: absolute;
@@ -326,24 +326,16 @@ button:disabled {
   z-index: 0;
   pointer-events: none;
   opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .blackout-btn.transitioning::before {
-  animation: stripe-fade 0.6s ease-in-out infinite;
+  opacity: 1;
 }
 
 .blackout-btn > * {
   position: relative;
   z-index: 1;
-}
-
-@keyframes stripe-fade {
-  0%, 100% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 /* Presets */
