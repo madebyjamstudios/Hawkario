@@ -558,6 +558,9 @@ function init() {
 
   // Start render loop
   render();
+
+  // Signal to main process that viewer is fully initialized and ready
+  window.hawkario.signalViewerReady();
 }
 
 // Start when DOM is ready

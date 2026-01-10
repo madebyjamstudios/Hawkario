@@ -45,6 +45,11 @@ contextBridge.exposeInMainWorld('hawkario', {
     ipcRenderer.on('window:output-closed', () => callback());
   },
 
+  // Signal that viewer is fully initialized and ready to receive state
+  signalViewerReady: () => {
+    ipcRenderer.send('viewer:ready');
+  },
+
   // Keyboard shortcuts from output window
   sendKeyboardShortcut: (shortcut) => {
     ipcRenderer.send('keyboard:shortcut', shortcut);

@@ -87,13 +87,8 @@ function createOutputWindow() {
 
   outputWindow.loadFile('src/viewer/viewer.html');
 
-  outputWindow.webContents.on('did-finish-load', () => {
-    // Notify control window that output is ready
-    // Control window will send a sync command with current timer state
-    if (mainWindow) {
-      mainWindow.webContents.send('window:output-ready');
-    }
-  });
+  // Note: We no longer use did-finish-load to signal readiness.
+  // The viewer will signal when it's fully initialized via 'viewer:ready'
 
   outputWindow.on('closed', () => {
     outputWindow = null;
@@ -125,6 +120,13 @@ ipcMain.on('timer:command', (_event, data) => {
 ipcMain.on('display:state', (_event, state) => {
   if (outputWindow && !outputWindow.isDestroyed()) {
     outputWindow.webContents.send('display:update', state);
+  }
+});
+
+// Viewer signals it's fully initialized and ready to receive state
+ipcMain.on('viewer:ready', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('window:output-ready');
   }
 });
 
