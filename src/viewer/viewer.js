@@ -11,6 +11,25 @@ const timerEl = document.getElementById('timer');
 const stageEl = document.querySelector('.stage');
 const fsHintEl = document.getElementById('fsHint');
 
+// Hardcoded style defaults (not user-configurable)
+const FIXED_STYLE = {
+  fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+  fontWeight: '600',
+  opacity: 1,
+  align: 'center',
+  letterSpacing: 0.02
+};
+
+/**
+ * Generate text shadow CSS from size value
+ */
+function getShadowCSS(sizePx) {
+  if (sizePx === 0) return 'none';
+  const blur = sizePx;
+  const spread = Math.round(sizePx * 0.3);
+  return `0 ${spread}px ${blur}px rgba(0,0,0,0.5)`;
+}
+
 // Timer state
 const state = {
   running: false,
@@ -20,31 +39,14 @@ const state = {
   pausedAcc: 0,
   format: 'MM:SS',
   style: {
-    fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-    fontWeight: '600',
     color: '#ffffff',
-    opacity: 1,
     strokeWidth: 2,
     strokeColor: '#000000',
-    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-    align: 'center',
-    letterSpacing: 0,
-    bgMode: 'transparent',
-    bgColor: '#000000',
-    bgOpacity: 0
-  },
-  warn: {
-    enabled: false,
-    seconds: 120,
-    colorEnabled: true,
-    color: '#E64A19',
-    flashEnabled: false,
-    flashRateMs: 500,
-    soundEnabled: false
+    shadowSize: 10,
+    bgColor: '#000000'
   },
   sound: {
-    warnEnabled: false,
-    endEnabled: true,
+    endEnabled: false,
     volume: 0.7
   }
 };
@@ -72,7 +74,6 @@ let displayState = {
   opacity: 1,
   blackout: false,
   overtime: false,
-  flashing: false,
   elapsed: '',
   remaining: '',
   style: null
@@ -167,37 +168,26 @@ function triggerFlash() {
 function applyStyle(style) {
   if (!style) return;
 
-  timerEl.style.fontFamily = style.fontFamily;
-  timerEl.style.fontWeight = style.fontWeight;
+  // Use hardcoded FIXED_STYLE values for non-configurable options
+  timerEl.style.fontFamily = style.fontFamily || FIXED_STYLE.fontFamily;
+  timerEl.style.fontWeight = style.fontWeight || FIXED_STYLE.fontWeight;
   // Font size is auto-calculated by autoFitTimer()
-  timerEl.style.color = style.color;
-  timerEl.style.opacity = style.opacity;
-  timerEl.style.textShadow = style.textShadow;
-  timerEl.style.letterSpacing = style.letterSpacing + 'em';
-  timerEl.style.webkitTextStrokeWidth = (style.strokeWidth || 0) + 'px';
-  timerEl.style.webkitTextStrokeColor = style.strokeColor || '#000';
-  timerEl.style.textAlign = style.align || 'center';
+  timerEl.style.color = style.color || state.style.color;
+  timerEl.style.opacity = FIXED_STYLE.opacity;
+  timerEl.style.textShadow = style.textShadow || getShadowCSS(state.style.shadowSize);
+  timerEl.style.letterSpacing = (style.letterSpacing ?? FIXED_STYLE.letterSpacing) + 'em';
+  timerEl.style.webkitTextStrokeWidth = (style.strokeWidth ?? state.style.strokeWidth) + 'px';
+  timerEl.style.webkitTextStrokeColor = style.strokeColor || state.style.strokeColor;
+  timerEl.style.textAlign = style.textAlign || FIXED_STYLE.align;
 
-  // Alignment adjustments
-  if (style.align === 'left') {
-    stageEl.style.placeItems = 'center start';
-    timerEl.style.justifySelf = 'start';
-    timerEl.style.paddingLeft = '5vw';
-  } else if (style.align === 'right') {
-    stageEl.style.placeItems = 'center end';
-    timerEl.style.justifySelf = 'end';
-    timerEl.style.paddingRight = '5vw';
-  } else {
-    stageEl.style.placeItems = 'center';
-    timerEl.style.justifySelf = 'center';
-    timerEl.style.paddingLeft = '0';
-    timerEl.style.paddingRight = '0';
-  }
+  // Always centered (no alignment options anymore)
+  stageEl.style.placeItems = 'center';
+  timerEl.style.justifySelf = 'center';
+  timerEl.style.paddingLeft = '0';
+  timerEl.style.paddingRight = '0';
 
   // Background
-  const bg = style.bgMode === 'solid'
-    ? hexToRgba(style.bgColor, style.bgOpacity)
-    : 'transparent';
+  const bg = style.background || state.style.bgColor;
   document.body.style.background = bg;
   stageEl.style.background = bg;
 }
@@ -215,38 +205,9 @@ function applyColorState(remainingSec, durationSec) {
   // Reset classes
   timerEl.classList.remove('warning', 'danger');
 
-  if (durationSec <= 0 || remainingSec <= 0) {
-    timerEl.style.color = state.style.color;
-    timerEl.style.opacity = state.style.opacity;
-    return;
-  }
-
-  const percentRemaining = (remainingSec / durationSec) * 100;
-
-  if (percentRemaining <= 10) {
-    // Danger state - orange
-    timerEl.style.color = '#E64A19';
-    timerEl.classList.add('danger');
-
-    // Flash effect in danger zone if enabled
-    if (state.warn.flashEnabled) {
-      const phase = Math.floor(Date.now() / state.warn.flashRateMs) % 2;
-      timerEl.style.opacity = phase
-        ? state.style.opacity
-        : Math.max(0.15, state.style.opacity * 0.25);
-    } else {
-      timerEl.style.opacity = state.style.opacity;
-    }
-  } else if (percentRemaining <= 20) {
-    // Warning state - yellow
-    timerEl.style.color = '#ffcc00';
-    timerEl.classList.add('warning');
-    timerEl.style.opacity = state.style.opacity;
-  } else {
-    // Normal state - use configured color
-    timerEl.style.color = state.style.color;
-    timerEl.style.opacity = state.style.opacity;
-  }
+  // Always use configured color (no warning states)
+  timerEl.style.color = state.style.color;
+  timerEl.style.opacity = FIXED_STYLE.opacity;
 }
 
 /**
@@ -348,10 +309,6 @@ function handleTimerUpdate(data) {
     if (config.style) {
       state.style = { ...state.style, ...config.style };
       applyStyle(state.style);
-    }
-
-    if (config.warn) {
-      state.warn = { ...state.warn, ...config.warn };
     }
 
     if (config.sound) {

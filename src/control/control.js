@@ -14,34 +14,19 @@ const els = {
   duration: document.getElementById('duration'),
   format: document.getElementById('format'),
 
-  // Typography
-  fontFamily: document.getElementById('fontFamily'),
-  fontWeight: document.getElementById('fontWeight'),
+  // Appearance (simplified)
   fontColor: document.getElementById('fontColor'),
-  opacity: document.getElementById('opacity'),
   strokeWidth: document.getElementById('strokeWidth'),
+  strokeWidthValue: document.getElementById('strokeWidthValue'),
   strokeColor: document.getElementById('strokeColor'),
-  shadow: document.getElementById('shadow'),
-  align: document.getElementById('align'),
-  letterSpacing: document.getElementById('letterSpacing'),
-
-  // Background
-  bgMode: document.getElementById('bgMode'),
+  shadowSize: document.getElementById('shadowSize'),
+  shadowSizeValue: document.getElementById('shadowSizeValue'),
   bgColor: document.getElementById('bgColor'),
-  bgOpacity: document.getElementById('bgOpacity'),
 
-  // Warnings
-  warnEnable: document.getElementById('warnEnable'),
-  warnTime: document.getElementById('warnTime'),
-  warnColorEnable: document.getElementById('warnColorEnable'),
-  warnColor: document.getElementById('warnColor'),
-  warnFlashEnable: document.getElementById('warnFlashEnable'),
-  flashRate: document.getElementById('flashRate'),
-
-  // Sound
-  soundWarnEnable: document.getElementById('soundWarnEnable'),
+  // Sound (simplified)
   soundEndEnable: document.getElementById('soundEndEnable'),
   soundVolume: document.getElementById('soundVolume'),
+  volumeRow: document.getElementById('volumeRow'),
 
   // Live Preview (main window)
   previewSection: document.getElementById('previewSection'),
@@ -92,10 +77,6 @@ const els = {
   defaultMode: document.getElementById('defaultMode'),
   defaultDuration: document.getElementById('defaultDuration'),
   defaultFormat: document.getElementById('defaultFormat'),
-  defaultFontColor: document.getElementById('defaultFontColor'),
-  defaultWarnEnabled: document.getElementById('defaultWarnEnabled'),
-  defaultWarnTime: document.getElementById('defaultWarnTime'),
-  defaultEndSound: document.getElementById('defaultEndSound'),
   outputOnTop: document.getElementById('outputOnTop'),
   controlOnTop: document.getElementById('controlOnTop'),
 
@@ -464,11 +445,7 @@ const DEFAULT_APP_SETTINGS = {
   defaults: {
     mode: 'countdown',
     durationSec: 600,
-    format: 'MM:SS',
-    fontColor: '#ffffff',
-    warnEnabled: true,
-    warnSeconds: 60,
-    endSoundEnabled: true
+    format: 'MM:SS'
   }
 };
 
@@ -502,10 +479,6 @@ async function openAppSettings() {
   els.defaultMode.value = settings.defaults.mode;
   setDefaultDurationInputs(settings.defaults.durationSec);
   els.defaultFormat.value = settings.defaults.format;
-  els.defaultFontColor.value = settings.defaults.fontColor;
-  els.defaultWarnEnabled.value = settings.defaults.warnEnabled ? 'on' : 'off';
-  els.defaultWarnTime.value = secondsToHMS(settings.defaults.warnSeconds);
-  els.defaultEndSound.value = settings.defaults.endSoundEnabled ? 'on' : 'off';
 
   // Fetch window stay on top settings from main process
   const windowSettings = await window.hawkario.getAlwaysOnTop();
@@ -526,11 +499,7 @@ function saveAppSettingsFromForm() {
     defaults: {
       mode: els.defaultMode.value,
       durationSec: getDefaultDurationSeconds(),
-      format: els.defaultFormat.value,
-      fontColor: els.defaultFontColor.value,
-      warnEnabled: els.defaultWarnEnabled.value === 'on',
-      warnSeconds: parseHMS(els.defaultWarnTime.value),
-      endSoundEnabled: els.defaultEndSound.value === 'on'
+      format: els.defaultFormat.value
     }
   };
 
@@ -603,6 +572,25 @@ function setupConfirmDialog() {
   });
 }
 
+// Hardcoded style defaults (not user-configurable)
+const FIXED_STYLE = {
+  fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+  fontWeight: '600',
+  opacity: 1,
+  align: 'center',
+  letterSpacing: 0.02
+};
+
+/**
+ * Generate text shadow CSS from size value
+ */
+function getShadowCSS(sizePx) {
+  if (sizePx === 0) return 'none';
+  const blur = sizePx;
+  const spread = Math.round(sizePx * 0.3);
+  return `0 ${spread}px ${blur}px rgba(0,0,0,0.5)`;
+}
+
 function getDefaultTimerConfig() {
   const settings = loadAppSettings();
   const d = settings.defaults;
@@ -612,30 +600,14 @@ function getDefaultTimerConfig() {
     durationSec: d.durationSec,
     format: d.format,
     style: {
-      fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-      fontWeight: '600',
-      color: d.fontColor,
-      opacity: 1,
+      color: '#ffffff',
       strokeWidth: 2,
       strokeColor: '#000000',
-      textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-      align: 'center',
-      letterSpacing: 0,
-      bgMode: 'transparent',
-      bgColor: '#000000',
-      bgOpacity: 0
-    },
-    warn: {
-      enabled: d.warnEnabled,
-      seconds: d.warnSeconds,
-      colorEnabled: true,
-      color: '#E64A19',
-      flashEnabled: false,
-      flashRateMs: 500
+      shadowSize: 10,
+      bgColor: '#000000'
     },
     sound: {
-      warnEnabled: false,
-      endEnabled: d.endSoundEnabled,
+      endEnabled: false,
       volume: 0.7
     }
   };
@@ -729,21 +701,18 @@ function updateModalPreview() {
   const mode = els.mode.value;
   const format = els.format.value;
   const durationSec = getDurationSeconds();
+  const shadowSize = parseInt(els.shadowSize.value, 10) || 0;
 
-  const bgOpacity = parseFloat(els.bgOpacity.value) || 0;
-  const bg = els.bgMode.value === 'solid'
-    ? hexToRgba(els.bgColor.value, bgOpacity)
-    : 'transparent';
-
-  els.modalPreview.style.background = bg;
-  els.modalPreviewTimer.style.fontFamily = els.fontFamily.value;
-  els.modalPreviewTimer.style.fontWeight = els.fontWeight.value;
+  // Apply styles (using hardcoded FIXED_STYLE + user settings)
+  els.modalPreview.style.background = els.bgColor.value;
+  els.modalPreviewTimer.style.fontFamily = FIXED_STYLE.fontFamily;
+  els.modalPreviewTimer.style.fontWeight = FIXED_STYLE.fontWeight;
   els.modalPreviewTimer.style.color = els.fontColor.value;
-  els.modalPreviewTimer.style.opacity = els.opacity.value;
+  els.modalPreviewTimer.style.opacity = FIXED_STYLE.opacity;
   els.modalPreviewTimer.style.webkitTextStrokeWidth = (parseInt(els.strokeWidth.value, 10) || 0) + 'px';
   els.modalPreviewTimer.style.webkitTextStrokeColor = els.strokeColor.value;
-  els.modalPreviewTimer.style.textShadow = els.shadow.value;
-  els.modalPreviewTimer.style.letterSpacing = els.letterSpacing.value + 'em';
+  els.modalPreviewTimer.style.textShadow = getShadowCSS(shadowSize);
+  els.modalPreviewTimer.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';
 
   // Update displayed time based on mode
   let displayText = '';
@@ -914,19 +883,17 @@ const debouncedPreview = debounce(applyPreview, 50);
  * Scales font size proportionally to preview box width
  */
 function applyLivePreviewStyle() {
-  const bgOpacity = parseFloat(els.bgOpacity.value) || 0;
-  const bg = els.bgMode.value === 'solid'
-    ? hexToRgba(els.bgColor.value, bgOpacity)
-    : 'transparent';
+  const shadowSize = parseInt(els.shadowSize.value, 10) || 0;
 
-  els.livePreview.style.background = bg;
-  els.livePreviewTimer.style.fontFamily = els.fontFamily.value;
-  els.livePreviewTimer.style.fontWeight = els.fontWeight.value;
+  els.livePreview.style.background = els.bgColor.value;
+  els.livePreviewTimer.style.fontFamily = FIXED_STYLE.fontFamily;
+  els.livePreviewTimer.style.fontWeight = FIXED_STYLE.fontWeight;
   els.livePreviewTimer.style.color = els.fontColor.value;
-  els.livePreviewTimer.style.opacity = els.opacity.value;
+  els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
+  els.livePreviewTimer.style.webkitTextStrokeWidth = (parseInt(els.strokeWidth.value, 10) || 0) + 'px';
   els.livePreviewTimer.style.webkitTextStrokeColor = els.strokeColor.value;
-  els.livePreviewTimer.style.textShadow = els.shadow.value;
-  els.livePreviewTimer.style.letterSpacing = els.letterSpacing.value + 'em';
+  els.livePreviewTimer.style.textShadow = getShadowCSS(shadowSize);
+  els.livePreviewTimer.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';
 
   // Font size is handled by autoFitText in renderLivePreview
 }
@@ -938,28 +905,28 @@ function applyLivePreviewStyle() {
 function broadcastDisplayState(state) {
   if (!outputWindowReady) return;
 
+  const shadowSize = parseInt(els.shadowSize.value, 10) || 0;
+
   window.hawkario.sendDisplayState({
     visible: state.visible !== false,
     text: state.text || '',
     colorState: state.colorState || 'normal',
     color: state.color || els.fontColor.value,
-    opacity: state.opacity !== undefined ? state.opacity : parseFloat(els.opacity.value),
+    opacity: state.opacity !== undefined ? state.opacity : FIXED_STYLE.opacity,
     blackout: state.blackout || false,
     overtime: state.overtime || false,
     flashing: state.flashing || false,
     elapsed: state.elapsed || '',
     remaining: state.remaining || '',
     style: {
-      fontFamily: els.fontFamily.value,
-      fontWeight: els.fontWeight.value,
+      fontFamily: FIXED_STYLE.fontFamily,
+      fontWeight: FIXED_STYLE.fontWeight,
       strokeWidth: parseInt(els.strokeWidth.value, 10) || 0,
       strokeColor: els.strokeColor.value,
-      textShadow: els.shadow.value,
-      textAlign: els.align.value,
-      letterSpacing: parseFloat(els.letterSpacing.value) || 0,
-      background: els.bgMode.value === 'solid'
-        ? hexToRgba(els.bgColor.value, parseFloat(els.bgOpacity.value) || 0)
-        : 'transparent'
+      textShadow: getShadowCSS(shadowSize),
+      textAlign: FIXED_STYLE.align,
+      letterSpacing: FIXED_STYLE.letterSpacing,
+      background: els.bgColor.value
     }
   });
 }
@@ -971,12 +938,6 @@ function renderLivePreview() {
   const mode = els.mode.value;
   const durationSec = getDurationSeconds();
   const format = els.format.value;
-  const warnEnabled = els.warnEnable.value === 'on';
-  const warnSeconds = parseHMS(els.warnTime.value);
-  const warnColorEnabled = els.warnColorEnable.value === 'on';
-  const warnColor = els.warnColor.value;
-  const warnFlashEnabled = els.warnFlashEnable.value === 'on';
-  const flashRateMs = parseInt(els.flashRate.value, 10) || 500;
 
   let displayText = '';
   let elapsed = 0;
@@ -998,14 +959,14 @@ function renderLivePreview() {
     els.livePreviewTimer.textContent = displayText;
     autoFitText(els.livePreviewTimer, els.livePreview, 0.9);
     els.livePreviewTimer.style.color = els.fontColor.value;
-    els.livePreviewTimer.style.opacity = els.opacity.value;
+    els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
     els.livePreview.classList.remove('warning');
     broadcastDisplayState({
       visible: true,
       text: displayText,
       colorState: 'normal',
       color: els.fontColor.value,
-      opacity: parseFloat(els.opacity.value),
+      opacity: FIXED_STYLE.opacity,
       blackout: isBlackedOut
     });
     requestAnimationFrame(renderLivePreview);
@@ -1111,42 +1072,14 @@ function renderLivePreview() {
     els.remainingTime.textContent = '00:00';
   }
 
-  // Color states based on percentage remaining (only for countdown modes)
-  // Normal (white): > 20% remaining
-  // Warning (yellow): 10-20% remaining
-  // Danger (orange): < 10% remaining
-  if (isCountdown && durationSec > 0) {
-    const percentRemaining = (remainingSec / durationSec) * 100;
-
-    if (percentRemaining <= 10 && remainingSec > 0) {
-      // Danger state - orange
-      els.livePreviewTimer.style.color = '#E64A19';
-      els.livePreview.classList.add('danger');
-      els.livePreview.classList.remove('warning');
-
-      // Flash effect in danger zone if enabled
-      if (warnFlashEnabled) {
-        const phase = Math.floor(Date.now() / flashRateMs) % 2;
-        els.livePreviewTimer.style.opacity = phase
-          ? els.opacity.value
-          : Math.max(0.15, parseFloat(els.opacity.value) * 0.25);
-      }
-    } else if (percentRemaining <= 20 && remainingSec > 0) {
-      // Warning state - yellow
-      els.livePreviewTimer.style.color = '#ffcc00';
-      els.livePreview.classList.add('warning');
-      els.livePreview.classList.remove('danger');
-      els.livePreviewTimer.style.opacity = els.opacity.value;
-    } else {
-      // Normal state - use configured color
-      els.livePreviewTimer.style.color = els.fontColor.value;
-      els.livePreviewTimer.style.opacity = els.opacity.value;
-      els.livePreview.classList.remove('warning', 'danger');
-    }
+  // Color states (overtime shows different color)
+  if (timerState.overtime) {
+    els.livePreviewTimer.style.color = '#E64A19';
+    els.livePreview.classList.add('overtime');
   } else {
     els.livePreviewTimer.style.color = els.fontColor.value;
-    els.livePreviewTimer.style.opacity = els.opacity.value;
-    els.livePreview.classList.remove('warning', 'danger');
+    els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
+    els.livePreview.classList.remove('overtime');
   }
 
   // Blackout state
@@ -1159,26 +1092,11 @@ function renderLivePreview() {
   // Determine color state for broadcast
   let colorState = 'normal';
   let currentColor = els.fontColor.value;
-  let currentOpacity = parseFloat(els.opacity.value);
-  let isFlashing = false;
+  let currentOpacity = FIXED_STYLE.opacity;
 
   if (timerState.overtime) {
     colorState = 'overtime';
     currentColor = '#E64A19';
-  } else if (isCountdown && durationSec > 0) {
-    const percentRemaining = (remainingSec / durationSec) * 100;
-    if (percentRemaining <= 10 && remainingSec > 0) {
-      colorState = 'danger';
-      currentColor = '#E64A19';
-      if (warnFlashEnabled) {
-        isFlashing = true;
-        const phase = Math.floor(Date.now() / flashRateMs) % 2;
-        currentOpacity = phase ? currentOpacity : Math.max(0.15, currentOpacity * 0.25);
-      }
-    } else if (percentRemaining <= 20 && remainingSec > 0) {
-      colorState = 'warning';
-      currentColor = '#ffcc00';
-    }
   }
 
   // Broadcast display state to output window
@@ -1190,7 +1108,6 @@ function renderLivePreview() {
     opacity: currentOpacity,
     blackout: isBlackedOut,
     overtime: timerState.overtime,
-    flashing: isFlashing,
     elapsed: els.elapsedTime?.textContent || '',
     remaining: els.remainingTime?.textContent || ''
   });
@@ -1206,29 +1123,13 @@ function getCurrentConfig() {
     durationSec: getDurationSeconds(),
     format: els.format.value,
     style: {
-      fontFamily: els.fontFamily.value,
-      fontWeight: els.fontWeight.value,
       color: els.fontColor.value,
-      opacity: parseFloat(els.opacity.value) || 1,
       strokeWidth: parseInt(els.strokeWidth.value, 10) || 0,
       strokeColor: els.strokeColor.value,
-      textShadow: els.shadow.value,
-      align: els.align.value,
-      letterSpacing: parseFloat(els.letterSpacing.value) || 0,
-      bgMode: els.bgMode.value,
-      bgColor: els.bgColor.value,
-      bgOpacity: parseFloat(els.bgOpacity.value) || 0
-    },
-    warn: {
-      enabled: els.warnEnable.value === 'on',
-      seconds: parseHMS(els.warnTime.value),
-      colorEnabled: els.warnColorEnable.value === 'on',
-      color: els.warnColor.value,
-      flashEnabled: els.warnFlashEnable.value === 'on',
-      flashRateMs: parseInt(els.flashRate.value, 10) || 500
+      shadowSize: parseInt(els.shadowSize.value, 10) || 0,
+      bgColor: els.bgColor.value
     },
     sound: {
-      warnEnabled: els.soundWarnEnable.value === 'on',
       endEnabled: els.soundEndEnable.value === 'on',
       volume: parseFloat(els.soundVolume.value) || 0.7
     }
@@ -1243,36 +1144,44 @@ function applyConfig(config) {
   els.format.value = config.format || 'MM:SS';
 
   if (config.style) {
-    els.fontFamily.value = config.style.fontFamily || 'Inter, sans-serif';
-    els.fontWeight.value = config.style.fontWeight || '600';
     els.fontColor.value = config.style.color || '#ffffff';
-    els.opacity.value = config.style.opacity ?? 1;
     els.strokeWidth.value = config.style.strokeWidth ?? 2;
     els.strokeColor.value = config.style.strokeColor || '#000000';
-    els.shadow.value = config.style.textShadow || 'none';
-    els.align.value = config.style.align || 'center';
-    els.letterSpacing.value = config.style.letterSpacing || 0;
-    els.bgMode.value = config.style.bgMode || 'transparent';
+    els.shadowSize.value = config.style.shadowSize ?? 10;
     els.bgColor.value = config.style.bgColor || '#000000';
-    els.bgOpacity.value = config.style.bgOpacity ?? 0;
-  }
-
-  if (config.warn) {
-    els.warnEnable.value = config.warn.enabled ? 'on' : 'off';
-    els.warnTime.value = secondsToHMS(config.warn.seconds || 120);
-    els.warnColorEnable.value = config.warn.colorEnabled ? 'on' : 'off';
-    els.warnColor.value = config.warn.color || '#E64A19';
-    els.warnFlashEnable.value = config.warn.flashEnabled ? 'on' : 'off';
-    els.flashRate.value = config.warn.flashRateMs || 500;
+    // Update range value displays
+    updateRangeDisplays();
   }
 
   if (config.sound) {
-    els.soundWarnEnable.value = config.sound.warnEnabled ? 'on' : 'off';
     els.soundEndEnable.value = config.sound.endEnabled ? 'on' : 'off';
     els.soundVolume.value = config.sound.volume ?? 0.7;
+    // Update volume row visibility
+    updateVolumeRowVisibility();
   }
 
   applyPreview();
+}
+
+/**
+ * Update range slider value displays
+ */
+function updateRangeDisplays() {
+  if (els.strokeWidthValue) {
+    els.strokeWidthValue.textContent = els.strokeWidth.value + 'px';
+  }
+  if (els.shadowSizeValue) {
+    els.shadowSizeValue.textContent = els.shadowSize.value + 'px';
+  }
+}
+
+/**
+ * Update volume row visibility based on sound enabled state
+ */
+function updateVolumeRowVisibility() {
+  if (els.volumeRow) {
+    els.volumeRow.style.display = els.soundEndEnable.value === 'on' ? 'flex' : 'none';
+  }
 }
 
 // ============ Timer Commands ============
@@ -1810,13 +1719,9 @@ function setupEventListeners() {
   // Input change listeners (debounced) - update both live and modal preview
   const inputEls = [
     els.mode, els.duration, els.format,
-    els.fontFamily, els.fontWeight, els.fontColor,
-    els.opacity, els.strokeWidth, els.strokeColor, els.shadow,
-    els.align, els.letterSpacing,
-    els.bgMode, els.bgColor, els.bgOpacity,
-    els.warnEnable, els.warnTime, els.warnColorEnable, els.warnColor,
-    els.warnFlashEnable, els.flashRate,
-    els.soundWarnEnable, els.soundEndEnable, els.soundVolume
+    els.fontColor, els.strokeWidth, els.strokeColor,
+    els.shadowSize, els.bgColor,
+    els.soundEndEnable, els.soundVolume
   ];
 
   inputEls.forEach(el => {
@@ -1835,6 +1740,24 @@ function setupEventListeners() {
       });
     }
   });
+
+  // Range slider value display updates
+  if (els.strokeWidth) {
+    els.strokeWidth.addEventListener('input', updateRangeDisplays);
+  }
+  if (els.shadowSize) {
+    els.shadowSize.addEventListener('input', updateRangeDisplays);
+  }
+
+  // Sound enable toggle - show/hide volume row
+  if (els.soundEndEnable) {
+    els.soundEndEnable.addEventListener('change', updateVolumeRowVisibility);
+    // Initialize visibility
+    updateVolumeRowVisibility();
+  }
+
+  // Initialize range displays
+  updateRangeDisplays();
 
   // Blackout button (toggle) with stripe animation
   els.blackoutBtn.addEventListener('click', () => {
