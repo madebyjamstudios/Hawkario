@@ -775,6 +775,24 @@ function broadcastDisplayState(state) {
 }
 
 /**
+ * Auto-fit live preview timer text to container width
+ */
+function autoFitLivePreview() {
+  if (!els.livePreviewTimer || !els.livePreview) return;
+
+  // Reset scale first to measure natural size
+  els.livePreviewTimer.style.transform = 'scale(1)';
+
+  const containerWidth = els.livePreview.offsetWidth * 0.95;
+  const actualWidth = els.livePreviewTimer.scrollWidth;
+
+  if (actualWidth > containerWidth && containerWidth > 0) {
+    const scale = containerWidth / actualWidth;
+    els.livePreviewTimer.style.transform = `scale(${scale})`;
+  }
+}
+
+/**
  * Render loop for live preview - mirrors actual timer output
  */
 function renderLivePreview() {
@@ -806,6 +824,7 @@ function renderLivePreview() {
   if (mode === 'tod') {
     displayText = formatTimeOfDay();
     els.livePreviewTimer.textContent = displayText;
+    autoFitLivePreview();
     els.livePreviewTimer.style.color = els.fontColor.value;
     els.livePreviewTimer.style.opacity = els.opacity.value;
     els.livePreview.classList.remove('warning');
@@ -901,6 +920,7 @@ function renderLivePreview() {
 
   // Update display
   els.livePreviewTimer.textContent = displayText;
+  autoFitLivePreview();
 
   // Update progress bar
   if (isCountdown) {

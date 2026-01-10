@@ -256,6 +256,22 @@ function handleDisplayUpdate(newState) {
 }
 
 /**
+ * Auto-fit timer text to viewport width
+ */
+function autoFitTimer() {
+  // Reset scale first to measure natural size
+  timerEl.style.transform = 'scale(1)';
+
+  const maxWidth = window.innerWidth * 0.95;
+  const actualWidth = timerEl.scrollWidth;
+
+  if (actualWidth > maxWidth) {
+    const scale = maxWidth / actualWidth;
+    timerEl.style.transform = `scale(${scale})`;
+  }
+}
+
+/**
  * Main render loop - now just applies display state from control
  */
 function render() {
@@ -270,6 +286,9 @@ function render() {
 
   // Apply display text from control
   timerEl.textContent = displayState.text;
+
+  // Auto-fit to viewport
+  autoFitTimer();
 
   // Apply color state (skip during flash animation)
   if (!isFlashing) {

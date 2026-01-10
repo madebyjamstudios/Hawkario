@@ -27,6 +27,8 @@ html, body {
   font-variant-numeric: tabular-nums lining-nums;
   user-select: none;
   white-space: nowrap;
+  max-width: 95vw;
+  overflow: visible;
 }
 
 /* Overtime state - red color when timer has passed */
