@@ -1156,8 +1156,14 @@ function renderPresetList() {
       linkIcon.className = 'link-icon';
       linkIcon.innerHTML = ICONS.link;
 
+      // Add click handler to both zone and icon for reliable clicking
+      const handleLinkClick = (e) => {
+        e.stopPropagation();
+        toggleLink(idx);
+      };
       linkZone.appendChild(linkIcon);
-      linkZone.addEventListener('click', () => toggleLink(idx));
+      linkZone.addEventListener('click', handleLinkClick);
+      linkIcon.addEventListener('click', handleLinkClick);
 
       els.presetList.appendChild(linkZone);
     }

@@ -564,16 +564,17 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* Link zone between timers - compact */
+/* Link zone between timers - compact but clickable */
 .link-zone {
-  height: 4px;
+  height: 16px;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: visible;
-  margin: 0;
-  padding: 6px 0;
+  margin: -4px 0;
+  padding: 0;
+  cursor: pointer;
 }
 
 /* Connector line - hidden by default, shows on hover */
