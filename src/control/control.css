@@ -326,8 +326,8 @@ button:disabled {
   z-index: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s ease;
-  animation: stripe-slide 0.4s linear infinite;
+  transition: opacity 0.1s ease;
+  animation: stripe-slide 0.25s linear infinite;
 }
 
 .blackout-btn.transitioning::before {

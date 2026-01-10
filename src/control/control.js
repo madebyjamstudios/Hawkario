@@ -125,6 +125,48 @@ const timerState = {
 };
 let isBlackedOut = false;
 
+// Undo stack for reverting changes
+const undoStack = [];
+const MAX_UNDO_STATES = 20;
+
+/**
+ * Save current presets state to undo stack
+ */
+function saveUndoState() {
+  const presets = loadPresets();
+  const state = {
+    presets: JSON.parse(JSON.stringify(presets)),
+    activePresetIndex: activePresetIndex
+  };
+  undoStack.push(state);
+
+  // Limit stack size
+  if (undoStack.length > MAX_UNDO_STATES) {
+    undoStack.shift();
+  }
+}
+
+/**
+ * Undo last change - restore previous state
+ */
+function undo() {
+  if (undoStack.length === 0) {
+    return false;
+  }
+
+  const previousState = undoStack.pop();
+  savePresets(previousState.presets);
+  activePresetIndex = previousState.activePresetIndex;
+
+  // If we have an active preset, apply its config
+  if (activePresetIndex !== null && previousState.presets[activePresetIndex]) {
+    applyConfig(previousState.presets[activePresetIndex].config);
+  }
+
+  renderPresetList();
+  return true;
+}
+
 // Drag state for timer reordering (mouse-based drag system)
 const dragState = {
   isDragging: false,
@@ -398,6 +440,8 @@ function closeModal() {
 }
 
 function saveModal() {
+  saveUndoState(); // Save state before changes for undo
+
   const name = els.presetName.value.trim() || 'Timer';
   const config = getCurrentConfig();
   const presets = loadPresets();
@@ -930,6 +974,7 @@ function savePresets(list) {
 function toggleLink(idx) {
   const presets = loadPresets();
   if (idx >= 0 && idx < presets.length - 1) {
+    saveUndoState(); // Save state before link change for undo
     presets[idx].linkedToNext = !presets[idx].linkedToNext;
     savePresets(presets);
     renderPresetList();
@@ -1175,6 +1220,7 @@ function showPresetMenu(idx, preset, anchorEl) {
     }
 
     if (shouldDelete) {
+      saveUndoState(); // Save state before delete for undo
       const presets = loadPresets();
       presets.splice(idx, 1);
       savePresets(presets);
@@ -1238,6 +1284,7 @@ function showQuickEditPopup(idx, preset, anchorEl) {
   saveBtn.className = 'save-btn';
   saveBtn.textContent = 'Save';
   saveBtn.onclick = () => {
+    saveUndoState(); // Save state before rename for undo
     const newName = input.value.trim() || 'Timer';
     const presets = loadPresets();
     presets[idx].name = newName;
@@ -1390,11 +1437,11 @@ function setupEventListeners() {
 
   // Blackout button (toggle) with stripe animation
   els.blackoutBtn.addEventListener('click', () => {
-    // Add transitioning stripes for 0.5s (match fade duration)
+    // Add transitioning stripes briefly
     els.blackoutBtn.classList.add('transitioning');
     setTimeout(() => {
       els.blackoutBtn.classList.remove('transitioning');
-    }, 500);
+    }, 300);
 
     window.hawkario.toggleBlackout();
   });
@@ -1521,6 +1568,18 @@ function setupEventListeners() {
     if (e.key === 'Escape') {
       e.preventDefault();
       closeModal();
+    }
+  });
+
+  // Global undo shortcut (Cmd+Z / Ctrl+Z)
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+      // Don't undo if in a text input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      e.preventDefault();
+      undo();
     }
   });
 
@@ -1674,6 +1733,7 @@ function setupDragListeners() {
     // Reorder if position changed
     const fromIndex = dragState.fromIndex;
     if (fromIndex !== null && fromIndex !== finalIndex) {
+      saveUndoState(); // Save state before reorder for undo
       const presets = loadPresets();
       const [moved] = presets.splice(fromIndex, 1);
 
