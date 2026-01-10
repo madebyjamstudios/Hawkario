@@ -25,6 +25,10 @@ let outputWindow = null;
 // Store last config to send to new output windows
 let lastTimerConfig = null;
 
+// Window settings
+let outputAlwaysOnTop = true;  // Default: output stays on top
+let controlAlwaysOnTop = false; // Default: control window normal
+
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 400,
@@ -73,6 +77,7 @@ function createOutputWindow() {
     y: targetDisplay.bounds.y,
     title: 'Hawkario Timer - Output',
     fullscreen: hasSecondaryDisplay, // Auto-fullscreen on secondary display
+    alwaysOnTop: outputAlwaysOnTop,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -154,6 +159,28 @@ ipcMain.on('sound:play', (_event, soundType) => {
 // App version
 ipcMain.handle('app:version', () => {
   return app.getVersion();
+});
+
+// Stay on top settings
+ipcMain.on('window:set-always-on-top', (_event, { window, value }) => {
+  if (window === 'output') {
+    outputAlwaysOnTop = value;
+    if (outputWindow && !outputWindow.isDestroyed()) {
+      outputWindow.setAlwaysOnTop(value);
+    }
+  } else if (window === 'control') {
+    controlAlwaysOnTop = value;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setAlwaysOnTop(value);
+    }
+  }
+});
+
+ipcMain.handle('window:get-always-on-top', () => {
+  return {
+    output: outputAlwaysOnTop,
+    control: controlAlwaysOnTop
+  };
 });
 
 // Confirm dialog with app icon

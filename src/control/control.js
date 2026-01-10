@@ -98,6 +98,8 @@ const els = {
   defaultWarnEnabled: document.getElementById('defaultWarnEnabled'),
   defaultWarnTime: document.getElementById('defaultWarnTime'),
   defaultEndSound: document.getElementById('defaultEndSound'),
+  outputOnTop: document.getElementById('outputOnTop'),
+  controlOnTop: document.getElementById('controlOnTop'),
 
   // Confirm Dialog
   confirmDialog: document.getElementById('confirmDialog'),
@@ -248,7 +250,7 @@ function saveAppSettings(settings) {
   }
 }
 
-function openAppSettings() {
+async function openAppSettings() {
   const settings = loadAppSettings();
 
   // Populate form fields
@@ -262,6 +264,11 @@ function openAppSettings() {
   els.defaultWarnEnabled.value = settings.defaults.warnEnabled ? 'on' : 'off';
   els.defaultWarnTime.value = secondsToHMS(settings.defaults.warnSeconds);
   els.defaultEndSound.value = settings.defaults.endSoundEnabled ? 'on' : 'off';
+
+  // Fetch window stay on top settings from main process
+  const windowSettings = await window.hawkario.getAlwaysOnTop();
+  els.outputOnTop.value = windowSettings.output ? 'on' : 'off';
+  els.controlOnTop.value = windowSettings.control ? 'on' : 'off';
 
   els.appSettingsModal.classList.remove('hidden');
 }
@@ -285,6 +292,12 @@ function saveAppSettingsFromForm() {
       endSoundEnabled: els.defaultEndSound.value === 'on'
     }
   };
+
+  // Apply window stay on top settings to main process
+  const outputOnTop = els.outputOnTop.value === 'on';
+  const controlOnTop = els.controlOnTop.value === 'on';
+  window.hawkario.setAlwaysOnTop('output', outputOnTop);
+  window.hawkario.setAlwaysOnTop('control', controlOnTop);
 
   saveAppSettings(settings);
   closeAppSettings();
@@ -1641,6 +1654,44 @@ function setupEventListeners() {
       }
       e.preventDefault();
       undo();
+    }
+  });
+
+  // Global keyboard shortcuts (same as output window)
+  document.addEventListener('keydown', (e) => {
+    // Ignore if user is typing in an input or modal is open
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+    if (!els.settingsModal.classList.contains('hidden') ||
+        !els.appSettingsModal.classList.contains('hidden')) {
+      return;
+    }
+
+    switch (e.key.toLowerCase()) {
+      case ' ':
+        // Space - toggle play/pause
+        e.preventDefault();
+        if (isRunning) {
+          sendCommand('pause');
+        } else if (timerState.startedAt !== null) {
+          sendCommand('resume');
+        } else {
+          sendCommand('start');
+        }
+        break;
+
+      case 'r':
+        // Reset (only without modifier keys to avoid conflict with Cmd+R)
+        if (!e.metaKey && !e.ctrlKey) {
+          sendCommand('reset');
+        }
+        break;
+
+      case 'b':
+        // Blackout toggle
+        window.hawkario.toggleBlackout();
+        break;
     }
   });
 

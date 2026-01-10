@@ -848,6 +848,24 @@ header {
   color: #fff;
 }
 
+.output-btn {
+  background: #E64A19;
+  border-color: #E64A19;
+  color: #fff;
+  font-weight: 600;
+}
+
+.output-btn:hover {
+  background: #FF5722;
+  border-color: #FF5722;
+  color: #fff;
+}
+
+.output-btn:active {
+  background: #BF360C;
+  border-color: #BF360C;
+}
+
 .header-settings-btn {
   display: flex;
   align-items: center;

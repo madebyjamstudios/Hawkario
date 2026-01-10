@@ -258,9 +258,24 @@ function render() {
   const isCountup = state.mode === 'countup' || state.mode === 'countup-tod';
   const showToD = state.mode === 'countdown-tod' || state.mode === 'countup-tod';
 
-  if (!state.running || state.startedAt === null) {
-    // Timer is idle
+  if (!state.running && state.pausedAcc === 0 && state.startedAt === null) {
+    // Timer has never been started - show initial state
     elapsed = isCountdown ? state.durationSec * 1000 : 0;
+    remainingSec = Math.floor(elapsed / 1000);
+
+    // Apply color state based on percentage
+    if (isCountdown) {
+      applyColorState(remainingSec, state.durationSec);
+    } else {
+      applyColorState(0, 0);
+    }
+  } else if (!state.running && state.pausedAcc > 0) {
+    // Timer is paused - show paused time
+    if (isCountdown) {
+      elapsed = Math.max(0, (state.durationSec * 1000) - state.pausedAcc);
+    } else {
+      elapsed = state.pausedAcc;
+    }
     remainingSec = Math.floor(elapsed / 1000);
 
     // Apply color state based on percentage

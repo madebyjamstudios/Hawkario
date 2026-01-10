@@ -66,6 +66,13 @@ contextBridge.exposeInMainWorld('hawkario', {
   // Show confirm dialog with app icon
   showConfirm: (options) => ipcRenderer.invoke('dialog:confirm', options),
 
+  // Stay on top settings
+  setAlwaysOnTop: (window, value) => {
+    ipcRenderer.send('window:set-always-on-top', { window, value });
+  },
+
+  getAlwaysOnTop: () => ipcRenderer.invoke('window:get-always-on-top'),
+
   // Cleanup listeners (call when window closes)
   removeAllListeners: () => {
     ipcRenderer.removeAllListeners('timer:update');
