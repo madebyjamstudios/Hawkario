@@ -1811,32 +1811,18 @@ function setupDragListeners() {
       document.body.appendChild(ghost);
       dragState.ghostEl = ghost;
 
-      // Create placeholder wrapper (full size with dashed outline)
-      const placeholderWrapper = document.createElement('div');
-      placeholderWrapper.className = 'drag-placeholder-wrapper';
-      placeholderWrapper.style.border = '2px solid #555';
-      placeholderWrapper.style.borderRadius = '12px';
-      placeholderWrapper.style.padding = '4px';
-      placeholderWrapper.style.display = 'flex';
-      placeholderWrapper.style.justifyContent = 'center';
-      placeholderWrapper.style.alignItems = 'center';
-
-      // Create inner placeholder (98% size, 50% opacity)
-      const placeholderInner = row.cloneNode(true);
-      placeholderInner.className = 'preset-item drag-placeholder-item';
-      placeholderInner.style.opacity = '0.5';
-      placeholderInner.style.pointerEvents = 'none';
-      placeholderInner.style.transform = 'scale(0.99)';
-      placeholderInner.style.transformOrigin = 'center center';
-      placeholderInner.style.margin = '0';
-      placeholderInner.style.width = '100%';
-
-      placeholderWrapper.appendChild(placeholderInner);
-      dragState.placeholderEl = placeholderWrapper;
+      // Create placeholder - simple clone with reduced opacity
+      const placeholder = row.cloneNode(true);
+      placeholder.className = 'preset-item drag-placeholder';
+      placeholder.style.opacity = '0.4';
+      placeholder.style.pointerEvents = 'none';
+      placeholder.style.outline = '2px dashed #555';
+      placeholder.style.outlineOffset = '-2px';
+      dragState.placeholderEl = placeholder;
 
       // Hide original row completely and insert placeholder in its place
       row.style.display = 'none';
-      row.parentNode.insertBefore(placeholderWrapper, row);
+      row.parentNode.insertBefore(placeholder, row);
 
       // Hide all link zones during drag (use visibility to preserve layout)
       const linkZones = els.presetList.querySelectorAll('.link-zone');
@@ -1855,8 +1841,7 @@ function setupDragListeners() {
     const allElements = Array.from(els.presetList.children);
     const visibleItems = allElements.filter(item =>
       item.classList.contains('preset-item') &&
-      !item.classList.contains('drag-placeholder-item') &&
-      !item.classList.contains('drag-placeholder-wrapper') &&
+      !item.classList.contains('drag-placeholder') &&
       item !== dragState.placeholderEl &&
       item.style.display !== 'none'
     );
@@ -1957,7 +1942,7 @@ function setupDragListeners() {
       // Count only visible preset items (not hidden, not placeholder)
       if (child.classList.contains('preset-item') &&
           child.style.display !== 'none' &&
-          !child.classList.contains('drag-placeholder-item')) {
+          !child.classList.contains('drag-placeholder')) {
         count++;
       }
     }
