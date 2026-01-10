@@ -1724,14 +1724,16 @@ function setupDragListeners() {
     );
 
     // Find target position based on cursor Y
+    // Trigger swap early (15% into target) for responsive feel
     let targetIndex = visibleItems.length; // Default to end
 
     for (let i = 0; i < visibleItems.length; i++) {
       const item = visibleItems[i];
       const rect = item.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
+      // Use 15% threshold instead of 50% for quicker swap response
+      const triggerY = rect.top + rect.height * 0.15;
 
-      if (e.clientY < midY) {
+      if (e.clientY < triggerY) {
         targetIndex = i;
         break;
       }
