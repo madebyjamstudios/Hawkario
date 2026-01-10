@@ -348,10 +348,16 @@ function setupConfirmDialog() {
     }
   });
 
-  // Close on Escape key
+  // Keyboard shortcuts for confirm dialog
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !els.confirmDialog.classList.contains('hidden')) {
+    if (els.confirmDialog.classList.contains('hidden')) return;
+
+    if (e.key === 'Escape') {
       closeConfirmDialog(false);
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      closeConfirmDialog(true);
     }
   });
 }
@@ -1593,6 +1599,18 @@ function setupEventListeners() {
   // Close app settings on backdrop click
   els.appSettingsModal.addEventListener('click', (e) => {
     if (e.target === els.appSettingsModal) {
+      closeAppSettings();
+    }
+  });
+
+  // Keyboard shortcuts for app settings modal (Enter to save, Escape to cancel)
+  els.appSettingsModal.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName !== 'SELECT') {
+      e.preventDefault();
+      saveAppSettingsFromForm();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
       closeAppSettings();
     }
   });
