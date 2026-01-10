@@ -129,12 +129,14 @@ let isBlackedOut = false;
 const dragState = {
   isDragging: false,
   fromIndex: null,
+  currentIndex: null,
   draggedRow: null,
   ghostEl: null,
   placeholderEl: null,
   grabOffsetX: 0,
   grabOffsetY: 0,
-  originalHeight: 0
+  originalHeight: 0,
+  originalWidth: 0
 };
 
 // SVG Icons
@@ -975,11 +977,13 @@ function renderPresetList() {
       dragState.grabOffsetX = e.clientX - rect.left;
       dragState.grabOffsetY = e.clientY - rect.top;
       dragState.originalHeight = rect.height;
+      dragState.originalWidth = rect.width;
       dragState.isDragging = true;
       dragState.fromIndex = idx;
+      dragState.currentIndex = idx;
       dragState.draggedRow = row;
 
-      // Create ghost element
+      // Create ghost element (follows cursor - the one you're "holding")
       const ghost = row.cloneNode(true);
       ghost.className = 'preset-item drag-ghost';
       ghost.style.width = rect.width + 'px';
@@ -989,17 +993,21 @@ function renderPresetList() {
       ghost.style.pointerEvents = 'none';
       ghost.style.zIndex = '1000';
       ghost.style.margin = '0';
+      ghost.style.opacity = '0.9';
+      ghost.style.transform = 'scale(1.02)';
+      ghost.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)';
       document.body.appendChild(ghost);
       dragState.ghostEl = ghost;
 
-      // Create placeholder
-      const placeholder = document.createElement('div');
-      placeholder.className = 'drag-placeholder';
-      placeholder.style.height = dragState.originalHeight + 'px';
+      // Create placeholder (50% transparent copy showing drop position)
+      const placeholder = row.cloneNode(true);
+      placeholder.className = 'preset-item drag-placeholder-item';
+      placeholder.style.opacity = '0.5';
+      placeholder.style.pointerEvents = 'none';
       dragState.placeholderEl = placeholder;
 
-      // Hide original and insert placeholder
-      row.classList.add('dragging');
+      // Hide original row completely and insert placeholder in its place
+      row.style.display = 'none';
       row.parentNode.insertBefore(placeholder, row);
     });
 
@@ -1575,45 +1583,47 @@ function setupDragListeners() {
   document.addEventListener('mousemove', (e) => {
     if (!dragState.isDragging || !dragState.ghostEl) return;
 
-    // Move ghost to follow cursor
+    // Move ghost to follow cursor exactly
     dragState.ghostEl.style.left = (e.clientX - dragState.grabOffsetX) + 'px';
     dragState.ghostEl.style.top = (e.clientY - dragState.grabOffsetY) + 'px';
 
-    // Find which preset item we're hovering over
-    const items = els.presetList.querySelectorAll('.preset-item:not(.dragging)');
-    let targetItem = null;
-    let insertBefore = true;
+    // Find all preset items (excluding the hidden original and the placeholder)
+    const items = Array.from(els.presetList.querySelectorAll('.preset-item:not([style*="display: none"])'))
+      .filter(item => item !== dragState.placeholderEl);
 
-    for (const item of items) {
+    // Find which item we're hovering over based on cursor Y position
+    let targetIndex = -1;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
       const rect = item.getBoundingClientRect();
-      if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
-        targetItem = item;
-        // Determine if we should insert before or after
-        const midY = rect.top + rect.height / 2;
-        insertBefore = e.clientY < midY;
+      const midY = rect.top + rect.height / 2;
+
+      if (e.clientY < midY) {
+        targetIndex = i;
         break;
       }
     }
 
-    // Move placeholder to target position
-    if (targetItem && dragState.placeholderEl) {
-      if (insertBefore) {
-        targetItem.parentNode.insertBefore(dragState.placeholderEl, targetItem);
+    // If cursor is below all items, target the end
+    if (targetIndex === -1) {
+      targetIndex = items.length;
+    }
+
+    // Only move placeholder if target changed
+    if (targetIndex !== dragState.currentIndex && dragState.placeholderEl) {
+      // Remove placeholder from current position
+      dragState.placeholderEl.remove();
+
+      // Insert at new position
+      if (targetIndex >= items.length) {
+        // Append to end (after all items including link zones)
+        els.presetList.appendChild(dragState.placeholderEl);
       } else {
-        targetItem.parentNode.insertBefore(dragState.placeholderEl, targetItem.nextSibling);
+        // Insert before the target item
+        items[targetIndex].parentNode.insertBefore(dragState.placeholderEl, items[targetIndex]);
       }
-    } else if (dragState.placeholderEl) {
-      // If below all items, append to end
-      const listRect = els.presetList.getBoundingClientRect();
-      if (e.clientY > listRect.top) {
-        const lastItem = items[items.length - 1];
-        if (lastItem) {
-          const lastRect = lastItem.getBoundingClientRect();
-          if (e.clientY > lastRect.bottom) {
-            els.presetList.appendChild(dragState.placeholderEl);
-          }
-        }
-      }
+
+      dragState.currentIndex = targetIndex;
     }
   });
 
@@ -1629,12 +1639,26 @@ function setupDragListeners() {
 
     // Calculate final index based on placeholder position
     let finalIndex = 0;
-    const allItems = els.presetList.querySelectorAll('.preset-item:not(.dragging), .drag-placeholder');
+    const allItems = els.presetList.querySelectorAll('.preset-item:not([style*="display: none"])');
+    let placeholderIdx = 0;
     allItems.forEach((item, i) => {
       if (item === dragState.placeholderEl) {
-        finalIndex = i;
+        placeholderIdx = i;
       }
     });
+
+    // Count only real preset items before placeholder
+    const itemsBefore = els.presetList.querySelectorAll('.preset-item:not([style*="display: none"]):not(.drag-placeholder-item)');
+    let count = 0;
+    for (const item of allItems) {
+      if (item === dragState.placeholderEl) {
+        finalIndex = count;
+        break;
+      }
+      if (!item.classList.contains('drag-placeholder-item')) {
+        count++;
+      }
+    }
 
     // Remove placeholder
     if (dragState.placeholderEl) {
@@ -1642,9 +1666,9 @@ function setupDragListeners() {
       dragState.placeholderEl = null;
     }
 
-    // Remove dragging class
+    // Show original row again
     if (dragState.draggedRow) {
-      dragState.draggedRow.classList.remove('dragging');
+      dragState.draggedRow.style.display = '';
     }
 
     // Reorder if position changed
@@ -1675,6 +1699,7 @@ function setupDragListeners() {
     // Reset drag state
     dragState.isDragging = false;
     dragState.fromIndex = null;
+    dragState.currentIndex = null;
     dragState.draggedRow = null;
 
     renderPresetList();

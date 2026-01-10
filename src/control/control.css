@@ -367,6 +367,11 @@ button:disabled {
   padding: 4px;
 }
 
+/* Smooth reordering animation when items move */
+.preset-list .preset-item {
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
 /* Timer Progress Bar (non-interactive indicator) */
 .timer-progress-container {
   display: flex;
@@ -446,28 +451,18 @@ button:disabled {
   position: relative;
 }
 
-/* Hide the item being dragged (replaced by ghost) */
-.preset-item.dragging {
-  opacity: 0 !important;
+/* Drag placeholder - 50% transparent copy showing where item will drop */
+.drag-placeholder-item {
+  opacity: 0.5 !important;
   pointer-events: none;
+  transition: none;
 }
 
-/* Drag placeholder - grey dashed outline showing drop zone */
-.drag-placeholder {
-  border: 2px dashed #555;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  margin: 4px 0;
-  transition: all 0.15s ease;
-}
-
-/* Drag ghost - semi-transparent clone following cursor */
+/* Drag ghost - the item following the cursor */
 .drag-ghost {
-  opacity: 0.6 !important;
   pointer-events: none !important;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+  transition: none !important;
 }
 
 /* Drag handle / number indicator */
