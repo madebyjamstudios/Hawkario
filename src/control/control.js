@@ -175,7 +175,6 @@ const dragState = {
   dragActivated: false,  // True only after mouse moves 5px+
   fromIndex: null,
   currentIndex: null,
-  targetIndex: null,     // Where the timer will be dropped
   draggedRow: null,
   ghostEl: null,
   placeholderEl: null,
@@ -1812,20 +1811,38 @@ function setupDragListeners() {
       document.body.appendChild(ghost);
       dragState.ghostEl = ghost;
 
-      // Create 99% scale placeholder (cloned from original)
-      const placeholder = row.cloneNode(true);
-      placeholder.className = 'preset-item drag-placeholder';
-      placeholder.style.transform = 'scale(0.99)';
-      placeholder.style.transformOrigin = 'center center';
-      placeholder.style.opacity = '0.5';
-      placeholder.style.pointerEvents = 'none';
-      placeholder.style.outline = '2px dashed #555';
-      placeholder.style.outlineOffset = '-2px';
-      dragState.placeholderEl = placeholder;
+      // Create placeholder wrapper (full size with dashed outline)
+      const placeholderWrapper = document.createElement('div');
+      placeholderWrapper.className = 'drag-placeholder-wrapper';
+      placeholderWrapper.style.border = '2px solid #555';
+      placeholderWrapper.style.borderRadius = '12px';
+      placeholderWrapper.style.padding = '4px';
+      placeholderWrapper.style.display = 'flex';
+      placeholderWrapper.style.justifyContent = 'center';
+      placeholderWrapper.style.alignItems = 'center';
 
-      // Replace original row with placeholder (keeps same DOM position)
+      // Create inner placeholder (98% size, 50% opacity)
+      const placeholderInner = row.cloneNode(true);
+      placeholderInner.className = 'preset-item drag-placeholder-item';
+      placeholderInner.style.opacity = '0.5';
+      placeholderInner.style.pointerEvents = 'none';
+      placeholderInner.style.transform = 'scale(0.99)';
+      placeholderInner.style.transformOrigin = 'center center';
+      placeholderInner.style.margin = '0';
+      placeholderInner.style.width = '100%';
+
+      placeholderWrapper.appendChild(placeholderInner);
+      dragState.placeholderEl = placeholderWrapper;
+
+      // Hide original row completely and insert placeholder in its place
       row.style.display = 'none';
-      row.parentNode.insertBefore(placeholder, row);
+      row.parentNode.insertBefore(placeholderWrapper, row);
+
+      // Hide all link zones during drag to prevent shifting
+      const linkZones = els.presetList.querySelectorAll('.link-zone');
+      linkZones.forEach(zone => {
+        zone.style.display = 'none';
+      });
     }
 
     if (!dragState.ghostEl) return;
@@ -1838,7 +1855,8 @@ function setupDragListeners() {
     const allElements = Array.from(els.presetList.children);
     const visibleItems = allElements.filter(item =>
       item.classList.contains('preset-item') &&
-      !item.classList.contains('drag-placeholder') &&
+      !item.classList.contains('drag-placeholder-item') &&
+      !item.classList.contains('drag-placeholder-wrapper') &&
       item !== dragState.placeholderEl &&
       item.style.display !== 'none'
     );
@@ -1865,7 +1883,7 @@ function setupDragListeners() {
       }
     });
 
-    // When hovering over a timer, move placeholder to show where it will drop
+    // When hovering over a timer, insert placeholder based on cursor position
     // Top half of timer = insert before, bottom half = insert after
     if (hoveredIndex !== -1 && dragState.placeholderEl) {
       const hoveredItem = visibleItems[hoveredIndex];
@@ -1873,32 +1891,31 @@ function setupDragListeners() {
       const midY = rect.top + rect.height / 2;
       const insertBefore = e.clientY < midY;
 
-      // Calculate target index
-      dragState.targetIndex = insertBefore ? hoveredIndex : hoveredIndex + 1;
-
-      // Determine where to insert placeholder
+      // Determine the correct sibling position
       let targetSibling;
       if (insertBefore) {
-        targetSibling = hoveredItem;
+        targetSibling = hoveredItem; // Insert before hovered item
       } else {
-        targetSibling = hoveredItem.nextSibling;
+        targetSibling = hoveredItem.nextSibling; // Insert after hovered item
       }
 
-      // Only move if not already in the right position
+      // Check if placeholder is already in the right position
       const currentNext = dragState.placeholderEl.nextSibling;
       const isCorrectPosition = insertBefore
         ? (currentNext === hoveredItem)
         : (dragState.placeholderEl.previousSibling === hoveredItem);
 
       if (!isCorrectPosition) {
+        // Remove placeholder from current position
+        dragState.placeholderEl.remove();
+
+        // Insert at new position
         if (targetSibling) {
-          els.presetList.insertBefore(dragState.placeholderEl, targetSibling);
+          hoveredItem.parentNode.insertBefore(dragState.placeholderEl, targetSibling);
         } else {
-          els.presetList.appendChild(dragState.placeholderEl);
+          hoveredItem.parentNode.appendChild(dragState.placeholderEl);
         }
       }
-    } else {
-      dragState.targetIndex = null;
     }
   });
 
@@ -1927,6 +1944,24 @@ function setupDragListeners() {
       item.classList.remove('drag-hover');
     });
 
+    // Calculate final index based on placeholder position
+    let finalIndex = 0;
+    const allChildren = Array.from(els.presetList.children);
+    let count = 0;
+
+    for (const child of allChildren) {
+      if (child === dragState.placeholderEl) {
+        finalIndex = count;
+        break;
+      }
+      // Count only visible preset items (not hidden, not placeholder)
+      if (child.classList.contains('preset-item') &&
+          child.style.display !== 'none' &&
+          !child.classList.contains('drag-placeholder-item')) {
+        count++;
+      }
+    }
+
     // Remove placeholder
     if (dragState.placeholderEl) {
       dragState.placeholderEl.remove();
@@ -1938,12 +1973,9 @@ function setupDragListeners() {
       dragState.draggedRow.style.display = '';
     }
 
-    // Get final index from tracked target position
-    const finalIndex = dragState.targetIndex;
-
-    // Reorder if position changed and we have a valid target
+    // Reorder if position changed
     const fromIndex = dragState.fromIndex;
-    if (fromIndex !== null && finalIndex !== null && fromIndex !== finalIndex) {
+    if (fromIndex !== null && fromIndex !== finalIndex) {
       saveUndoState(); // Save state before reorder for undo
       const presets = loadPresets();
       const [moved] = presets.splice(fromIndex, 1);
@@ -1972,7 +2004,6 @@ function setupDragListeners() {
     dragState.dragActivated = false;
     dragState.fromIndex = null;
     dragState.currentIndex = null;
-    dragState.targetIndex = null;
     dragState.draggedRow = null;
 
     renderPresetList();
