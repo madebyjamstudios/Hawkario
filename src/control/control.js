@@ -1054,12 +1054,12 @@ function renderPresetList() {
       placeholderWrapper.style.justifyContent = 'center';
       placeholderWrapper.style.alignItems = 'center';
 
-      // Create inner placeholder (90% size, 50% opacity)
+      // Create inner placeholder (95% size, 50% opacity)
       const placeholderInner = row.cloneNode(true);
       placeholderInner.className = 'preset-item drag-placeholder-item';
       placeholderInner.style.opacity = '0.5';
       placeholderInner.style.pointerEvents = 'none';
-      placeholderInner.style.transform = 'scale(0.9)';
+      placeholderInner.style.transform = 'scale(0.95)';
       placeholderInner.style.transformOrigin = 'center center';
       placeholderInner.style.margin = '0';
       placeholderInner.style.width = '100%';
