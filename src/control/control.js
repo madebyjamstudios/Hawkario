@@ -1748,19 +1748,23 @@ function setupDragListeners() {
     // When hovering over a timer, placeholder takes that timer's visual spot
     // The hovered timer and others shift to fill the gap
     // Dragging timer 1 over timer 5 results in: 2,3,4,5,[1],6
-    if (hoveredIndex !== -1 && hoveredIndex !== dragState.currentIndex && dragState.placeholderEl) {
-      // Remove placeholder from current position
-      dragState.placeholderEl.remove();
-
-      // Insert placeholder right after the hovered timer
+    if (hoveredIndex !== -1 && dragState.placeholderEl) {
       const hoveredItem = visibleItems[hoveredIndex];
-      if (hoveredItem.nextSibling) {
-        hoveredItem.parentNode.insertBefore(dragState.placeholderEl, hoveredItem.nextSibling);
-      } else {
-        hoveredItem.parentNode.appendChild(dragState.placeholderEl);
-      }
 
-      dragState.currentIndex = hoveredIndex;
+      // Check if placeholder is already right after this item
+      const placeholderIsAfterHovered = hoveredItem.nextSibling === dragState.placeholderEl;
+
+      if (!placeholderIsAfterHovered) {
+        // Remove placeholder from current position
+        dragState.placeholderEl.remove();
+
+        // Insert placeholder right after the hovered timer
+        if (hoveredItem.nextSibling) {
+          hoveredItem.parentNode.insertBefore(dragState.placeholderEl, hoveredItem.nextSibling);
+        } else {
+          hoveredItem.parentNode.appendChild(dragState.placeholderEl);
+        }
+      }
     }
   });
 
