@@ -108,13 +108,7 @@
         </div>
         <div class="kv">
           <label>Duration</label>
-          <div class="duration-inputs">
-            <input id="duration-hours" type="number" min="0" max="99" value="0" placeholder="H" />
-            <span class="duration-sep">:</span>
-            <input id="duration-minutes" type="number" min="0" max="59" value="10" placeholder="M" />
-            <span class="duration-sep">:</span>
-            <input id="duration-seconds" type="number" min="0" max="59" value="0" placeholder="S" />
-          </div>
+          <input id="duration" type="text" class="time-input" value="00:10:00" maxlength="8" />
         </div>
         <div class="kv">
           <label for="format">Format</label>
@@ -365,13 +359,7 @@
           </div>
           <div class="kv">
             <label>Duration</label>
-            <div class="duration-inputs">
-              <input id="defaultDuration-hours" type="number" min="0" max="99" value="0" placeholder="H" />
-              <span class="duration-sep">:</span>
-              <input id="defaultDuration-minutes" type="number" min="0" max="59" value="10" placeholder="M" />
-              <span class="duration-sep">:</span>
-              <input id="defaultDuration-seconds" type="number" min="0" max="59" value="0" placeholder="S" />
-            </div>
+            <input id="defaultDuration" type="text" class="time-input" value="00:10:00" maxlength="8" />
           </div>
           <div class="kv">
             <label for="defaultFormat">Format</label>

@@ -11,9 +11,7 @@ import { STORAGE_KEYS } from '../shared/constants.js';
 const els = {
   // Timer settings (in modal)
   mode: document.getElementById('mode'),
-  durationHours: document.getElementById('duration-hours'),
-  durationMinutes: document.getElementById('duration-minutes'),
-  durationSeconds: document.getElementById('duration-seconds'),
+  duration: document.getElementById('duration'),
   format: document.getElementById('format'),
 
   // Typography
@@ -93,9 +91,7 @@ const els = {
   todFormat: document.getElementById('todFormat'),
   confirmDelete: document.getElementById('confirmDelete'),
   defaultMode: document.getElementById('defaultMode'),
-  defaultDurationHours: document.getElementById('defaultDuration-hours'),
-  defaultDurationMinutes: document.getElementById('defaultDuration-minutes'),
-  defaultDurationSeconds: document.getElementById('defaultDuration-seconds'),
+  defaultDuration: document.getElementById('defaultDuration'),
   defaultFormat: document.getElementById('defaultFormat'),
   defaultFontSize: document.getElementById('defaultFontSize'),
   defaultFontColor: document.getElementById('defaultFontColor'),
@@ -115,11 +111,25 @@ const els = {
   confirmDeleteBtn: document.getElementById('confirmDeleteBtn')
 };
 
-// Helper functions for duration inputs (H:M:S)
+// Helper functions for unified time input (HH:MM:SS)
+function formatTimeValue(h, m, s) {
+  const pad = n => String(Math.max(0, n)).padStart(2, '0');
+  const hh = Math.min(99, Math.max(0, h));
+  const mm = Math.min(59, Math.max(0, m));
+  const ss = Math.min(59, Math.max(0, s));
+  return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+}
+
+function parseTimeValue(val) {
+  const parts = (val || '00:00:00').split(':');
+  const h = parseInt(parts[0], 10) || 0;
+  const m = parseInt(parts[1], 10) || 0;
+  const s = parseInt(parts[2], 10) || 0;
+  return { h, m, s };
+}
+
 function getDurationSeconds() {
-  const h = parseInt(els.durationHours.value, 10) || 0;
-  const m = parseInt(els.durationMinutes.value, 10) || 0;
-  const s = parseInt(els.durationSeconds.value, 10) || 0;
+  const { h, m, s } = parseTimeValue(els.duration.value);
   return h * 3600 + m * 60 + s;
 }
 
@@ -127,15 +137,11 @@ function setDurationInputs(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  els.durationHours.value = h;
-  els.durationMinutes.value = m;
-  els.durationSeconds.value = s;
+  els.duration.value = formatTimeValue(h, m, s);
 }
 
 function getDefaultDurationSeconds() {
-  const h = parseInt(els.defaultDurationHours.value, 10) || 0;
-  const m = parseInt(els.defaultDurationMinutes.value, 10) || 0;
-  const s = parseInt(els.defaultDurationSeconds.value, 10) || 0;
+  const { h, m, s } = parseTimeValue(els.defaultDuration.value);
   return h * 3600 + m * 60 + s;
 }
 
@@ -143,9 +149,204 @@ function setDefaultDurationInputs(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  els.defaultDurationHours.value = h;
-  els.defaultDurationMinutes.value = m;
-  els.defaultDurationSeconds.value = s;
+  els.defaultDuration.value = formatTimeValue(h, m, s);
+}
+
+/**
+ * Initialize a unified time input with section-based navigation
+ * Sections: HH (0-1), MM (3-4), SS (6-7), colons at 2 and 5
+ */
+function initTimeInput(input) {
+  if (!input) return;
+
+  // Get section from cursor position
+  const getSection = (pos) => {
+    if (pos <= 2) return 'hours';
+    if (pos <= 5) return 'minutes';
+    return 'seconds';
+  };
+
+  // Get section digit boundaries (start inclusive, end exclusive for selection)
+  const getSectionRange = (section) => {
+    switch (section) {
+      case 'hours': return [0, 2];
+      case 'minutes': return [3, 5];
+      case 'seconds': return [6, 8];
+    }
+  };
+
+  // Ensure cursor doesn't land on colons
+  const adjustCursor = (pos) => {
+    if (pos === 2) return 1; // Before first colon, go to end of hours
+    if (pos === 5) return 4; // Before second colon, go to end of minutes
+    return pos;
+  };
+
+  // Handle click - adjust cursor if on colon
+  input.addEventListener('click', () => {
+    setTimeout(() => {
+      const pos = input.selectionStart;
+      if (pos === 2 || pos === 5) {
+        input.setSelectionRange(pos + 1, pos + 1);
+      }
+    }, 0);
+  });
+
+  // Handle keyboard navigation and input
+  input.addEventListener('keydown', (e) => {
+    const pos = input.selectionStart;
+    const selEnd = input.selectionEnd;
+    const section = getSection(pos);
+    const [start, end] = getSectionRange(section);
+    const val = input.value;
+
+    // Arrow keys
+    if (e.key === 'ArrowLeft') {
+      if (pos <= start) {
+        // At left edge of section
+        if (section === 'minutes') {
+          e.preventDefault();
+          input.setSelectionRange(2, 2); // Jump to end of hours
+        } else if (section === 'seconds') {
+          e.preventDefault();
+          input.setSelectionRange(5, 5); // Jump to end of minutes
+        } else {
+          // hours section: wall
+          e.preventDefault();
+        }
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowRight') {
+      if (pos >= end) {
+        // At right edge of section
+        if (section === 'hours') {
+          e.preventDefault();
+          input.setSelectionRange(3, 3); // Jump to start of minutes
+        } else if (section === 'minutes') {
+          e.preventDefault();
+          input.setSelectionRange(6, 6); // Jump to start of seconds
+        } else {
+          // seconds section: wall
+          e.preventDefault();
+        }
+      }
+      return;
+    }
+
+    // Tab - allow natural behavior
+    if (e.key === 'Tab') return;
+
+    // Cmd/Ctrl+A - select current section only
+    if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+      e.preventDefault();
+      input.setSelectionRange(start, end);
+      return;
+    }
+
+    // Backspace - replace current digit with 0
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      if (pos > start) {
+        const newPos = pos - 1;
+        const chars = val.split('');
+        chars[newPos] = '0';
+        input.value = chars.join('');
+        input.setSelectionRange(newPos, newPos);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      return;
+    }
+
+    // Delete - replace current digit with 0
+    if (e.key === 'Delete') {
+      e.preventDefault();
+      if (pos < end) {
+        const chars = val.split('');
+        chars[pos] = '0';
+        input.value = chars.join('');
+        input.setSelectionRange(pos, pos);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      return;
+    }
+
+    // Digit input
+    if (/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+
+      // If selection spans multiple chars, replace the section
+      if (selEnd > pos) {
+        const chars = val.split('');
+        // Clear selected section and put digit at start
+        for (let i = start; i < end; i++) {
+          chars[i] = '0';
+        }
+        chars[start] = e.key;
+        input.value = chars.join('');
+        input.setSelectionRange(start + 1, start + 1);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        return;
+      }
+
+      // Insert digit at current position
+      if (pos < end) {
+        const chars = val.split('');
+        chars[pos] = e.key;
+
+        // Validate the section value
+        const newVal = chars.join('');
+        const { h, m, s } = parseTimeValue(newVal);
+
+        // Clamp values and reformat
+        input.value = formatTimeValue(h, m, s);
+
+        // Move cursor
+        let newPos = pos + 1;
+        if (newPos === 2 || newPos === 5) newPos++; // Skip colon
+        if (newPos > 7) newPos = 7;
+        input.setSelectionRange(newPos, newPos);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      return;
+    }
+
+    // Block all other printable characters
+    if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+    }
+  });
+
+  // Handle double-click - select current section only
+  input.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    const pos = input.selectionStart;
+    const section = getSection(pos);
+    const [start, end] = getSectionRange(section);
+    input.setSelectionRange(start, end);
+  });
+
+  // Prevent invalid paste, try to parse time from paste
+  input.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text');
+    // Try to parse as HH:MM:SS or similar
+    const match = text.match(/(\d{1,2}):(\d{1,2}):(\d{1,2})/);
+    if (match) {
+      const h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const s = parseInt(match[3], 10);
+      input.value = formatTimeValue(h, m, s);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
+  // Ensure value is always valid format on blur
+  input.addEventListener('blur', () => {
+    const { h, m, s } = parseTimeValue(input.value);
+    input.value = formatTimeValue(h, m, s);
+  });
 }
 
 // State
@@ -1633,9 +1834,13 @@ function handleImportPresets(e) {
 // ============ Event Listeners ============
 
 function setupEventListeners() {
+  // Initialize time inputs with section-based navigation
+  initTimeInput(els.duration);
+  initTimeInput(els.defaultDuration);
+
   // Input change listeners (debounced) - update both live and modal preview
   const inputEls = [
-    els.mode, els.durationHours, els.durationMinutes, els.durationSeconds, els.format,
+    els.mode, els.duration, els.format,
     els.fontFamily, els.fontWeight, els.fontSize, els.fontColor,
     els.opacity, els.strokeWidth, els.strokeColor, els.shadow,
     els.align, els.letterSpacing,

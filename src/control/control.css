@@ -60,30 +60,15 @@ input[type="color"] {
   cursor: pointer;
 }
 
-/* Duration inputs (H:M:S) */
-.duration-inputs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.duration-inputs input {
-  width: 42px;
-  text-align: center;
-  padding: 6px 4px;
-  -moz-appearance: textfield;
-}
-
-.duration-inputs input::-webkit-outer-spin-button,
-.duration-inputs input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.duration-sep {
-  color: #666;
-  font-weight: 600;
+/* Unified time input (HH:MM:SS) */
+.time-input {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
   font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-align: center;
+  width: 90px;
+  padding: 6px 8px;
 }
 
 /* Buttons */
