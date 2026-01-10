@@ -121,6 +121,13 @@ ipcMain.on('timer:command', (_event, data) => {
   }
 });
 
+// Display state sync: control -> output (runs every frame for live mirror)
+ipcMain.on('display:state', (_event, state) => {
+  if (outputWindow && !outputWindow.isDestroyed()) {
+    outputWindow.webContents.send('display:update', state);
+  }
+});
+
 // Window management
 ipcMain.on('window:open-output', () => {
   createOutputWindow();

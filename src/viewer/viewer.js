@@ -63,6 +63,21 @@ let isFlashing = false;
 
 // Blackout state
 let isBlackedOut = false;
+
+// Display state from control window (master source)
+let displayState = {
+  visible: true,
+  text: '00:00',
+  colorState: 'normal',
+  color: '#ffffff',
+  opacity: 1,
+  blackout: false,
+  overtime: false,
+  flashing: false,
+  elapsed: '',
+  remaining: '',
+  style: null
+};
 const blackoutEl = document.createElement('div');
 blackoutEl.className = 'blackout-overlay';
 blackoutEl.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.5s ease;';
@@ -228,15 +243,24 @@ function applyColorState(remainingSec, durationSec) {
 }
 
 /**
- * Main render loop
+ * Handle display state updates from control window
+ * This makes the output a pure mirror of the live preview
+ */
+function handleDisplayUpdate(newState) {
+  displayState = { ...displayState, ...newState };
+
+  // Apply style if provided
+  if (newState.style) {
+    applyStyle(newState.style);
+  }
+}
+
+/**
+ * Main render loop - now just applies display state from control
  */
 function render() {
-  let displayText = '';
-  let elapsed = 0;
-  let remainingSec = 0;
-
-  // Handle hidden mode
-  if (state.mode === 'hidden') {
+  // Handle visibility
+  if (!displayState.visible) {
     timerEl.style.visibility = 'hidden';
     requestAnimationFrame(render);
     return;
@@ -244,105 +268,37 @@ function render() {
     timerEl.style.visibility = 'visible';
   }
 
-  // Handle Time of Day modes
-  if (state.mode === 'tod') {
-    displayText = formatTimeOfDay(state.format);
-    applyColorState(0, 0); // No warning colors for ToD
-    timerEl.textContent = displayText;
-    requestAnimationFrame(render);
-    return;
+  // Apply display text from control
+  timerEl.textContent = displayState.text;
+
+  // Apply color state (skip during flash animation)
+  if (!isFlashing) {
+    timerEl.style.color = displayState.color;
+    timerEl.style.opacity = displayState.opacity;
+
+    // Apply color state classes
+    timerEl.classList.remove('warning', 'danger', 'overtime');
+    if (displayState.colorState === 'warning') {
+      timerEl.classList.add('warning');
+    } else if (displayState.colorState === 'danger') {
+      timerEl.classList.add('danger');
+    } else if (displayState.colorState === 'overtime' || displayState.overtime) {
+      timerEl.classList.add('overtime');
+    }
   }
 
-  // Handle countdown/countup with optional ToD
-  const isCountdown = state.mode === 'countdown' || state.mode === 'countdown-tod';
-  const isCountup = state.mode === 'countup' || state.mode === 'countup-tod';
-  const showToD = state.mode === 'countdown-tod' || state.mode === 'countup-tod';
-
-  if (!state.running && state.pausedAcc === 0 && state.startedAt === null) {
-    // Timer has never been started - show initial state
-    elapsed = isCountdown ? state.durationSec * 1000 : 0;
-    remainingSec = Math.floor(elapsed / 1000);
-
-    // Apply color state based on percentage
-    if (isCountdown) {
-      applyColorState(remainingSec, state.durationSec);
+  // Handle blackout from control
+  if (displayState.blackout !== isBlackedOut) {
+    isBlackedOut = displayState.blackout;
+    if (isBlackedOut) {
+      blackoutEl.style.pointerEvents = 'auto';
+      blackoutEl.style.opacity = '1';
     } else {
-      applyColorState(0, 0);
-    }
-  } else if (!state.running && state.pausedAcc > 0) {
-    // Timer is paused - show paused time
-    if (isCountdown) {
-      elapsed = Math.max(0, (state.durationSec * 1000) - state.pausedAcc);
-    } else {
-      elapsed = state.pausedAcc;
-    }
-    remainingSec = Math.floor(elapsed / 1000);
-
-    // Apply color state based on percentage
-    if (isCountdown) {
-      applyColorState(remainingSec, state.durationSec);
-    } else {
-      applyColorState(0, 0);
-    }
-  } else {
-    // Timer is running
-    const now = Date.now();
-    const base = now - state.startedAt + state.pausedAcc;
-
-    if (isCountdown) {
-      elapsed = Math.max(0, (state.durationSec * 1000) - base);
-      remainingSec = Math.floor(elapsed / 1000);
-
-      // Check if timer ended
-      if (elapsed === 0 && !isOvertime) {
-        // Start overtime mode
-        isOvertime = true;
-        overtimeStartedAt = Date.now();
-        timerEl.classList.add('ended');
-        timerEl.classList.add('overtime');
-
-        // Play end sound
-        if (!endSoundPlayed && state.sound.endEnabled) {
-          playEndSound(state.sound.volume);
-          endSoundPlayed = true;
-        }
-      }
-
-      // Apply color state based on percentage
-      applyColorState(remainingSec, state.durationSec);
-
-      // Play warning sound at 20% threshold
-      const percentRemaining = (remainingSec / state.durationSec) * 100;
-      if (percentRemaining <= 20 && !warningSoundPlayed && state.sound.warnEnabled) {
-        playWarningSound(state.sound.volume);
-        warningSoundPlayed = true;
-      }
-    } else if (isCountup) {
-      // Count up mode
-      elapsed = base;
-      remainingSec = Math.floor(elapsed / 1000);
-      applyColorState(0, 0); // No warning colors for count up
+      blackoutEl.style.opacity = '0';
+      blackoutEl.style.pointerEvents = 'none';
     }
   }
 
-  // Format display text
-  if (isOvertime && overtimeStartedAt) {
-    // Overtime mode - show +M:SS
-    const overtimeMs = Date.now() - overtimeStartedAt;
-    const overtimeSec = Math.floor(overtimeMs / 1000);
-    const mins = Math.floor(overtimeSec / 60);
-    const secs = overtimeSec % 60;
-    displayText = '+' + mins + ':' + String(secs).padStart(2, '0');
-  } else {
-    displayText = formatTime(elapsed, state.format);
-  }
-
-  // Add Time of Day if needed
-  if (showToD) {
-    displayText += '  |  ' + formatTimeOfDay(state.format);
-  }
-
-  timerEl.textContent = displayText;
   requestAnimationFrame(render);
 }
 
@@ -551,8 +507,11 @@ function init() {
   // Apply initial styles
   applyStyle(state.style);
 
-  // Setup IPC listener
+  // Setup IPC listener for timer commands (sounds, flash, etc.)
   window.hawkario.onTimerUpdate(handleTimerUpdate);
+
+  // Setup display state listener (main sync from control window)
+  window.hawkario.onDisplayUpdate(handleDisplayUpdate);
 
   // Setup blackout listener
   window.hawkario.onBlackoutToggle(toggleBlackout);

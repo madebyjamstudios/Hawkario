@@ -17,6 +17,16 @@ contextBridge.exposeInMainWorld('hawkario', {
     ipcRenderer.on('timer:update', (_event, data) => callback(data));
   },
 
+  // Display state sync (control -> output, runs every frame)
+  sendDisplayState: (state) => {
+    ipcRenderer.send('display:state', state);
+  },
+
+  // Listen for display state updates (output window receives these)
+  onDisplayUpdate: (callback) => {
+    ipcRenderer.on('display:update', (_event, state) => callback(state));
+  },
+
   // Window management
   openOutputWindow: () => {
     ipcRenderer.send('window:open-output');
@@ -76,6 +86,7 @@ contextBridge.exposeInMainWorld('hawkario', {
   // Cleanup listeners (call when window closes)
   removeAllListeners: () => {
     ipcRenderer.removeAllListeners('timer:update');
+    ipcRenderer.removeAllListeners('display:update');
     ipcRenderer.removeAllListeners('window:output-ready');
     ipcRenderer.removeAllListeners('window:output-closed');
     ipcRenderer.removeAllListeners('keyboard:shortcut');

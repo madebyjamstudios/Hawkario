@@ -576,11 +576,11 @@ function updateModalPreview() {
   }
 
   if (mode === 'tod') {
-    displayText = formatTimeOfDay(format);
+    displayText = formatTimeOfDay();
   } else {
     displayText = formatTime(isCountdown ? durationSec * 1000 : 0, format);
     if (showToD) {
-      displayText += '  |  ' + formatTimeOfDay(format);
+      displayText += '  |  ' + formatTimeOfDay();
     }
   }
 
@@ -741,6 +741,40 @@ function applyLivePreviewStyle() {
 }
 
 /**
+ * Broadcast display state to output window
+ * This makes the output window a pure mirror of the live preview
+ */
+function broadcastDisplayState(state) {
+  if (!outputWindowReady) return;
+
+  window.hawkario.sendDisplayState({
+    visible: state.visible !== false,
+    text: state.text || '',
+    colorState: state.colorState || 'normal',
+    color: state.color || els.fontColor.value,
+    opacity: state.opacity !== undefined ? state.opacity : parseFloat(els.opacity.value),
+    blackout: state.blackout || false,
+    overtime: state.overtime || false,
+    flashing: state.flashing || false,
+    elapsed: state.elapsed || '',
+    remaining: state.remaining || '',
+    style: {
+      fontFamily: els.fontFamily.value,
+      fontWeight: els.fontWeight.value,
+      fontSizeVw: parseFloat(els.fontSize.value) || 10,
+      strokeWidth: parseInt(els.strokeWidth.value, 10) || 0,
+      strokeColor: els.strokeColor.value,
+      textShadow: els.shadow.value,
+      textAlign: els.align.value,
+      letterSpacing: parseFloat(els.letterSpacing.value) || 0,
+      background: els.bgMode.value === 'solid'
+        ? hexToRgba(els.bgColor.value, parseFloat(els.bgOpacity.value) || 0)
+        : 'transparent'
+    }
+  });
+}
+
+/**
  * Render loop for live preview - mirrors actual timer output
  */
 function renderLivePreview() {
@@ -761,6 +795,7 @@ function renderLivePreview() {
   // Handle hidden mode
   if (mode === 'hidden') {
     els.livePreviewTimer.style.visibility = 'hidden';
+    broadcastDisplayState({ visible: false });
     requestAnimationFrame(renderLivePreview);
     return;
   } else {
@@ -769,11 +804,19 @@ function renderLivePreview() {
 
   // Handle Time of Day only mode
   if (mode === 'tod') {
-    displayText = formatTimeOfDay(format);
+    displayText = formatTimeOfDay();
     els.livePreviewTimer.textContent = displayText;
     els.livePreviewTimer.style.color = els.fontColor.value;
     els.livePreviewTimer.style.opacity = els.opacity.value;
     els.livePreview.classList.remove('warning');
+    broadcastDisplayState({
+      visible: true,
+      text: displayText,
+      colorState: 'normal',
+      color: els.fontColor.value,
+      opacity: parseFloat(els.opacity.value),
+      blackout: isBlackedOut
+    });
     requestAnimationFrame(renderLivePreview);
     return;
   }
@@ -853,7 +896,7 @@ function renderLivePreview() {
   }
 
   if (showToD) {
-    displayText += '  |  ' + formatTimeOfDay(format);
+    displayText += '  |  ' + formatTimeOfDay();
   }
 
   // Update display
@@ -920,6 +963,45 @@ function renderLivePreview() {
   } else {
     els.livePreview.classList.remove('blackout');
   }
+
+  // Determine color state for broadcast
+  let colorState = 'normal';
+  let currentColor = els.fontColor.value;
+  let currentOpacity = parseFloat(els.opacity.value);
+  let isFlashing = false;
+
+  if (timerState.overtime) {
+    colorState = 'overtime';
+    currentColor = '#E64A19';
+  } else if (isCountdown && durationSec > 0) {
+    const percentRemaining = (remainingSec / durationSec) * 100;
+    if (percentRemaining <= 10 && remainingSec > 0) {
+      colorState = 'danger';
+      currentColor = '#E64A19';
+      if (warnFlashEnabled) {
+        isFlashing = true;
+        const phase = Math.floor(Date.now() / flashRateMs) % 2;
+        currentOpacity = phase ? currentOpacity : Math.max(0.15, currentOpacity * 0.25);
+      }
+    } else if (percentRemaining <= 20 && remainingSec > 0) {
+      colorState = 'warning';
+      currentColor = '#ffcc00';
+    }
+  }
+
+  // Broadcast display state to output window
+  broadcastDisplayState({
+    visible: true,
+    text: displayText,
+    colorState: colorState,
+    color: currentColor,
+    opacity: currentOpacity,
+    blackout: isBlackedOut,
+    overtime: timerState.overtime,
+    flashing: isFlashing,
+    elapsed: els.elapsedTime?.textContent || '',
+    remaining: els.remainingTime?.textContent || ''
+  });
 
   requestAnimationFrame(renderLivePreview);
 }

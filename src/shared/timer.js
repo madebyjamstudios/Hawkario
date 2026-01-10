@@ -102,10 +102,10 @@ export function hexToRgba(hex, opacity = 1) {
 
 /**
  * Format current time of day
- * @param {string} format - Display format ('H:MM:SS', 'MM:SS', 'SS')
- * @returns {string} Formatted time string
+ * Always shows full H:MM:SS format - format setting only affects countdown/countup
+ * @returns {string} Formatted time string (always H:MM:SS)
  */
-export function formatTimeOfDay(format = 'H:MM:SS') {
+export function formatTimeOfDay() {
   const now = new Date();
   const h = now.getHours();
   const m = now.getMinutes();
@@ -113,16 +113,8 @@ export function formatTimeOfDay(format = 'H:MM:SS') {
 
   const pad = n => String(n).padStart(2, '0');
 
-  switch (format) {
-    case 'H:MM:SS':
-      return `${h}:${pad(m)}:${pad(s)}`;
-    case 'MM:SS':
-      return `${pad(m)}:${pad(s)}`;
-    case 'SS':
-      return String(s);
-    default:
-      return `${h}:${pad(m)}:${pad(s)}`;
-  }
+  // ToD always shows full time with hours
+  return `${h}:${pad(m)}:${pad(s)}`;
 }
 
 /**
