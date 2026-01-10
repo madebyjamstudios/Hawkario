@@ -1319,10 +1319,19 @@ function showQuickEditPopup(idx, preset, anchorEl) {
   const popup = document.createElement('div');
   popup.className = 'quick-edit-popup';
 
+  const inputRow = document.createElement('div');
+  inputRow.className = 'quick-edit-input-row';
+
+  const label = document.createElement('label');
+  label.textContent = 'Title:';
+  label.className = 'quick-edit-label';
+
   const input = document.createElement('input');
   input.type = 'text';
   input.value = preset.name;
   input.placeholder = 'Timer name';
+
+  inputRow.append(label, input);
 
   const buttons = document.createElement('div');
   buttons.className = 'quick-edit-buttons';
@@ -1346,7 +1355,7 @@ function showQuickEditPopup(idx, preset, anchorEl) {
   };
 
   buttons.append(cancelBtn, saveBtn);
-  popup.append(input, buttons);
+  popup.append(inputRow, buttons);
 
   // Position popup near the anchor element
   const rect = anchorEl.getBoundingClientRect();

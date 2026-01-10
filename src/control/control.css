@@ -1239,15 +1239,28 @@ button.danger:active {
   }
 }
 
+.quick-edit-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.quick-edit-label {
+  color: #aaa;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .quick-edit-popup input {
-  width: 100%;
+  flex: 1;
   padding: 10px 12px;
   font-size: 14px;
   background: #0a0a0a;
   border: 1px solid #333;
   border-radius: 6px;
   color: #fff;
-  margin-bottom: 10px;
   box-sizing: border-box;
 }
 
