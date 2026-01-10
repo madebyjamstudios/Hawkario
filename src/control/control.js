@@ -1466,12 +1466,12 @@ function setupEventListeners() {
     const maxFlashes = 3;
 
     const showGlow = () => {
-      // White glow effect
+      // White glow effect (compact but strong)
       els.flashBtn.classList.add('flashing');
       els.livePreviewTimer.style.color = '#ffffff';
       els.livePreviewTimer.style.webkitTextStrokeColor = '#ffffff';
-      els.livePreviewTimer.style.webkitTextStrokeWidth = '2px';
-      els.livePreviewTimer.style.textShadow = '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff';
+      els.livePreviewTimer.style.webkitTextStrokeWidth = '1px';
+      els.livePreviewTimer.style.textShadow = '0 0 2px #fff, 0 0 4px #fff, 0 0 8px rgba(255,255,255,0.9)';
 
       setTimeout(showGrey, glowDuration);
     };

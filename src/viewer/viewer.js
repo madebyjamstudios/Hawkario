@@ -103,11 +103,11 @@ function triggerFlash() {
   const maxFlashes = 3;
 
   const showGlow = () => {
-    // White glow effect
+    // White glow effect (compact but strong)
     timerEl.style.color = '#ffffff';
     timerEl.style.webkitTextStrokeColor = '#ffffff';
-    timerEl.style.webkitTextStrokeWidth = '2px';
-    timerEl.style.textShadow = '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff';
+    timerEl.style.webkitTextStrokeWidth = '1px';
+    timerEl.style.textShadow = '0 0 2px #fff, 0 0 4px #fff, 0 0 8px rgba(255,255,255,0.9)';
 
     setTimeout(showGrey, glowDuration);
   };
