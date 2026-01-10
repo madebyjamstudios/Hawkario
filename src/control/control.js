@@ -1913,18 +1913,43 @@ function setupDragListeners() {
       dragState.slotHeight = timerHeight + linkZoneHeight + gap;
 
       // Create ghost element (follows cursor - the one you're "holding")
-      const ghost = row.cloneNode(true);
-      ghost.className = 'preset-item drag-ghost';
-      ghost.style.width = dragState.originalWidth + 'px';
+      // If timer owns a link, include the link zone in the ghost
+      let ghost;
+      if (dragState.hasLink && dragState.draggedLinkZone) {
+        // Create a wrapper to hold both link zone and timer
+        ghost = document.createElement('div');
+        ghost.className = 'drag-ghost-wrapper';
+        ghost.style.display = 'flex';
+        ghost.style.flexDirection = 'column';
+        ghost.style.alignItems = 'stretch';
+
+        // Clone and add the link zone
+        const linkClone = dragState.draggedLinkZone.cloneNode(true);
+        linkClone.style.pointerEvents = 'none';
+        ghost.appendChild(linkClone);
+
+        // Clone and add the timer
+        const timerClone = row.cloneNode(true);
+        timerClone.className = 'preset-item';
+        timerClone.style.margin = '0';
+        timerClone.style.width = dragState.originalWidth + 'px';
+        ghost.appendChild(timerClone);
+      } else {
+        ghost = row.cloneNode(true);
+        ghost.className = 'preset-item drag-ghost';
+        ghost.style.width = dragState.originalWidth + 'px';
+        ghost.style.margin = '0';
+      }
+
       ghost.style.position = 'fixed';
       ghost.style.left = (e.clientX - dragState.grabOffsetX) + 'px';
       ghost.style.top = (e.clientY - dragState.grabOffsetY) + 'px';
       ghost.style.pointerEvents = 'none';
       ghost.style.zIndex = '1000';
-      ghost.style.margin = '0';
       ghost.style.opacity = '0.9';
       ghost.style.transform = 'scale(1.02)';
       ghost.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)';
+      ghost.style.borderRadius = '12px';
       document.body.appendChild(ghost);
       dragState.ghostEl = ghost;
 
@@ -2005,44 +2030,73 @@ function setupDragListeners() {
     if (fromIndex !== null && toIndex !== null && fromIndex !== toIndex) {
       saveUndoState(); // Save state before reorder for undo
       const presets = loadPresets();
-      const hadLink = dragState.hasLink;
+      const draggedTimerOwnsLink = dragState.hasLink;
+
+      // Before reorder, capture which timer indices own links (have a timer above linking to them)
+      // A timer at index i owns a link if presets[i-1].linkedToNext === true
+      const linkOwners = new Set();
+      for (let i = 1; i < presets.length; i++) {
+        if (presets[i - 1].linkedToNext) {
+          linkOwners.add(i);
+        }
+      }
+
+      // Clear all linkedToNext flags - we'll recalculate after move
+      presets.forEach(p => p.linkedToNext = false);
 
       // Remove the timer from old position
       const [moved] = presets.splice(fromIndex, 1);
 
-      // Adjust toIndex if we removed from before it
-      let adjustedToIndex = toIndex;
+      // Insert at new position (toIndex is the final visual slot, no adjustment needed)
+      // When moving down, after removing the element, target indices shift down by 1
+      // When moving up, no shift needed
+      let finalIndex = toIndex;
       if (fromIndex < toIndex) {
-        adjustedToIndex--;
+        finalIndex = toIndex - 1;
+      }
+      presets.splice(finalIndex, 0, moved);
+
+      // Re-establish links based on the move:
+      // - If the dragged timer owned a link and is now at position > 0, link from timer above
+      // - Timers that owned links but got displaced need their links updated
+
+      // For each original link owner, find their new index and re-link if valid
+      // But the dragged timer is special - it carries its link
+
+      if (draggedTimerOwnsLink && finalIndex > 0) {
+        // Dragged timer owned a link and isn't at position 0, so link to it
+        presets[finalIndex - 1].linkedToNext = true;
       }
 
-      // Insert at new position
-      presets.splice(adjustedToIndex, 0, moved);
+      // For other timers that owned links (not the dragged one):
+      // They keep their link only if they're still at position > 0 AND the timer above them is valid
+      linkOwners.forEach(originalIdx => {
+        if (originalIdx === fromIndex) return; // Skip dragged timer, handled above
 
-      // Update links:
-      // 1. Clear old link (if dragged timer had a link, the timer that was above it no longer links to it)
-      if (fromIndex > 0 && hadLink) {
-        // The timer that was at fromIndex-1 (before the move) now needs its linkedToNext cleared
-        // After splice, this timer might be at a different index
-        const oldAboveTimerNewIndex = fromIndex <= adjustedToIndex ? fromIndex - 1 : fromIndex - 1;
-        if (oldAboveTimerNewIndex >= 0 && presets[oldAboveTimerNewIndex]) {
-          presets[oldAboveTimerNewIndex].linkedToNext = false;
+        // Find this timer's new index after the move
+        let newIdx = originalIdx;
+        if (originalIdx > fromIndex) {
+          newIdx--; // Shifted up because we removed dragged timer
         }
-      }
+        if (newIdx >= finalIndex) {
+          newIdx++; // Shifted down because we inserted dragged timer
+        }
 
-      // 2. If dragged timer had a link AND is not at position 0, create new link to timer above
-      if (hadLink && adjustedToIndex > 0) {
-        presets[adjustedToIndex - 1].linkedToNext = true;
-      }
+        // If this timer is now at position 0, it can't have a link (no timer above)
+        if (newIdx > 0) {
+          presets[newIdx - 1].linkedToNext = true;
+        }
+        // If newIdx === 0, the link is lost (timer is now first)
+      });
 
       savePresets(presets);
 
       // Update activePresetIndex if needed
       if (activePresetIndex === fromIndex) {
-        activePresetIndex = adjustedToIndex;
-      } else if (fromIndex < activePresetIndex && adjustedToIndex >= activePresetIndex) {
+        activePresetIndex = finalIndex;
+      } else if (fromIndex < activePresetIndex && finalIndex >= activePresetIndex) {
         activePresetIndex--;
-      } else if (fromIndex > activePresetIndex && adjustedToIndex <= activePresetIndex) {
+      } else if (fromIndex > activePresetIndex && finalIndex <= activePresetIndex) {
         activePresetIndex++;
       }
     }
