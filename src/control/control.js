@@ -1815,11 +1815,12 @@ function setupDragListeners() {
       // Create 99% scale placeholder (cloned from original)
       const placeholder = row.cloneNode(true);
       placeholder.className = 'preset-item drag-placeholder';
-      placeholder.style.transform = 'scale(0.95)';
+      placeholder.style.transform = 'scale(0.99)';
       placeholder.style.transformOrigin = 'center center';
       placeholder.style.opacity = '0.5';
       placeholder.style.pointerEvents = 'none';
-      placeholder.style.boxShadow = 'inset 0 0 0 2px #555';
+      placeholder.style.outline = '2px dashed #555';
+      placeholder.style.outlineOffset = '-2px';
       dragState.placeholderEl = placeholder;
 
       // Replace original row with placeholder (keeps same DOM position)
