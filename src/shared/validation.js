@@ -197,7 +197,11 @@ export function validatePreset(preset) {
 
   if (!config) return null;
 
-  return { name, config };
+  return {
+    name,
+    config,
+    linkedToNext: Boolean(preset.linkedToNext)
+  };
 }
 
 /**
