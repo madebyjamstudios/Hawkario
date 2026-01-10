@@ -1725,12 +1725,12 @@ function setupDragListeners() {
 
     // Find which timer the cursor is hovering over
     let hoveredIndex = -1;
+
     for (let i = 0; i < visibleItems.length; i++) {
       const item = visibleItems[i];
       const rect = item.getBoundingClientRect();
 
-      if (e.clientY >= rect.top && e.clientY <= rect.bottom &&
-          e.clientX >= rect.left && e.clientX <= rect.right) {
+      if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
         hoveredIndex = i;
         break;
       }
@@ -1745,27 +1745,22 @@ function setupDragListeners() {
       }
     });
 
-    // Determine target index based on hover
-    let targetIndex = dragState.currentIndex;
-    if (hoveredIndex !== -1) {
-      targetIndex = hoveredIndex;
-    }
-
-    // Only move placeholder if target changed and we're hovering a timer
-    if (targetIndex !== dragState.currentIndex && dragState.placeholderEl && hoveredIndex !== -1) {
+    // When hovering over a timer, placeholder takes that timer's visual spot
+    // The hovered timer and others shift to fill the gap
+    // Dragging timer 1 over timer 5 results in: 2,3,4,5,[1],6
+    if (hoveredIndex !== -1 && hoveredIndex !== dragState.currentIndex && dragState.placeholderEl) {
       // Remove placeholder from current position
       dragState.placeholderEl.remove();
 
-      // Insert at new position
-      if (targetIndex >= visibleItems.length) {
-        // Append to end
-        els.presetList.appendChild(dragState.placeholderEl);
+      // Insert placeholder right after the hovered timer
+      const hoveredItem = visibleItems[hoveredIndex];
+      if (hoveredItem.nextSibling) {
+        hoveredItem.parentNode.insertBefore(dragState.placeholderEl, hoveredItem.nextSibling);
       } else {
-        // Insert before the target item
-        visibleItems[targetIndex].parentNode.insertBefore(dragState.placeholderEl, visibleItems[targetIndex]);
+        hoveredItem.parentNode.appendChild(dragState.placeholderEl);
       }
 
-      dragState.currentIndex = targetIndex;
+      dragState.currentIndex = hoveredIndex;
     }
   });
 
