@@ -453,6 +453,12 @@ button:disabled {
   transition: none !important;
 }
 
+/* In-place placeholder (transform-based drag) */
+.preset-item.drag-placeholder {
+  opacity: 0.5 !important;
+  pointer-events: none !important;
+}
+
 /* Drag ghost - the item following the cursor */
 .drag-ghost {
   pointer-events: none !important;
@@ -573,6 +579,12 @@ button:disabled {
   margin: -4px 0;
   padding: 0;
   cursor: pointer;
+}
+
+/* Smooth transform transition during drag */
+.link-zone.drag-transforming,
+.preset-item.drag-transforming {
+  transition: transform 0.15s ease !important;
 }
 
 /* Upper connector line - going UP from icon */

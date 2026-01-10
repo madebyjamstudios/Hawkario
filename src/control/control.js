@@ -174,7 +174,7 @@ const dragState = {
   isDragging: false,
   dragActivated: false,  // True only after mouse moves 5px+
   fromIndex: null,
-  currentIndex: null,
+  currentSlot: null,     // Current visual slot position (for transforms)
   draggedRow: null,
   ghostEl: null,
   placeholderEl: null,
@@ -183,7 +183,14 @@ const dragState = {
   startX: 0,
   startY: 0,
   originalHeight: 0,
-  originalWidth: 0
+  originalWidth: 0,
+  // Transform-based drag fields
+  visibleItems: [],      // All timer elements (excluding placeholder)
+  linkZones: [],         // All link zone elements
+  timerLinkZoneMap: null, // Maps each timer element → its link zone (above it)
+  draggedLinkZone: null, // Link zone being dragged with timer (if any)
+  hasLink: false,        // Whether dragged timer has a link to timer above
+  slotHeight: 0          // Height of timer + link zone for transforms
 };
 
 // SVG Icons
@@ -1776,7 +1783,81 @@ function setupEventListeners() {
 // ============ Drag and Drop ============
 
 /**
- * Setup global mouse-based drag listeners
+ * Apply CSS transforms to reorder timers visually during drag
+ * Links move with their associated timers (bottom timer owns the link)
+ */
+function applyDragTransforms(fromIndex, toIndex) {
+  const slotHeight = dragState.slotHeight;
+
+  // Transform the placeholder (dragged timer's original spot)
+  const placeholderDelta = (toIndex - fromIndex) * slotHeight;
+  if (dragState.placeholderEl) {
+    dragState.placeholderEl.style.transform = `translateY(${placeholderDelta}px)`;
+  }
+
+  // Transform dragged timer's link zone (if any) - it moves with the timer
+  if (dragState.draggedLinkZone) {
+    dragState.draggedLinkZone.style.transform = `translateY(${placeholderDelta}px)`;
+  }
+
+  // Transform other timers and their link zones
+  dragState.visibleItems.forEach((timer, i) => {
+    if (i === fromIndex) return; // Skip dragged timer
+
+    let transform = '';
+
+    if (fromIndex < toIndex) {
+      // Dragging DOWN: timers between from+1 and to shift UP
+      if (i > fromIndex && i <= toIndex) {
+        transform = `translateY(-${slotHeight}px)`;
+      }
+    } else if (fromIndex > toIndex) {
+      // Dragging UP: timers between to and from-1 shift DOWN
+      if (i >= toIndex && i < fromIndex) {
+        transform = `translateY(${slotHeight}px)`;
+      }
+    }
+
+    timer.style.transform = transform;
+
+    // Also transform this timer's link zone (the one above it)
+    const linkZone = dragState.timerLinkZoneMap.get(timer);
+    if (linkZone && linkZone !== dragState.draggedLinkZone) {
+      linkZone.style.transform = transform;
+    }
+  });
+}
+
+/**
+ * Calculate target slot based on cursor Y position
+ */
+function calculateTargetSlot(clientY) {
+  const items = dragState.visibleItems;
+  if (items.length === 0) return dragState.fromIndex;
+
+  // Get the original positions (without transforms)
+  const firstRect = items[0].getBoundingClientRect();
+  const slotHeight = dragState.slotHeight;
+
+  // Calculate slot boundaries based on original first item position
+  // Account for the transforms already applied
+  const baseY = firstRect.top - (items[0].style.transform ? parseFloat(items[0].style.transform.match(/-?\d+/)?.[0] || 0) : 0);
+
+  for (let i = 0; i < items.length; i++) {
+    const slotTop = baseY + i * slotHeight;
+    const slotBottom = slotTop + slotHeight;
+    const slotMid = slotTop + slotHeight / 2;
+
+    if (clientY < slotMid) {
+      return i;
+    }
+  }
+
+  return items.length - 1;
+}
+
+/**
+ * Setup global mouse-based drag listeners (transform-based approach)
  */
 function setupDragListeners() {
   // Update ghost position and handle drop targets on mousemove
@@ -1794,6 +1875,42 @@ function setupDragListeners() {
       // Activate drag - create ghost and placeholder
       dragState.dragActivated = true;
       const row = dragState.draggedRow;
+      const fromIndex = dragState.fromIndex;
+
+      // Collect all timer elements and link zones BEFORE any modifications
+      const timers = Array.from(els.presetList.querySelectorAll('.preset-item'));
+      const linkZones = Array.from(els.presetList.querySelectorAll('.link-zone'));
+
+      dragState.visibleItems = timers;
+      dragState.linkZones = linkZones;
+
+      // Map each timer to its link zone (the one ABOVE it)
+      // Link zone at index i is between timer[i] and timer[i+1], so it "belongs" to timer[i+1]
+      dragState.timerLinkZoneMap = new Map();
+      linkZones.forEach((zone, i) => {
+        const timerBelow = timers[i + 1];
+        if (timerBelow) {
+          dragState.timerLinkZoneMap.set(timerBelow, zone);
+        }
+      });
+
+      // Get the dragged timer's link zone (if it has one - meaning there's a timer above linked to it)
+      const presets = loadPresets();
+      if (fromIndex > 0) {
+        dragState.draggedLinkZone = linkZones[fromIndex - 1] || null;
+        dragState.hasLink = presets[fromIndex - 1]?.linkedToNext === true;
+      } else {
+        dragState.draggedLinkZone = null;
+        dragState.hasLink = false;
+      }
+
+      // Calculate slot height (timer height + link zone height if present)
+      const timerHeight = row.getBoundingClientRect().height;
+      const linkZoneHeight = linkZones.length > 0 ? linkZones[0].getBoundingClientRect().height : 0;
+      // Get gap from computed style
+      const listStyle = window.getComputedStyle(els.presetList);
+      const gap = parseFloat(listStyle.gap) || 0;
+      dragState.slotHeight = timerHeight + linkZoneHeight + gap;
 
       // Create ghost element (follows cursor - the one you're "holding")
       const ghost = row.cloneNode(true);
@@ -1811,38 +1928,19 @@ function setupDragListeners() {
       document.body.appendChild(ghost);
       dragState.ghostEl = ghost;
 
-      // Create placeholder wrapper (full size with dashed outline)
-      const placeholderWrapper = document.createElement('div');
-      placeholderWrapper.className = 'drag-placeholder-wrapper';
-      placeholderWrapper.style.border = '2px solid #555';
-      placeholderWrapper.style.borderRadius = '12px';
-      placeholderWrapper.style.padding = '4px';
-      placeholderWrapper.style.display = 'flex';
-      placeholderWrapper.style.justifyContent = 'center';
-      placeholderWrapper.style.alignItems = 'center';
+      // Turn original row into placeholder (in-place, no DOM movement)
+      row.classList.add('drag-placeholder');
+      row.style.opacity = '0.5';
+      row.style.border = '2px dashed #555';
+      row.style.borderRadius = '12px';
+      dragState.placeholderEl = row;
 
-      // Create inner placeholder (98% size, 50% opacity)
-      const placeholderInner = row.cloneNode(true);
-      placeholderInner.className = 'preset-item drag-placeholder-item';
-      placeholderInner.style.opacity = '0.5';
-      placeholderInner.style.pointerEvents = 'none';
-      placeholderInner.style.transform = 'scale(0.99)';
-      placeholderInner.style.transformOrigin = 'center center';
-      placeholderInner.style.margin = '0';
-      placeholderInner.style.width = '100%';
+      // Initialize current slot
+      dragState.currentSlot = fromIndex;
 
-      placeholderWrapper.appendChild(placeholderInner);
-      dragState.placeholderEl = placeholderWrapper;
-
-      // Hide original row completely and insert placeholder in its place
-      row.style.display = 'none';
-      row.parentNode.insertBefore(placeholderWrapper, row);
-
-      // Hide all link zones during drag to prevent shifting
-      const linkZones = els.presetList.querySelectorAll('.link-zone');
-      linkZones.forEach(zone => {
-        zone.style.display = 'none';
-      });
+      // Add transition class for smooth transforms
+      timers.forEach(t => t.classList.add('drag-transforming'));
+      linkZones.forEach(z => z.classList.add('drag-transforming'));
     }
 
     if (!dragState.ghostEl) return;
@@ -1851,71 +1949,13 @@ function setupDragListeners() {
     dragState.ghostEl.style.left = (e.clientX - dragState.grabOffsetX) + 'px';
     dragState.ghostEl.style.top = (e.clientY - dragState.grabOffsetY) + 'px';
 
-    // Get all visible preset items (excluding placeholder wrapper and hidden original)
-    const allElements = Array.from(els.presetList.children);
-    const visibleItems = allElements.filter(item =>
-      item.classList.contains('preset-item') &&
-      !item.classList.contains('drag-placeholder-item') &&
-      !item.classList.contains('drag-placeholder-wrapper') &&
-      item !== dragState.placeholderEl &&
-      item.style.display !== 'none'
-    );
+    // Calculate target slot based on cursor position
+    const targetSlot = calculateTargetSlot(e.clientY);
 
-    // Find which timer the cursor is hovering over
-    let hoveredIndex = -1;
-
-    for (let i = 0; i < visibleItems.length; i++) {
-      const item = visibleItems[i];
-      const rect = item.getBoundingClientRect();
-
-      if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
-        hoveredIndex = i;
-        break;
-      }
-    }
-
-    // Update hover highlight on timers during drag
-    visibleItems.forEach((item, i) => {
-      if (i === hoveredIndex) {
-        item.classList.add('drag-hover');
-      } else {
-        item.classList.remove('drag-hover');
-      }
-    });
-
-    // When hovering over a timer, insert placeholder based on cursor position
-    // Top half of timer = insert before, bottom half = insert after
-    if (hoveredIndex !== -1 && dragState.placeholderEl) {
-      const hoveredItem = visibleItems[hoveredIndex];
-      const rect = hoveredItem.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      const insertBefore = e.clientY < midY;
-
-      // Determine the correct sibling position
-      let targetSibling;
-      if (insertBefore) {
-        targetSibling = hoveredItem; // Insert before hovered item
-      } else {
-        targetSibling = hoveredItem.nextSibling; // Insert after hovered item
-      }
-
-      // Check if placeholder is already in the right position
-      const currentNext = dragState.placeholderEl.nextSibling;
-      const isCorrectPosition = insertBefore
-        ? (currentNext === hoveredItem)
-        : (dragState.placeholderEl.previousSibling === hoveredItem);
-
-      if (!isCorrectPosition) {
-        // Remove placeholder from current position
-        dragState.placeholderEl.remove();
-
-        // Insert at new position
-        if (targetSibling) {
-          hoveredItem.parentNode.insertBefore(dragState.placeholderEl, targetSibling);
-        } else {
-          hoveredItem.parentNode.appendChild(dragState.placeholderEl);
-        }
-      }
+    // Only update if slot changed
+    if (targetSlot !== dragState.currentSlot) {
+      dragState.currentSlot = targetSlot;
+      applyDragTransforms(dragState.fromIndex, targetSlot);
     }
   });
 
@@ -1928,7 +1968,7 @@ function setupDragListeners() {
       dragState.isDragging = false;
       dragState.dragActivated = false;
       dragState.fromIndex = null;
-      dragState.currentIndex = null;
+      dragState.currentSlot = null;
       dragState.draggedRow = null;
       return;
     }
@@ -1939,62 +1979,70 @@ function setupDragListeners() {
       dragState.ghostEl = null;
     }
 
-    // Remove drag-hover class from all items
-    els.presetList.querySelectorAll('.drag-hover').forEach(item => {
-      item.classList.remove('drag-hover');
+    // Clear all transforms and transition classes
+    dragState.visibleItems.forEach(t => {
+      t.style.transform = '';
+      t.classList.remove('drag-transforming');
+    });
+    dragState.linkZones.forEach(z => {
+      z.style.transform = '';
+      z.classList.remove('drag-transforming');
     });
 
-    // Calculate final index based on placeholder position
-    let finalIndex = 0;
-    const allChildren = Array.from(els.presetList.children);
-    let count = 0;
-
-    for (const child of allChildren) {
-      if (child === dragState.placeholderEl) {
-        finalIndex = count;
-        break;
-      }
-      // Count only visible preset items (not hidden, not placeholder)
-      if (child.classList.contains('preset-item') &&
-          child.style.display !== 'none' &&
-          !child.classList.contains('drag-placeholder-item')) {
-        count++;
-      }
-    }
-
-    // Remove placeholder
+    // Reset placeholder styling
     if (dragState.placeholderEl) {
-      dragState.placeholderEl.remove();
-      dragState.placeholderEl = null;
-    }
-
-    // Show original row again
-    if (dragState.draggedRow) {
-      dragState.draggedRow.style.display = '';
+      dragState.placeholderEl.classList.remove('drag-placeholder');
+      dragState.placeholderEl.style.opacity = '';
+      dragState.placeholderEl.style.border = '';
+      dragState.placeholderEl.style.borderRadius = '';
+      dragState.placeholderEl.style.transform = '';
     }
 
     // Reorder if position changed
     const fromIndex = dragState.fromIndex;
-    if (fromIndex !== null && fromIndex !== finalIndex) {
+    const toIndex = dragState.currentSlot;
+
+    if (fromIndex !== null && toIndex !== null && fromIndex !== toIndex) {
       saveUndoState(); // Save state before reorder for undo
       const presets = loadPresets();
+      const hadLink = dragState.hasLink;
+
+      // Remove the timer from old position
       const [moved] = presets.splice(fromIndex, 1);
 
-      // Adjust finalIndex if we removed from before it
-      let toIndex = finalIndex;
-      if (fromIndex < finalIndex) {
-        toIndex--;
+      // Adjust toIndex if we removed from before it
+      let adjustedToIndex = toIndex;
+      if (fromIndex < toIndex) {
+        adjustedToIndex--;
       }
 
-      presets.splice(toIndex, 0, moved);
+      // Insert at new position
+      presets.splice(adjustedToIndex, 0, moved);
+
+      // Update links:
+      // 1. Clear old link (if dragged timer had a link, the timer that was above it no longer links to it)
+      if (fromIndex > 0 && hadLink) {
+        // The timer that was at fromIndex-1 (before the move) now needs its linkedToNext cleared
+        // After splice, this timer might be at a different index
+        const oldAboveTimerNewIndex = fromIndex <= adjustedToIndex ? fromIndex - 1 : fromIndex - 1;
+        if (oldAboveTimerNewIndex >= 0 && presets[oldAboveTimerNewIndex]) {
+          presets[oldAboveTimerNewIndex].linkedToNext = false;
+        }
+      }
+
+      // 2. If dragged timer had a link AND is not at position 0, create new link to timer above
+      if (hadLink && adjustedToIndex > 0) {
+        presets[adjustedToIndex - 1].linkedToNext = true;
+      }
+
       savePresets(presets);
 
       // Update activePresetIndex if needed
       if (activePresetIndex === fromIndex) {
-        activePresetIndex = toIndex;
-      } else if (fromIndex < activePresetIndex && toIndex >= activePresetIndex) {
+        activePresetIndex = adjustedToIndex;
+      } else if (fromIndex < activePresetIndex && adjustedToIndex >= activePresetIndex) {
         activePresetIndex--;
-      } else if (fromIndex > activePresetIndex && toIndex <= activePresetIndex) {
+      } else if (fromIndex > activePresetIndex && adjustedToIndex <= activePresetIndex) {
         activePresetIndex++;
       }
     }
@@ -2003,8 +2051,14 @@ function setupDragListeners() {
     dragState.isDragging = false;
     dragState.dragActivated = false;
     dragState.fromIndex = null;
-    dragState.currentIndex = null;
+    dragState.currentSlot = null;
     dragState.draggedRow = null;
+    dragState.visibleItems = [];
+    dragState.linkZones = [];
+    dragState.timerLinkZoneMap = null;
+    dragState.draggedLinkZone = null;
+    dragState.hasLink = false;
+    dragState.slotHeight = 0;
 
     renderPresetList();
   });
