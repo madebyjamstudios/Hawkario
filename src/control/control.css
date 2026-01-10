@@ -851,20 +851,20 @@ header {
 .output-btn {
   background: transparent;
   border-color: #E64A19;
-  color: #E64A19;
+  color: #fff;
   font-weight: 600;
 }
 
 .output-btn:hover {
   background: rgba(230, 74, 25, 0.15);
   border-color: #FF5722;
-  color: #FF5722;
+  color: #fff;
 }
 
 .output-btn:active {
   background: rgba(230, 74, 25, 0.25);
   border-color: #BF360C;
-  color: #BF360C;
+  color: #fff;
 }
 
 .header-settings-btn {
