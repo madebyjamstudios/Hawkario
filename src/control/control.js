@@ -476,13 +476,25 @@ function updateModalPreview() {
     ? hexToRgba(els.bgColor.value, bgOpacity)
     : 'transparent';
 
+  // Scale font size proportionally for the modal preview
+  // vw is relative to viewport, but we need it relative to the modal preview width
+  const modalPreviewWidth = els.modalPreview.offsetWidth || 400;
+  const viewportWidth = window.innerWidth;
+  const scaleFactor = modalPreviewWidth / viewportWidth;
+  const fontSizeVw = parseFloat(els.fontSize.value) || 10;
+  const scaledFontSize = fontSizeVw * viewportWidth * scaleFactor / 100;
+
+  // Scale stroke width proportionally too
+  const strokeWidthPx = parseFloat(els.strokeWidth.value) || 0;
+  const scaledStroke = strokeWidthPx * scaleFactor;
+
   els.modalPreview.style.background = bg;
   els.modalPreviewTimer.style.fontFamily = els.fontFamily.value;
   els.modalPreviewTimer.style.fontWeight = els.fontWeight.value;
-  els.modalPreviewTimer.style.fontSize = els.fontSize.value + 'vw';
+  els.modalPreviewTimer.style.fontSize = scaledFontSize + 'px';
   els.modalPreviewTimer.style.color = els.fontColor.value;
   els.modalPreviewTimer.style.opacity = els.opacity.value;
-  els.modalPreviewTimer.style.webkitTextStrokeWidth = els.strokeWidth.value + 'px';
+  els.modalPreviewTimer.style.webkitTextStrokeWidth = Math.max(0, scaledStroke) + 'px';
   els.modalPreviewTimer.style.webkitTextStrokeColor = els.strokeColor.value;
   els.modalPreviewTimer.style.textShadow = els.shadow.value;
   els.modalPreviewTimer.style.letterSpacing = els.letterSpacing.value + 'em';
