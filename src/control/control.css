@@ -1069,16 +1069,23 @@ footer small {
   background: #15803d;
 }
 
-/* Modal preview - sticky at top while settings scroll */
-.modal-preview-wrapper {
+/* Modal preview - sticky section at top while settings scroll */
+.modal-preview-section {
   position: sticky;
-  top: 0;
+  top: -20px;
   z-index: 10;
+  background: #111;
+  margin: -20px -20px 0 -20px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.modal-preview-wrapper {
   border: 1px solid #333;
   border-radius: 10px;
   background: #0a0a0a;
   aspect-ratio: 16 / 9;
-  margin-bottom: 16px;
   overflow: hidden;
 }
 
