@@ -1811,20 +1811,14 @@ function setupDragListeners() {
       document.body.appendChild(ghost);
       dragState.ghostEl = ghost;
 
-      // Create placeholder - 99% scale shadow effect
-      const placeholder = row.cloneNode(true);
-      placeholder.className = 'preset-item drag-placeholder';
-      placeholder.style.opacity = '0.4';
-      placeholder.style.pointerEvents = 'none';
-      placeholder.style.transform = 'scale(0.99)';
-      placeholder.style.transformOrigin = 'center center';
-      placeholder.style.outline = '2px dashed #555';
-      placeholder.style.outlineOffset = '-2px';
-      dragState.placeholderEl = placeholder;
-
-      // Hide original row but keep its space (visibility preserves layout)
-      row.style.visibility = 'hidden';
-      row.parentNode.insertBefore(placeholder, row);
+      // Style original row as placeholder - 99% scale shadow effect
+      row.style.opacity = '0.4';
+      row.style.pointerEvents = 'none';
+      row.style.transform = 'scale(0.99)';
+      row.style.outline = '2px dashed #555';
+      row.style.outlineOffset = '-2px';
+      row.classList.add('drag-placeholder');
+      dragState.placeholderEl = row;
 
       // Hide all link zones during drag (use visibility to preserve layout)
       const linkZones = els.presetList.querySelectorAll('.link-zone');
@@ -1949,16 +1943,16 @@ function setupDragListeners() {
       }
     }
 
-    // Remove placeholder
-    if (dragState.placeholderEl) {
-      dragState.placeholderEl.remove();
-      dragState.placeholderEl = null;
-    }
-
-    // Show original row again
+    // Restore original row styles (placeholder IS the original row now)
     if (dragState.draggedRow) {
-      dragState.draggedRow.style.visibility = '';
+      dragState.draggedRow.style.opacity = '';
+      dragState.draggedRow.style.pointerEvents = '';
+      dragState.draggedRow.style.transform = '';
+      dragState.draggedRow.style.outline = '';
+      dragState.draggedRow.style.outlineOffset = '';
+      dragState.draggedRow.classList.remove('drag-placeholder');
     }
+    dragState.placeholderEl = null;
 
     // Reorder if position changed
     const fromIndex = dragState.fromIndex;
