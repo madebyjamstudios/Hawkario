@@ -1838,10 +1838,10 @@ function setupDragListeners() {
       row.style.display = 'none';
       row.parentNode.insertBefore(placeholderWrapper, row);
 
-      // Hide all link zones during drag to prevent shifting
+      // Hide all link zones during drag (use visibility to preserve layout)
       const linkZones = els.presetList.querySelectorAll('.link-zone');
       linkZones.forEach(zone => {
-        zone.style.display = 'none';
+        zone.style.visibility = 'hidden';
       });
     }
 
