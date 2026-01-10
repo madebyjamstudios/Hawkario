@@ -973,6 +973,19 @@ footer small {
   font-size: 14px;
 }
 
+/* Modal save button - green */
+#modalSave {
+  background: #22c55e;
+}
+
+#modalSave:hover {
+  background: #16a34a;
+}
+
+#modalSave:active {
+  background: #15803d;
+}
+
 /* Modal preview */
 .modal-preview-wrapper {
   border: 1px solid #333;
