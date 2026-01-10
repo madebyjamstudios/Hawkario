@@ -190,7 +190,8 @@ const dragState = {
   timerLinkZoneMap: null, // Maps each timer element → its link zone (above it)
   draggedLinkZone: null, // Link zone being dragged with timer (if any)
   hasLink: false,        // Whether dragged timer has a link to timer above
-  slotHeight: 0          // Height of timer + link zone for transforms
+  slotHeight: 0,         // Height of timer + link zone for transforms
+  originalBaseY: 0       // Original Y position of first slot (before any transforms)
 };
 
 // SVG Icons
@@ -1830,23 +1831,17 @@ function applyDragTransforms(fromIndex, toIndex) {
 
 /**
  * Calculate target slot based on cursor Y position
+ * Uses stored original positions to prevent oscillation from transforms
  */
 function calculateTargetSlot(clientY) {
   const items = dragState.visibleItems;
   if (items.length === 0) return dragState.fromIndex;
 
-  // Get the original positions (without transforms)
-  const firstRect = items[0].getBoundingClientRect();
   const slotHeight = dragState.slotHeight;
-
-  // Calculate slot boundaries based on original first item position
-  // Account for the transforms already applied
-  const baseY = firstRect.top - (items[0].style.transform ? parseFloat(items[0].style.transform.match(/-?\d+/)?.[0] || 0) : 0);
+  const baseY = dragState.originalBaseY;
 
   for (let i = 0; i < items.length; i++) {
-    const slotTop = baseY + i * slotHeight;
-    const slotBottom = slotTop + slotHeight;
-    const slotMid = slotTop + slotHeight / 2;
+    const slotMid = baseY + i * slotHeight + slotHeight / 2;
 
     if (clientY < slotMid) {
       return i;
@@ -1911,6 +1906,9 @@ function setupDragListeners() {
       const listStyle = window.getComputedStyle(els.presetList);
       const gap = parseFloat(listStyle.gap) || 0;
       dragState.slotHeight = timerHeight + linkZoneHeight + gap;
+
+      // Store original base Y position (first timer's top) for stable slot calculation
+      dragState.originalBaseY = timers[0].getBoundingClientRect().top;
 
       // Create ghost element (follows cursor - the one you're "holding")
       // If timer owns a link, include the link zone in the ghost
@@ -2113,6 +2111,7 @@ function setupDragListeners() {
     dragState.draggedLinkZone = null;
     dragState.hasLink = false;
     dragState.slotHeight = 0;
+    dragState.originalBaseY = 0;
 
     renderPresetList();
   });

@@ -581,10 +581,10 @@ button:disabled {
   cursor: pointer;
 }
 
-/* Smooth transform transition during drag */
+/* No transition during drag - instant snappy movement */
 .link-zone.drag-transforming,
 .preset-item.drag-transforming {
-  transition: transform 0.15s ease !important;
+  transition: none !important;
 }
 
 /* Upper connector line - going UP from icon */
