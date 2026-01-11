@@ -424,6 +424,7 @@ function saveUndoState() {
  */
 function undo() {
   if (undoStack.length === 0) {
+    showToast('Nothing to undo', 'info');
     return false;
   }
 
@@ -439,6 +440,7 @@ function undo() {
   }
 
   renderPresetList();
+  showToast('Undone', 'success');
   return true;
 }
 
