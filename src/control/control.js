@@ -112,8 +112,7 @@ const els = {
   boldToggle: document.getElementById('boldToggle'),
   italicToggle: document.getElementById('italicToggle'),
   sendMode: document.getElementById('sendMode'),
-  sendMessage: document.getElementById('sendMessage'),
-  addMessage: document.getElementById('addMessage')
+  sendMessage: document.getElementById('sendMessage')
 };
 
 // Helper functions for unified time input (HH:MM:SS)
@@ -974,6 +973,13 @@ function switchTab(tabName) {
   els.messagesTabBtn.classList.toggle('active', tabName === 'messages');
   els.timersTab.classList.toggle('active', tabName === 'timers');
   els.messagesTab.classList.toggle('active', tabName === 'messages');
+
+  // Update Add button text based on active tab
+  els.addTimer.textContent = tabName === 'timers' ? '+ Add Timer' : '+ Add Message';
+}
+
+function getActiveTab() {
+  return els.messagesTab.classList.contains('active') ? 'messages' : 'timers';
 }
 
 // ============ Message Management ============
@@ -1032,11 +1038,7 @@ function renderMessageList() {
   }
 
   if (list.length === 0 && !activeMessage) {
-    const empty = document.createElement('div');
-    empty.className = 'message-empty';
-    empty.textContent = 'No saved messages. Type a message below and click "Save Message" to save it for reuse.';
-    els.messageList.appendChild(empty);
-    return;
+    return; // No placeholder text - just show empty list
   }
 
   list.forEach((msg, idx) => {
@@ -2966,7 +2968,6 @@ function setupEventListeners() {
     els.italicToggle.classList.toggle('active');
   });
   els.sendMessage.addEventListener('click', sendComposedMessage);
-  els.addMessage.addEventListener('click', saveCurrentMessage);
   els.messageText.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -2998,24 +2999,29 @@ function setupEventListeners() {
   // Preset controls
   els.importFile.addEventListener('change', handleImport);
   els.addTimer.addEventListener('click', () => {
-    // Auto-create timer with defaults from app settings
-    const presets = loadPresets();
-    let counter = 1;
-    let name = `Timer ${counter}`;
-    while (presets.some(p => p.name === name)) {
-      counter++;
-      name = `Timer ${counter}`;
+    if (getActiveTab() === 'messages') {
+      // Save message
+      saveCurrentMessage();
+    } else {
+      // Auto-create timer with defaults from app settings
+      const presets = loadPresets();
+      let counter = 1;
+      let name = `Timer ${counter}`;
+      while (presets.some(p => p.name === name)) {
+        counter++;
+        name = `Timer ${counter}`;
+      }
+
+      const defaultConfig = getDefaultTimerConfig();
+      presets.push({ name, config: defaultConfig });
+      savePresets(presets);
+      renderPresetList();
+
+      // Auto-scroll to show the new timer
+      requestAnimationFrame(() => {
+        els.presetList.scrollTop = els.presetList.scrollHeight;
+      });
     }
-
-    const defaultConfig = getDefaultTimerConfig();
-    presets.push({ name, config: defaultConfig });
-    savePresets(presets);
-    renderPresetList();
-
-    // Auto-scroll to show the new timer
-    requestAnimationFrame(() => {
-      els.presetList.scrollTop = els.presetList.scrollHeight;
-    });
   });
 
   // Modal controls
