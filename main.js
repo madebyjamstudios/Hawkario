@@ -199,7 +199,10 @@ ipcMain.handle('app:version', () => {
   return app.getVersion();
 });
 
-// Check for updates from GitHub
+// Build timestamp - update this when you make a new build
+const BUILD_DATE = new Date('2025-01-11T00:00:00Z');
+
+// Check for updates from GitHub (compares latest commit date)
 ipcMain.handle('app:check-updates', async () => {
   const https = require('https');
   const currentVersion = app.getVersion();
@@ -207,7 +210,7 @@ ipcMain.handle('app:check-updates', async () => {
   return new Promise((resolve) => {
     const options = {
       hostname: 'api.github.com',
-      path: '/repos/madebyjamstudios/ninja-timer/releases/latest',
+      path: '/repos/madebyjamstudios/ninja-timer/commits/main',
       headers: { 'User-Agent': 'Ninja-Timer-App' }
     };
 
@@ -216,17 +219,20 @@ ipcMain.handle('app:check-updates', async () => {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try {
-          const release = JSON.parse(data);
-          if (release.tag_name) {
-            const latestVersion = release.tag_name.replace('v', '');
+          const commit = JSON.parse(data);
+          if (commit.commit && commit.commit.committer) {
+            const latestCommitDate = new Date(commit.commit.committer.date);
+            const updateAvailable = latestCommitDate > BUILD_DATE;
+
             resolve({
               currentVersion,
-              latestVersion,
-              updateAvailable: latestVersion !== currentVersion && latestVersion > currentVersion,
-              downloadUrl: release.html_url
+              updateAvailable,
+              latestCommitDate: latestCommitDate.toLocaleDateString(),
+              buildDate: BUILD_DATE.toLocaleDateString(),
+              downloadUrl: 'https://github.com/madebyjamstudios/ninja-timer'
             });
           } else {
-            resolve({ currentVersion, latestVersion: currentVersion, updateAvailable: false });
+            resolve({ currentVersion, updateAvailable: false });
           }
         } catch (e) {
           resolve({ error: 'Failed to parse response' });

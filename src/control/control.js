@@ -757,6 +757,33 @@ function saveAppSettings(settings) {
   }
 }
 
+async function checkForUpdates() {
+  const statusEl = document.getElementById('updateStatus');
+  if (!statusEl) return;
+
+  statusEl.textContent = 'Checking...';
+  statusEl.className = '';
+
+  try {
+    const result = await window.ninja.checkForUpdates();
+
+    if (result.error) {
+      statusEl.textContent = result.error;
+      statusEl.className = 'update-error';
+    } else if (result.updateAvailable) {
+      statusEl.innerHTML = `New updates available! <a href="${result.downloadUrl}" target="_blank">View on GitHub</a>`;
+      statusEl.className = 'update-available';
+    } else {
+      statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date!`;
+      statusEl.className = 'update-success';
+    }
+  } catch (e) {
+    console.error('Failed to check for updates:', e);
+    statusEl.textContent = 'Failed to check for updates';
+    statusEl.className = 'update-error';
+  }
+}
+
 function openAppSettings() {
   const settings = loadAppSettings();
 
@@ -773,6 +800,9 @@ function openAppSettings() {
   els.controlOnTop.value = settings.controlOnTop ? 'on' : 'off';
 
   els.appSettingsModal.classList.remove('hidden');
+
+  // Auto-check for updates when settings open
+  checkForUpdates();
 }
 
 function closeAppSettings() {
@@ -2550,28 +2580,7 @@ function setupEventListeners() {
   els.settingsImport.addEventListener('click', () => els.importFile.click());
 
   // Check for updates
-  document.getElementById('checkUpdates').addEventListener('click', async () => {
-    const statusEl = document.getElementById('updateStatus');
-    statusEl.textContent = 'Checking...';
-
-    try {
-      const result = await window.ninja.checkForUpdates();
-
-      if (result.error) {
-        statusEl.textContent = result.error;
-        statusEl.className = 'update-error';
-      } else if (result.updateAvailable) {
-        statusEl.innerHTML = `Update available: v${result.latestVersion} <a href="${result.downloadUrl}" target="_blank">Download</a>`;
-        statusEl.className = 'update-available';
-      } else {
-        statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date! (v${result.currentVersion})`;
-        statusEl.className = 'update-success';
-      }
-    } catch (e) {
-      console.error('Failed to check for updates:', e);
-      statusEl.textContent = 'Failed to check for updates';
-    }
-  });
+  document.getElementById('checkUpdates').addEventListener('click', checkForUpdates);
 
   // Close app settings on backdrop click
   els.appSettingsModal.addEventListener('click', (e) => {
