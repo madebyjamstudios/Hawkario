@@ -1181,6 +1181,10 @@ footer small {
   padding: 0.1em 0.15em;
 }
 
+.modal-preview .tod-line {
+  font-size: 13px;
+}
+
 /* Toast notifications */
 .toast-container {
   position: fixed;
