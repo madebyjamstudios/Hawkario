@@ -1,5 +1,5 @@
 /**
- * Hawkario Timer -Timer Utilities
+ * Ninja Timer - Timer Utilities
  * Shared functions for time parsing and formatting
  */
 

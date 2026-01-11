@@ -1,5 +1,5 @@
 /**
- * Hawkario Timer - Input Validation
+ * Ninja Timer - Input Validation
  * Validates and sanitizes user input
  */
 

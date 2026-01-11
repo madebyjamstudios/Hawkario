@@ -1,8 +1,8 @@
 /**
- * Hawkario Timer - Shared Constants
+ * Ninja Timer - Shared Constants
  */
 
-// Brand colors (from Hawkario icon)
+// Brand colors
 export const BRAND_COLORS = {
   orange: '#E64A19',
   orangeLight: '#FF5722',
@@ -12,8 +12,8 @@ export const BRAND_COLORS = {
 
 // Local storage keys
 export const STORAGE_KEYS = {
-  PRESETS: 'hawkario-presets-v1',
-  SETTINGS: 'hawkario-settings-v1'
+  PRESETS: 'ninja-presets-v1',
+  SETTINGS: 'ninja-settings-v1'
 };
 
 // Timer modes

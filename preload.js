@@ -1,12 +1,12 @@
 /**
- * Hawkario Timer - Preload Script
+ * Ninja Timer - Preload Script
  * Secure IPC bridge between renderer processes and main process
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Expose a secure API to renderer processes
-contextBridge.exposeInMainWorld('hawkario', {
+contextBridge.exposeInMainWorld('ninja', {
   // Timer commands (control -> main -> output)
   sendTimerCommand: (command, config) => {
     ipcRenderer.send('timer:command', { command, config });

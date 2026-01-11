@@ -1,5 +1,5 @@
 /**
- * Hawkario Timer -Main Process
+ * Ninja Timer - Main Process
  * Electron main process with IPC message broker
  */
 
@@ -36,7 +36,7 @@ function createMainWindow() {
     minWidth: 280,
     minHeight: 400,
     center: true,
-    title: 'Hawkario Timer',
+    title: 'Ninja Timer',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -75,7 +75,7 @@ function createOutputWindow() {
     height: targetDisplay.bounds.height,
     x: targetDisplay.bounds.x,
     y: targetDisplay.bounds.y,
-    title: 'Hawkario Timer - Output',
+    title: 'Ninja Timer - Output',
     fullscreen: hasSecondaryDisplay, // Auto-fullscreen on secondary display
     alwaysOnTop: outputAlwaysOnTop,
     webPreferences: {
@@ -218,7 +218,7 @@ ipcMain.handle('dialog:confirm', async (_event, options) => {
 
 const menuTemplate = [
   {
-    label: 'Hawkario Timer',
+    label: 'Ninja Timer',
     submenu: [
       { role: 'about' },
       { type: 'separator' },

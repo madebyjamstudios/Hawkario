@@ -1,5 +1,5 @@
 {
-  "name": "hawkario-timer",
+  "name": "ninja-timer",
   "version": "2.0.0",
   "description": "Professional countdown timer with customizable display for broadcasts and presentations",
   "main": "main.js",
@@ -8,7 +8,7 @@
     "build": "electron-builder --mac",
     "build:dmg": "electron-builder --mac dmg"
   },
-  "author": "Hawkario Timer",
+  "author": "Ninja Timer",
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.0.0",
@@ -16,8 +16,8 @@
     "electron-reload": "^2.0.0-alpha.1"
   },
   "build": {
-    "appId": "com.hawkario-timer.app",
-    "productName": "Hawkario Timer",
+    "appId": "com.ninja-timer.app",
+    "productName": "Ninja Timer",
     "mac": {
       "category": "public.app-category.utilities",
       "icon": "icon.icns",
@@ -26,7 +26,7 @@
       ]
     },
     "dmg": {
-      "title": "Hawkario Timer",
+      "title": "Ninja Timer",
       "icon": "icon.icns",
       "contents": [
         {

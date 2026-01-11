@@ -1,5 +1,5 @@
 /**
- * Hawkario Timer -Viewer Window
+ * Ninja Timer - Viewer Window
  * Output display for the timer
  */
 
@@ -433,17 +433,17 @@ function setupKeyboardShortcuts() {
       case ' ':
         // Space - toggle play/pause (send to control)
         e.preventDefault();
-        window.hawkario.sendKeyboardShortcut('toggle');
+        window.ninja.sendKeyboardShortcut('toggle');
         break;
 
       case 'r':
         // Reset
-        window.hawkario.sendKeyboardShortcut('reset');
+        window.ninja.sendKeyboardShortcut('reset');
         break;
 
       case 'b':
         // Blackout toggle
-        window.hawkario.sendKeyboardShortcut('blackout');
+        window.ninja.sendKeyboardShortcut('blackout');
         break;
 
       case 'escape':
@@ -529,13 +529,13 @@ function init() {
   applyStyle(state.style);
 
   // Setup IPC listener for timer commands (sounds, flash, etc.)
-  window.hawkario.onTimerUpdate(handleTimerUpdate);
+  window.ninja.onTimerUpdate(handleTimerUpdate);
 
   // Setup display state listener (main sync from control window)
-  window.hawkario.onDisplayUpdate(handleDisplayUpdate);
+  window.ninja.onDisplayUpdate(handleDisplayUpdate);
 
   // Setup blackout listener
-  window.hawkario.onBlackoutToggle(toggleBlackout);
+  window.ninja.onBlackoutToggle(toggleBlackout);
 
   // Setup keyboard shortcuts
   setupKeyboardShortcuts();
@@ -550,7 +550,7 @@ function init() {
   render();
 
   // Signal to main process that viewer is fully initialized and ready
-  window.hawkario.signalViewerReady();
+  window.ninja.signalViewerReady();
 }
 
 // Start when DOM is ready
@@ -562,5 +562,5 @@ if (document.readyState === 'loading') {
 
 // Cleanup on window close
 window.addEventListener('beforeunload', () => {
-  window.hawkario.removeAllListeners();
+  window.ninja.removeAllListeners();
 });

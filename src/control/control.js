@@ -1,5 +1,5 @@
 /**
- * Hawkario Timer -Control Window
+ * Ninja Timer - Control Window
  * Main controller for timer configuration and preset management
  */
 
@@ -337,6 +337,20 @@ let outputWindowReady = false;
 let editingPresetIndex = null; // Track which preset is being edited
 let activePresetIndex = null; // Track which preset is currently playing
 
+// Active timer config - stored separately so modal editing doesn't affect live preview
+let activeTimerConfig = {
+  mode: 'countdown',
+  durationSec: 600,
+  format: 'MM:SS',
+  style: {
+    color: '#ffffff',
+    strokeWidth: 2,
+    strokeColor: '#000000',
+    shadowSize: 10,
+    bgColor: '#000000'
+  }
+};
+
 // Timer state for live preview
 const timerState = {
   startedAt: null,
@@ -346,6 +360,25 @@ const timerState = {
   overtimeStartedAt: null
 };
 let isBlackedOut = false;
+
+/**
+ * Set the active timer config from a preset config
+ * This is what the live preview and output display - separate from form fields
+ */
+function setActiveTimerConfig(config) {
+  activeTimerConfig = {
+    mode: config.mode || 'countdown',
+    durationSec: config.durationSec || 600,
+    format: config.format || 'MM:SS',
+    style: {
+      color: config.style?.color || '#ffffff',
+      strokeWidth: config.style?.strokeWidth ?? 2,
+      strokeColor: config.style?.strokeColor || '#000000',
+      shadowSize: config.style?.shadowSize ?? 10,
+      bgColor: config.style?.bgColor || '#000000'
+    }
+  };
+}
 
 // Undo stack for reverting changes
 const undoStack = [];
@@ -382,7 +415,9 @@ function undo() {
 
   // If we have an active preset, apply its config
   if (activePresetIndex !== null && previousState.presets[activePresetIndex]) {
-    applyConfig(previousState.presets[activePresetIndex].config);
+    const config = previousState.presets[activePresetIndex].config;
+    setActiveTimerConfig(config);
+    applyConfig(config);
   }
 
   renderPresetList();
@@ -440,7 +475,7 @@ function showToast(message, type = 'info') {
 
 // ============ App Settings ============
 
-const APP_SETTINGS_KEY = 'hawkario:appSettings';
+const APP_SETTINGS_KEY = 'ninja:appSettings';
 
 const DEFAULT_APP_SETTINGS = {
   todFormat: '24h',
@@ -485,7 +520,7 @@ async function openAppSettings() {
   els.defaultSound.value = settings.defaults.soundEnabled ? 'on' : 'off';
 
   // Fetch window stay on top settings from main process
-  const windowSettings = await window.hawkario.getAlwaysOnTop();
+  const windowSettings = await window.ninja.getAlwaysOnTop();
   els.outputOnTop.value = windowSettings.output ? 'on' : 'off';
   els.controlOnTop.value = windowSettings.control ? 'on' : 'off';
 
@@ -511,8 +546,8 @@ function saveAppSettingsFromForm() {
   // Apply window stay on top settings to main process
   const outputOnTop = els.outputOnTop.value === 'on';
   const controlOnTop = els.controlOnTop.value === 'on';
-  window.hawkario.setAlwaysOnTop('output', outputOnTop);
-  window.hawkario.setAlwaysOnTop('control', controlOnTop);
+  window.ninja.setAlwaysOnTop('output', outputOnTop);
+  window.ninja.setAlwaysOnTop('control', controlOnTop);
 
   saveAppSettings(settings);
   closeAppSettings();
@@ -759,6 +794,7 @@ function openModal(presetIndex = null) {
     // Editing existing preset
     const presets = loadPresets();
     const preset = presets[presetIndex];
+    console.log('Opening modal for preset:', preset.name, 'config:', preset.config); // Debug log
     els.modalTitle.textContent = 'Edit Timer';
     els.presetName.value = preset.name;
     applyConfig(preset.config);
@@ -791,12 +827,18 @@ function saveModal() {
 
   const name = els.presetName.value.trim() || 'Timer';
   const config = getCurrentConfig();
+  console.log('Saving config:', config); // Debug log
   const presets = loadPresets();
 
   if (editingPresetIndex !== null) {
     // Update existing preset
     presets[editingPresetIndex] = { name, config };
     showToast(`Updated "${name}"`, 'success');
+
+    // If editing the active timer, update activeTimerConfig too
+    if (editingPresetIndex === activePresetIndex) {
+      setActiveTimerConfig(config);
+    }
   } else {
     // Create new preset
     presets.push({ name, config });
@@ -856,7 +898,7 @@ function updateModalPreview() {
 
 // ============ Collapsible Settings Sections ============
 
-const SECTIONS_STATE_KEY = 'hawkario:sectionsState';
+const SECTIONS_STATE_KEY = 'ninja:sectionsState';
 
 function setupCollapsibleSections() {
   const sections = document.querySelectorAll('.collapsible-section');
@@ -895,7 +937,7 @@ function saveSectionsState() {
 
 // ============ Preview Panel Resize ============
 
-const PREVIEW_WIDTH_KEY = 'hawkario:previewWidth';
+const PREVIEW_WIDTH_KEY = 'ninja:previewWidth';
 let isResizing = false;
 let startY = 0;
 let startWidth = 0;
@@ -1018,13 +1060,14 @@ function applyLivePreviewStyle() {
 function broadcastDisplayState(state) {
   if (!outputWindowReady) return;
 
-  const shadowSize = parseInt(els.shadowSize.value, 10) || 0;
+  // Use activeTimerConfig for style values (not form fields)
+  const style = activeTimerConfig.style;
 
-  window.hawkario.sendDisplayState({
+  window.ninja.sendDisplayState({
     visible: state.visible !== false,
     text: state.text || '',
     colorState: state.colorState || 'normal',
-    color: state.color || els.fontColor.value,
+    color: state.color || style.color,
     opacity: state.opacity !== undefined ? state.opacity : FIXED_STYLE.opacity,
     blackout: state.blackout || false,
     overtime: state.overtime || false,
@@ -1034,23 +1077,27 @@ function broadcastDisplayState(state) {
     style: {
       fontFamily: FIXED_STYLE.fontFamily,
       fontWeight: FIXED_STYLE.fontWeight,
-      strokeWidth: parseInt(els.strokeWidth.value, 10) || 0,
-      strokeColor: els.strokeColor.value,
-      textShadow: getShadowCSS(shadowSize),
+      strokeWidth: style.strokeWidth,
+      strokeColor: style.strokeColor,
+      textShadow: getShadowCSS(style.shadowSize),
       textAlign: FIXED_STYLE.align,
       letterSpacing: FIXED_STYLE.letterSpacing,
-      background: els.bgColor.value
+      background: style.bgColor
     }
   });
 }
 
 /**
  * Render loop for live preview - mirrors actual timer output
+ * Uses activeTimerConfig so modal editing doesn't affect display
  */
 function renderLivePreview() {
-  const mode = els.mode.value;
-  const durationSec = getDurationSeconds();
-  const format = els.format.value;
+  // Use stored active timer config (not form fields)
+  const mode = activeTimerConfig.mode;
+  const durationSec = activeTimerConfig.durationSec;
+  const format = activeTimerConfig.format;
+  const fontColor = activeTimerConfig.style.color;
+  const bgColor = activeTimerConfig.style.bgColor;
 
   let displayText = '';
   let elapsed = 0;
@@ -1071,14 +1118,14 @@ function renderLivePreview() {
     displayText = formatTimeOfDay();
     els.livePreviewTimer.textContent = displayText;
     autoFitText(els.livePreviewTimer, els.livePreview, 0.9);
-    els.livePreviewTimer.style.color = els.fontColor.value;
+    els.livePreviewTimer.style.color = fontColor;
     els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
     els.livePreview.classList.remove('warning');
     broadcastDisplayState({
       visible: true,
       text: displayText,
       colorState: 'normal',
-      color: els.fontColor.value,
+      color: fontColor,
       opacity: FIXED_STYLE.opacity,
       blackout: isBlackedOut
     });
@@ -1129,6 +1176,7 @@ function renderLivePreview() {
           const nextIdx = activePresetIndex + 1;
           const nextPreset = presets[nextIdx];
           activePresetIndex = nextIdx;
+          setActiveTimerConfig(nextPreset.config);
           applyConfig(nextPreset.config);
 
           setTimeout(() => {
@@ -1194,7 +1242,7 @@ function renderLivePreview() {
     els.livePreviewTimer.style.color = '#E64A19';
     els.livePreview.classList.add('overtime');
   } else {
-    els.livePreviewTimer.style.color = els.fontColor.value;
+    els.livePreviewTimer.style.color = fontColor;
     els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
     els.livePreview.classList.remove('overtime');
   }
@@ -1208,7 +1256,7 @@ function renderLivePreview() {
 
   // Determine color state for broadcast
   let colorState = 'normal';
-  let currentColor = els.fontColor.value;
+  let currentColor = fontColor;
   let currentOpacity = FIXED_STYLE.opacity;
 
   if (timerState.overtime) {
@@ -1255,6 +1303,7 @@ function getCurrentConfig() {
 
 function applyConfig(config) {
   if (!config) return;
+  console.log('Applying config, mode:', config.mode); // Debug log
 
   els.mode.value = config.mode || 'countdown';
   setDurationInputs(config.durationSec || 1200);
@@ -1304,8 +1353,8 @@ function updateVolumeRowVisibility() {
 // ============ Timer Commands ============
 
 function sendCommand(command) {
-  const config = getCurrentConfig();
-  window.hawkario.sendTimerCommand(command, config);
+  // Use activeTimerConfig instead of form fields
+  window.ninja.sendTimerCommand(command, activeTimerConfig);
 
   // Update local timer state for live preview
   switch (command) {
@@ -1351,6 +1400,7 @@ function loadPresets() {
   try {
     // Check for presets in current key
     let data = localStorage.getItem(STORAGE_KEYS.PRESETS);
+    console.log('Loading presets from localStorage:', data); // Debug log
 
     // Migration: check for old key from first version
     if (!data) {
@@ -1373,6 +1423,7 @@ function loadPresets() {
 
 function savePresets(list) {
   try {
+    console.log('Saving presets to localStorage:', JSON.stringify(list)); // Debug log
     localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(list));
   } catch (e) {
     showToast('Failed to save presets', 'error');
@@ -1506,6 +1557,7 @@ function renderPresetList() {
       selectResetBtn.onclick = (e) => {
         e.stopPropagation();
         // Select this timer without starting
+        setActiveTimerConfig(preset.config);
         applyConfig(preset.config);
         activePresetIndex = idx;
         sendCommand('reset');
@@ -1540,6 +1592,7 @@ function renderPresetList() {
         sendCommand('resume');
       } else {
         // Start this preset fresh
+        setActiveTimerConfig(preset.config);
         applyConfig(preset.config);
         activePresetIndex = idx;
         sendCommand('start');
@@ -1773,6 +1826,7 @@ function createDefaultPreset() {
   if (presets.length > 0 && activePresetIndex === null) {
     activePresetIndex = 0;
     const firstPreset = presets[0];
+    setActiveTimerConfig(firstPreset.config);
     applyConfig(firstPreset.config);
   }
 }
@@ -1790,7 +1844,7 @@ function handleExportPresets() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'hawkario-presets.json';
+  a.download = 'ninja-presets.json';
   a.click();
 
   setTimeout(() => URL.revokeObjectURL(url), 5000);
@@ -1890,7 +1944,7 @@ function setupEventListeners() {
       els.blackoutBtn.classList.remove('transitioning');
     }, 300);
 
-    window.hawkario.toggleBlackout();
+    window.ninja.toggleBlackout();
   });
 
   // Flash button (synced with viewer): glow → grey → repeat 3 times
@@ -1943,15 +1997,15 @@ function setupEventListeners() {
     };
 
     showGlow();
-    window.hawkario.sendTimerCommand('flash', getCurrentConfig());
+    window.ninja.sendTimerCommand('flash', activeTimerConfig);
   });
 
   // Output button - opens window if not open, toggles fullscreen if already open
   els.openOutput.addEventListener('click', () => {
     if (outputWindowReady) {
-      window.hawkario.fullscreenOutput();
+      window.ninja.fullscreenOutput();
     } else {
-      window.hawkario.openOutputWindow();
+      window.ninja.openOutputWindow();
     }
   });
 
@@ -2078,13 +2132,13 @@ function setupEventListeners() {
 
       case 'b':
         // Blackout toggle
-        window.hawkario.toggleBlackout();
+        window.ninja.toggleBlackout();
         break;
     }
   });
 
   // Keyboard shortcuts from main process
-  window.hawkario.onKeyboardShortcut((shortcut) => {
+  window.ninja.onKeyboardShortcut((shortcut) => {
     switch (shortcut) {
       case 'start':
         sendCommand('start');
@@ -2107,16 +2161,22 @@ function setupEventListeners() {
         }
         break;
       case 'blackout':
-        window.hawkario.toggleBlackout();
+        window.ninja.toggleBlackout();
         break;
     }
   });
 
   // Output window ready notification
-  window.hawkario.onOutputWindowReady(() => {
+  window.ninja.onOutputWindowReady(() => {
     outputWindowReady = true;
+
+    // Use activeTimerConfig (not form fields)
+    const mode = activeTimerConfig.mode;
+    const durationSec = activeTimerConfig.durationSec;
+    const format = activeTimerConfig.format;
+
     // Sync current timer state to new window
-    const config = getCurrentConfig();
+    const config = { ...activeTimerConfig };
     config.timerState = {
       startedAt: timerState.startedAt,
       pausedAcc: timerState.pausedAcc,
@@ -2125,12 +2185,9 @@ function setupEventListeners() {
       overtimeStartedAt: timerState.overtimeStartedAt
     };
     config.isRunning = isRunning;
-    window.hawkario.sendTimerCommand('sync', config);
+    window.ninja.sendTimerCommand('sync', config);
 
-    // Calculate the correct display text (don't rely on DOM which might not be updated yet)
-    const mode = els.mode.value;
-    const durationSec = getDurationSeconds();
-    const format = els.format.value;
+    // Calculate the correct display text
     let displayText = '00:00';
 
     if (mode === 'tod') {
@@ -2151,18 +2208,18 @@ function setupEventListeners() {
       visible: mode !== 'hidden',
       text: displayText,
       colorState: 'normal',
-      color: els.fontColor.value,
+      color: activeTimerConfig.style.color,
       opacity: FIXED_STYLE.opacity
     });
   });
 
   // Output window closed notification
-  window.hawkario.onOutputWindowClosed(() => {
+  window.ninja.onOutputWindowClosed(() => {
     outputWindowReady = false;
   });
 
   // Blackout toggle listener
-  window.hawkario.onBlackoutToggle(() => {
+  window.ninja.onBlackoutToggle(() => {
     isBlackedOut = !isBlackedOut;
     els.blackoutBtn.classList.toggle('active', isBlackedOut);
   });
@@ -2527,7 +2584,7 @@ function init() {
   renderLivePreview();
 
   // Log version
-  window.hawkario.getVersion().then(version => {
+  window.ninja.getVersion().then(version => {
     const footer = document.querySelector('footer small');
     if (footer) footer.textContent = `v${version}`;
   });
@@ -2542,5 +2599,5 @@ if (document.readyState === 'loading') {
 
 // Cleanup on window close
 window.addEventListener('beforeunload', () => {
-  window.hawkario.removeAllListeners();
+  window.ninja.removeAllListeners();
 });
