@@ -145,11 +145,11 @@ export function formatTimeOfDay(format = '12h') {
   if (format === '12h') {
     const period = h >= 12 ? 'PM' : 'AM';
     h = h % 12 || 12; // Convert 0 to 12 for midnight
-    return `${h}${COLON}${pad(m)}${COLON}${pad(s)} ${period}`;
+    return `${h}${COLON_HTML}${pad(m)}${COLON_HTML}${pad(s)} ${period}`;
   }
 
   // 24-hour format
-  return `${h}${COLON}${pad(m)}${COLON}${pad(s)}`;
+  return `${h}${COLON_HTML}${pad(m)}${COLON_HTML}${pad(s)}`;
 }
 
 /**
