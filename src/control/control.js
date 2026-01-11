@@ -1472,6 +1472,11 @@ function renderPresetList() {
 
     name.append(nameText, editIcon);
 
+    // Duration display
+    const duration = document.createElement('div');
+    duration.className = 'preset-duration';
+    duration.textContent = secondsToHMS(preset.config?.durationSec || 0);
+
     const actions = document.createElement('div');
     actions.className = 'preset-actions';
 
@@ -1545,7 +1550,7 @@ function renderPresetList() {
     };
 
     actions.append(selectResetBtn, editBtn, playBtn, moreBtn);
-    row.append(dragHandle, name, actions);
+    row.append(dragHandle, name, duration, actions);
     els.presetList.appendChild(row);
 
     // Add link zone between timers (except after last one)
