@@ -480,6 +480,8 @@ const APP_SETTINGS_KEY = 'ninja:appSettings';
 const DEFAULT_APP_SETTINGS = {
   todFormat: '12h',
   confirmDelete: true,
+  outputOnTop: false,
+  controlOnTop: false,
   defaults: {
     mode: 'countdown',
     durationSec: 600,
@@ -508,7 +510,7 @@ function saveAppSettings(settings) {
   }
 }
 
-async function openAppSettings() {
+function openAppSettings() {
   const settings = loadAppSettings();
 
   // Populate form fields
@@ -519,10 +521,9 @@ async function openAppSettings() {
   els.defaultFormat.value = settings.defaults.format;
   els.defaultSound.value = settings.defaults.soundEnabled ? 'on' : 'off';
 
-  // Fetch window stay on top settings from main process
-  const windowSettings = await window.ninja.getAlwaysOnTop();
-  els.outputOnTop.value = windowSettings.output ? 'on' : 'off';
-  els.controlOnTop.value = windowSettings.control ? 'on' : 'off';
+  // Load window stay on top settings from saved settings
+  els.outputOnTop.value = settings.outputOnTop ? 'on' : 'off';
+  els.controlOnTop.value = settings.controlOnTop ? 'on' : 'off';
 
   els.appSettingsModal.classList.remove('hidden');
 }
@@ -532,9 +533,14 @@ function closeAppSettings() {
 }
 
 function saveAppSettingsFromForm() {
+  const outputOnTop = els.outputOnTop.value === 'on';
+  const controlOnTop = els.controlOnTop.value === 'on';
+
   const settings = {
     todFormat: els.todFormat.value,
     confirmDelete: els.confirmDelete.value === 'on',
+    outputOnTop: outputOnTop,
+    controlOnTop: controlOnTop,
     defaults: {
       mode: els.defaultMode.value,
       durationSec: getDefaultDurationSeconds(),
@@ -544,8 +550,6 @@ function saveAppSettingsFromForm() {
   };
 
   // Apply window stay on top settings to main process
-  const outputOnTop = els.outputOnTop.value === 'on';
-  const controlOnTop = els.controlOnTop.value === 'on';
   window.ninja.setAlwaysOnTop('output', outputOnTop);
   window.ninja.setAlwaysOnTop('control', controlOnTop);
 
@@ -2573,6 +2577,11 @@ function init() {
 
   // Setup global drag listeners for ghost positioning
   setupDragListeners();
+
+  // Apply saved window on-top settings
+  const appSettings = loadAppSettings();
+  window.ninja.setAlwaysOnTop('output', appSettings.outputOnTop);
+  window.ninja.setAlwaysOnTop('control', appSettings.controlOnTop);
 
   // Create default preset on first launch
   createDefaultPreset();
