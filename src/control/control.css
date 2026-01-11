@@ -1812,10 +1812,11 @@ button.danger:active {
 
 /* ============ Messages Tab ============ */
 
-.message-list-container {
-  flex: 1;
+#messagesTab {
   overflow-y: auto;
-  min-height: 0;
+}
+
+.message-list-container {
   padding: 4px;
 }
 
