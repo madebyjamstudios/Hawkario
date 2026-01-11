@@ -2126,15 +2126,32 @@ function setupEventListeners() {
     config.isRunning = isRunning;
     window.hawkario.sendTimerCommand('sync', config);
 
-    // Immediately broadcast current display state so output shows correctly
+    // Calculate the correct display text (don't rely on DOM which might not be updated yet)
     const mode = els.mode.value;
-    const displayText = els.livePreviewTimer.textContent || '00:00';
+    const durationSec = getDurationSeconds();
+    const format = els.format.value;
+    let displayText = '00:00';
+
+    if (mode === 'tod') {
+      displayText = formatTimeOfDay();
+    } else if (mode !== 'hidden') {
+      const isCountdown = mode === 'countdown' || mode === 'countdown-tod';
+      if (!isRunning && timerState.pausedAcc === 0 && timerState.startedAt === null) {
+        // Timer never started - show initial duration
+        const elapsed = isCountdown ? durationSec * 1000 : 0;
+        displayText = formatTime(elapsed, format);
+      } else {
+        // Use whatever the live preview is showing
+        displayText = els.livePreviewTimer.textContent || formatTime(isCountdown ? durationSec * 1000 : 0, format);
+      }
+    }
+
     broadcastDisplayState({
       visible: mode !== 'hidden',
       text: displayText,
       colorState: 'normal',
       color: els.fontColor.value,
-      opacity: parseFloat(els.opacity.value)
+      opacity: FIXED_STYLE.opacity
     });
   });
 
