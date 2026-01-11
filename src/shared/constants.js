@@ -36,7 +36,7 @@ export const DEFAULT_CONFIG = {
   format: TIME_FORMATS.MS,
   style: {
     fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-    fontWeight: '600',
+    fontWeight: '800',
     fontSizeVw: 10,
     color: '#ffffff',
     opacity: 1,
