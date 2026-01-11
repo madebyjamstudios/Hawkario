@@ -1429,11 +1429,32 @@ h3 {
 #updateStatus {
   font-size: 13px;
   color: #888;
+  transition: color 0.2s;
+}
+
+#updateStatus.update-success {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+#updateStatus.update-success .update-check {
+  display: inline-block;
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+#updateStatus.update-available {
+  color: #f59e0b;
+}
+
+#updateStatus.update-error {
+  color: #ef4444;
 }
 
 #updateStatus a {
   color: #4a9eff;
   text-decoration: none;
+  font-weight: 500;
 }
 
 #updateStatus a:hover {

@@ -2559,10 +2559,13 @@ function setupEventListeners() {
 
       if (result.error) {
         statusEl.textContent = result.error;
+        statusEl.className = 'update-error';
       } else if (result.updateAvailable) {
         statusEl.innerHTML = `Update available: v${result.latestVersion} <a href="${result.downloadUrl}" target="_blank">Download</a>`;
+        statusEl.className = 'update-available';
       } else {
-        statusEl.textContent = `You're up to date (v${result.currentVersion})`;
+        statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date! (v${result.currentVersion})`;
+        statusEl.className = 'update-success';
       }
     } catch (e) {
       console.error('Failed to check for updates:', e);
