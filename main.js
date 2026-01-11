@@ -281,6 +281,15 @@ ipcMain.on('app:restart', () => {
   app.exit(0);
 });
 
+// ============ Message Broadcasting ============
+
+// Message send: control -> main -> viewer
+ipcMain.on('message:send', (_event, message) => {
+  if (outputWindow && !outputWindow.isDestroyed()) {
+    outputWindow.webContents.send('message:update', message);
+  }
+});
+
 // Stay on top settings
 ipcMain.on('window:set-always-on-top', (_event, { window, value }) => {
   if (window === 'output') {

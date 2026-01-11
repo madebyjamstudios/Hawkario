@@ -67,13 +67,61 @@
       </button>
     </div>
 
-    <!-- Timer List (scrollable) -->
-    <div class="preset-list-container">
-      <div id="presetList" class="preset-list"></div>
+    <!-- Tab Content Container -->
+    <div class="tab-content-container">
+      <!-- Timers Tab (default) -->
+      <div id="timersTab" class="tab-content active">
+        <div class="preset-list-container">
+          <div id="presetList" class="preset-list"></div>
+        </div>
+        <button id="addTimer" class="add-timer-btn">+ Add Timer</button>
+      </div>
+
+      <!-- Messages Tab -->
+      <div id="messagesTab" class="tab-content">
+        <div class="message-list-container">
+          <div id="messageList" class="message-list"></div>
+        </div>
+        <div class="message-compose">
+          <div class="compose-input-row">
+            <input id="messageText" type="text" placeholder="Type a message..." class="message-input" />
+          </div>
+          <div class="compose-controls">
+            <div class="format-toggles">
+              <button id="boldToggle" class="format-btn" title="Bold"><strong>B</strong></button>
+              <button id="italicToggle" class="format-btn" title="Italic"><em>I</em></button>
+              <input id="messageColor" type="color" value="#ffffff" title="Text Color" class="color-picker" />
+            </div>
+            <div class="send-controls">
+              <select id="sendMode" class="send-mode-select">
+                <option value="persistent">Persistent</option>
+                <option value="timed">Timed (9s)</option>
+              </select>
+              <button id="sendMessage" class="send-btn">Send</button>
+            </div>
+          </div>
+        </div>
+        <button id="addMessage" class="add-message-btn">+ Save Message</button>
+      </div>
     </div>
 
-    <!-- Add Timer (bottom) -->
-    <button id="addTimer" class="add-timer-btn">+ Add Timer</button>
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button id="timersTabBtn" class="tab-btn active" data-tab="timers">
+        <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>Timers</span>
+      </button>
+      <button id="messagesTabBtn" class="tab-btn" data-tab="messages">
+        <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>Messages</span>
+      </button>
+    </div>
+
     <input id="importFile" type="file" accept="application/json" style="display:none" />
   </main>
 

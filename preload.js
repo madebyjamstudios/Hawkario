@@ -125,6 +125,18 @@ contextBridge.exposeInMainWorld('ninja', {
 
   getAlwaysOnTop: () => ipcRenderer.invoke('window:get-always-on-top'),
 
+  // ============ Message Broadcasting ============
+
+  // Send message to viewer (control -> main -> viewer)
+  sendMessage: (message) => {
+    ipcRenderer.send('message:send', message);
+  },
+
+  // Listen for message updates (viewer receives)
+  onMessageUpdate: (callback) => {
+    ipcRenderer.on('message:update', (_event, message) => callback(message));
+  },
+
   // Cleanup listeners (call when window closes)
   removeAllListeners: () => {
     ipcRenderer.removeAllListeners('timer:state');
@@ -136,5 +148,6 @@ contextBridge.exposeInMainWorld('ninja', {
     ipcRenderer.removeAllListeners('keyboard:shortcut');
     ipcRenderer.removeAllListeners('blackout:toggle');
     ipcRenderer.removeAllListeners('blackout:state');
+    ipcRenderer.removeAllListeners('message:update');
   }
 });

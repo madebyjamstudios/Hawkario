@@ -13,6 +13,7 @@ import { computeDisplay, getShadowCSS, autoFitText, FlashAnimator } from '../sha
 const timerEl = document.getElementById('timer');
 const stageEl = document.querySelector('.stage');
 const fsHintEl = document.getElementById('fsHint');
+const messageOverlayEl = document.getElementById('messageOverlay');
 
 // Canonical timer state from control window
 let canonicalState = null;
@@ -63,6 +64,24 @@ function setBlackout(isBlacked) {
  */
 function toggleBlackout() {
   setBlackout(!isBlackedOut);
+}
+
+/**
+ * Handle message updates from control window
+ */
+function handleMessageUpdate(message) {
+  if (!message || !message.visible) {
+    // Hide message
+    messageOverlayEl.classList.remove('visible', 'bold', 'italic');
+    return;
+  }
+
+  // Apply message content and styling
+  messageOverlayEl.textContent = message.text || '';
+  messageOverlayEl.style.color = message.color || '#ffffff';
+  messageOverlayEl.classList.toggle('bold', !!message.bold);
+  messageOverlayEl.classList.toggle('italic', !!message.italic);
+  messageOverlayEl.classList.add('visible');
 }
 
 /**
@@ -375,6 +394,9 @@ function init() {
   window.ninja.onTimerUpdate(handleTimerUpdate);
   window.ninja.onDisplayUpdate(handleDisplayUpdate);
   window.ninja.onBlackoutToggle(toggleBlackout);
+
+  // Setup message listener
+  window.ninja.onMessageUpdate(handleMessageUpdate);
 
   // Setup keyboard shortcuts
   setupKeyboardShortcuts();

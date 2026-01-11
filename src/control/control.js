@@ -97,7 +97,23 @@ const els = {
   confirmDontAskContainer: document.getElementById('confirmDontAskContainer'),
   confirmDontAsk: document.getElementById('confirmDontAsk'),
   confirmCancel: document.getElementById('confirmCancel'),
-  confirmDeleteBtn: document.getElementById('confirmDeleteBtn')
+  confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+
+  // Tab elements
+  timersTabBtn: document.getElementById('timersTabBtn'),
+  messagesTabBtn: document.getElementById('messagesTabBtn'),
+  timersTab: document.getElementById('timersTab'),
+  messagesTab: document.getElementById('messagesTab'),
+
+  // Message elements
+  messageList: document.getElementById('messageList'),
+  messageText: document.getElementById('messageText'),
+  messageColor: document.getElementById('messageColor'),
+  boldToggle: document.getElementById('boldToggle'),
+  italicToggle: document.getElementById('italicToggle'),
+  sendMode: document.getElementById('sendMode'),
+  sendMessage: document.getElementById('sendMessage'),
+  addMessage: document.getElementById('addMessage')
 };
 
 // Helper functions for unified time input (HH:MM:SS)
@@ -605,6 +621,11 @@ let flashAnimator = null;
 // Flash state for synced broadcast
 let flashState = { active: false, startedAt: null };
 
+// Message state
+let activeMessage = null; // { text, bold, italic, color, mode, sentAt, duration }
+let messageTimerId = null;
+const MESSAGES_KEY = 'ninja-messages-v1';
+
 /**
  * Set the active timer config from a preset config
  * This is what the live preview and output display - separate from form fields
@@ -944,6 +965,243 @@ function saveAppSettingsFromForm() {
 
   saveAppSettings(settings);
   closeAppSettings();
+}
+
+// ============ Tab Navigation ============
+
+function switchTab(tabName) {
+  els.timersTabBtn.classList.toggle('active', tabName === 'timers');
+  els.messagesTabBtn.classList.toggle('active', tabName === 'messages');
+  els.timersTab.classList.toggle('active', tabName === 'timers');
+  els.messagesTab.classList.toggle('active', tabName === 'messages');
+}
+
+// ============ Message Management ============
+
+function loadMessages() {
+  try {
+    const data = localStorage.getItem(MESSAGES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessagesToStorage(list) {
+  try {
+    localStorage.setItem(MESSAGES_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.error('Failed to save messages:', e);
+  }
+}
+
+function renderMessageList() {
+  const list = loadMessages();
+  els.messageList.innerHTML = '';
+
+  // Show active message bar if message is being displayed
+  if (activeMessage) {
+    const bar = document.createElement('div');
+    bar.className = 'active-message-bar' + (activeMessage.mode === 'timed' ? ' timed' : '');
+
+    const text = document.createElement('span');
+    text.className = 'active-message-text';
+    text.textContent = activeMessage.text;
+    if (activeMessage.bold) text.style.fontWeight = 'bold';
+    if (activeMessage.italic) text.style.fontStyle = 'italic';
+    text.style.color = activeMessage.color;
+
+    bar.appendChild(text);
+
+    if (activeMessage.mode === 'timed') {
+      const countdown = document.createElement('span');
+      countdown.className = 'message-countdown';
+      countdown.id = 'messageCountdown';
+      const remaining = Math.max(0, Math.ceil((activeMessage.sentAt + activeMessage.duration - Date.now()) / 1000));
+      countdown.textContent = remaining + 's';
+      bar.appendChild(countdown);
+    }
+
+    const retractBtn = document.createElement('button');
+    retractBtn.className = 'retract-btn';
+    retractBtn.textContent = 'Retract';
+    retractBtn.onclick = retractMessage;
+    bar.appendChild(retractBtn);
+
+    els.messageList.appendChild(bar);
+  }
+
+  if (list.length === 0 && !activeMessage) {
+    const empty = document.createElement('div');
+    empty.className = 'message-empty';
+    empty.textContent = 'No saved messages. Type a message below and click "Save Message" to save it for reuse.';
+    els.messageList.appendChild(empty);
+    return;
+  }
+
+  list.forEach((msg, idx) => {
+    const row = document.createElement('div');
+    row.className = 'message-item';
+
+    const preview = document.createElement('span');
+    preview.className = 'message-preview';
+    preview.textContent = msg.text;
+    if (msg.bold) preview.style.fontWeight = 'bold';
+    if (msg.italic) preview.style.fontStyle = 'italic';
+    preview.style.color = msg.color || '#ffffff';
+
+    const actions = document.createElement('div');
+    actions.className = 'message-actions';
+
+    // Load to compose area
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'icon-btn';
+    loadBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
+    loadBtn.title = 'Load to compose';
+    loadBtn.onclick = (e) => {
+      e.stopPropagation();
+      loadMessageToCompose(msg);
+    };
+
+    // Quick send
+    const sendBtn = document.createElement('button');
+    sendBtn.className = 'icon-btn play-btn';
+    sendBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+    sendBtn.title = 'Send now';
+    sendBtn.onclick = (e) => {
+      e.stopPropagation();
+      sendMessageNow(msg);
+    };
+
+    // Delete
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'icon-btn';
+    deleteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    deleteBtn.title = 'Delete';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation();
+      deleteMessage(idx);
+    };
+
+    actions.append(loadBtn, sendBtn, deleteBtn);
+    row.append(preview, actions);
+    els.messageList.appendChild(row);
+  });
+}
+
+function loadMessageToCompose(msg) {
+  els.messageText.value = msg.text;
+  els.messageColor.value = msg.color || '#ffffff';
+  els.boldToggle.classList.toggle('active', !!msg.bold);
+  els.italicToggle.classList.toggle('active', !!msg.italic);
+}
+
+function saveCurrentMessage() {
+  const text = els.messageText.value.trim();
+  if (!text) return;
+
+  const msg = {
+    text,
+    bold: els.boldToggle.classList.contains('active'),
+    italic: els.italicToggle.classList.contains('active'),
+    color: els.messageColor.value
+  };
+
+  const messages = loadMessages();
+  messages.push(msg);
+  saveMessagesToStorage(messages);
+  renderMessageList();
+
+  // Clear compose area
+  els.messageText.value = '';
+}
+
+function deleteMessage(idx) {
+  const messages = loadMessages();
+  messages.splice(idx, 1);
+  saveMessagesToStorage(messages);
+  renderMessageList();
+}
+
+function sendMessageNow(msg) {
+  const mode = els.sendMode.value;
+  const duration = mode === 'timed' ? 9000 : 0;
+
+  activeMessage = {
+    text: msg.text,
+    bold: msg.bold,
+    italic: msg.italic,
+    color: msg.color,
+    mode: mode,
+    sentAt: Date.now(),
+    duration: duration
+  };
+
+  // Broadcast to viewer
+  window.ninja.sendMessage({
+    text: msg.text,
+    bold: msg.bold,
+    italic: msg.italic,
+    color: msg.color,
+    visible: true
+  });
+
+  // Start countdown timer for timed messages
+  if (mode === 'timed') {
+    startMessageCountdown();
+  }
+
+  renderMessageList();
+}
+
+function sendComposedMessage() {
+  const text = els.messageText.value.trim();
+  if (!text) return;
+
+  const msg = {
+    text,
+    bold: els.boldToggle.classList.contains('active'),
+    italic: els.italicToggle.classList.contains('active'),
+    color: els.messageColor.value
+  };
+
+  sendMessageNow(msg);
+}
+
+function retractMessage() {
+  if (messageTimerId) {
+    clearInterval(messageTimerId);
+    messageTimerId = null;
+  }
+
+  activeMessage = null;
+
+  // Clear from viewer
+  window.ninja.sendMessage({ visible: false });
+
+  renderMessageList();
+}
+
+function startMessageCountdown() {
+  if (messageTimerId) clearInterval(messageTimerId);
+
+  messageTimerId = setInterval(() => {
+    if (!activeMessage || activeMessage.mode !== 'timed') {
+      clearInterval(messageTimerId);
+      messageTimerId = null;
+      return;
+    }
+
+    const remaining = Math.max(0, Math.ceil((activeMessage.sentAt + activeMessage.duration - Date.now()) / 1000));
+    const countdownEl = document.getElementById('messageCountdown');
+    if (countdownEl) {
+      countdownEl.textContent = remaining + 's';
+    }
+
+    if (remaining <= 0) {
+      retractMessage();
+    }
+  }, 100);
 }
 
 // ============ Custom Confirm Dialog ============
@@ -2696,6 +2954,26 @@ function setupEventListeners() {
   document.getElementById('downloadUpdates').addEventListener('click', downloadUpdates);
   document.getElementById('restartApp').addEventListener('click', restartApp);
 
+  // Tab navigation
+  els.timersTabBtn.addEventListener('click', () => switchTab('timers'));
+  els.messagesTabBtn.addEventListener('click', () => switchTab('messages'));
+
+  // Message controls
+  els.boldToggle.addEventListener('click', () => {
+    els.boldToggle.classList.toggle('active');
+  });
+  els.italicToggle.addEventListener('click', () => {
+    els.italicToggle.classList.toggle('active');
+  });
+  els.sendMessage.addEventListener('click', sendComposedMessage);
+  els.addMessage.addEventListener('click', saveCurrentMessage);
+  els.messageText.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendComposedMessage();
+    }
+  });
+
   // Close app settings on backdrop click
   els.appSettingsModal.addEventListener('click', (e) => {
     if (e.target === els.appSettingsModal) {
@@ -3278,6 +3556,7 @@ function init() {
   setupEventListeners();
   applyPreview();
   renderPresetList();
+  renderMessageList();
 
   // Start live preview render loop
   renderLivePreview();
