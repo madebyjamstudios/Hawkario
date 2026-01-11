@@ -1163,6 +1163,9 @@ function updateModalPreview() {
   // Auto-fit text - timer-only modes get more space (0.95), ToD+timer uses 0.9
   const fitPercent = showToD ? 0.9 : 0.95;
   autoFitText(els.modalPreviewTimer, els.modalPreview, fitPercent);
+
+  // Align duration buttons to match timer digit positions
+  alignDurationButtons();
 }
 
 // ============ Collapsible Settings Sections ============
@@ -1296,6 +1299,50 @@ function autoFitText(textEl, containerEl, targetPercent = 0.9) {
     const newFontSize = Math.max(10, 100 * ratio); // Min 10px for readability
     textEl.style.fontSize = newFontSize + 'px';
   }
+}
+
+// Align duration button columns to match timer digit positions
+function alignDurationButtons() {
+  const timerEl = els.modalPreviewTimer;
+  const controls = document.getElementById('durationControls');
+  if (!timerEl || !controls) return;
+
+  // Get the timer's computed font size
+  const fontSize = parseFloat(window.getComputedStyle(timerEl).fontSize) || 20;
+
+  // Approximate character width (monospace-like with tabular nums)
+  // Inter font at tabular-nums is roughly 0.55em per digit
+  const charWidth = fontSize * 0.55;
+  const colonWidth = fontSize * 0.3;
+
+  // Apply widths to digit columns
+  const digitCols = controls.querySelectorAll('.digit-col');
+  digitCols.forEach(col => {
+    col.style.width = charWidth + 'px';
+  });
+
+  // Apply widths to separators
+  const separators = controls.querySelectorAll('.digit-separator');
+  separators.forEach(sep => {
+    sep.style.width = colonWidth + 'px';
+    sep.style.fontSize = fontSize * 0.7 + 'px';
+  });
+
+  // Scale digit values to match timer
+  const digitValues = controls.querySelectorAll('.digit-value');
+  digitValues.forEach(val => {
+    val.style.fontSize = fontSize * 0.5 + 'px';
+  });
+
+  // Scale buttons proportionally
+  const btnWidth = Math.max(16, charWidth * 0.85);
+  const btnHeight = Math.max(14, fontSize * 0.35);
+  const digitBtns = controls.querySelectorAll('.digit-btn');
+  digitBtns.forEach(btn => {
+    btn.style.width = btnWidth + 'px';
+    btn.style.height = btnHeight + 'px';
+    btn.style.fontSize = Math.max(8, fontSize * 0.2) + 'px';
+  });
 }
 
 /**

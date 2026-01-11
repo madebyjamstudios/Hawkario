@@ -1233,7 +1233,8 @@ footer small {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 24px;
+  min-width: 20px;
+  /* Width set dynamically by alignDurationButtons() */
 }
 
 .digit-btn {
