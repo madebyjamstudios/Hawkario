@@ -27,7 +27,7 @@ export function validateConfig(config) {
  * Validate timer mode
  */
 export function validateMode(mode) {
-  const validModes = ['countdown', 'countup'];
+  const validModes = ['countdown', 'countup', 'tod', 'countdown-tod', 'countup-tod', 'hidden'];
   return validModes.includes(mode) ? mode : 'countdown';
 }
 
