@@ -7,7 +7,7 @@ import { parseHMS, secondsToHMS, formatTime, formatTimeOfDay, hexToRgba, debounc
 import { validateConfig, validatePresets, safeJSONParse, validateExportData } from '../shared/validation.js';
 import { STORAGE_KEYS } from '../shared/constants.js';
 import { createTimerState, FIXED_STYLE } from '../shared/timerState.js';
-import { computeDisplay, getShadowCSS, applyStyle as applySharedStyle, autoFitText, FlashAnimator } from '../shared/renderTimer.js';
+import { computeDisplay, getShadowCSS, FlashAnimator } from '../shared/renderTimer.js';
 
 // DOM Elements
 const els = {
