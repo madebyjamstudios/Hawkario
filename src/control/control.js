@@ -1311,9 +1311,9 @@ function alignDurationButtons() {
   const fontSize = parseFloat(window.getComputedStyle(timerEl).fontSize) || 20;
 
   // Approximate character width (monospace-like with tabular nums)
-  // Inter font at tabular-nums is roughly 0.55em per digit
-  const charWidth = fontSize * 0.55;
-  const colonWidth = fontSize * 0.3;
+  // Inter font at tabular-nums is roughly 0.65em per digit
+  const charWidth = fontSize * 0.65;
+  const colonWidth = fontSize * 0.35;
 
   // Apply widths to digit columns
   const digitCols = controls.querySelectorAll('.digit-col');
