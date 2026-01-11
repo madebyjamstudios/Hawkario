@@ -789,7 +789,7 @@ function closeModal() {
 function saveModal() {
   saveUndoState(); // Save state before changes for undo
 
-  const name = (els.presetName.value.trim() || 'Timer').slice(0, 16);
+  const name = els.presetName.value.trim() || 'Timer';
   const config = getCurrentConfig();
   const presets = loadPresets();
 
@@ -1463,7 +1463,7 @@ function renderPresetList() {
     // Name with pencil edit icon - opens quick edit popup
     const name = document.createElement('div');
     name.className = 'preset-name';
-    name.title = 'Click to edit name';
+    name.title = 'Click to edit title';
     name.onclick = (e) => {
       e.stopPropagation();
       showQuickEditPopup(idx, preset, name);
@@ -1472,6 +1472,7 @@ function renderPresetList() {
     const nameText = document.createElement('span');
     nameText.className = 'preset-name-text';
     nameText.textContent = preset.name;
+    nameText.title = preset.name; // Tooltip showing full title on hover
 
     const editIcon = document.createElement('span');
     editIcon.className = 'edit-icon';
@@ -1696,8 +1697,7 @@ function showQuickEditPopup(idx, preset, anchorEl) {
   const input = document.createElement('input');
   input.type = 'text';
   input.value = preset.name;
-  input.placeholder = 'Timer name';
-  input.maxLength = 16;
+  input.placeholder = 'Timer title';
 
   inputRow.append(label, input);
 
@@ -1714,7 +1714,7 @@ function showQuickEditPopup(idx, preset, anchorEl) {
   saveBtn.textContent = 'Save';
   saveBtn.onclick = () => {
     saveUndoState(); // Save state before rename for undo
-    const newName = (input.value.trim() || 'Timer').slice(0, 16);
+    const newName = input.value.trim() || 'Timer';
     const presets = loadPresets();
     presets[idx].name = newName;
     savePresets(presets);
