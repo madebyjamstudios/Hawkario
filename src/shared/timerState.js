@@ -69,7 +69,7 @@ export function getDefaultStyle() {
  * Fixed style constants (not user-configurable)
  */
 export const FIXED_STYLE = {
-  fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+  fontFamily: "'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace",
   fontWeight: '700',
   opacity: 1,
   align: 'center',
