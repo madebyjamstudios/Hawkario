@@ -1159,7 +1159,8 @@ function renderLivePreview() {
     displayText = '+' + mins + ':' + String(secs).padStart(2, '0');
     els.livePreviewTimer.classList.add('overtime');
   } else {
-    displayText = formatTime(elapsed, format);
+    // Use roundUp=true for countdown so 9999ms shows as 10:00, not 9:59
+    displayText = formatTime(elapsed, format, isCountdown);
     els.livePreviewTimer.classList.remove('overtime');
   }
 
@@ -2139,10 +2140,10 @@ function setupEventListeners() {
       if (!isRunning && timerState.pausedAcc === 0 && timerState.startedAt === null) {
         // Timer never started - show initial duration
         const elapsed = isCountdown ? durationSec * 1000 : 0;
-        displayText = formatTime(elapsed, format);
+        displayText = formatTime(elapsed, format, isCountdown);
       } else {
         // Use whatever the live preview is showing
-        displayText = els.livePreviewTimer.textContent || formatTime(isCountdown ? durationSec * 1000 : 0, format);
+        displayText = els.livePreviewTimer.textContent || formatTime(isCountdown ? durationSec * 1000 : 0, format, isCountdown);
       }
     }
 

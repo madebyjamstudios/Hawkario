@@ -58,10 +58,11 @@ export function secondsToHMS(total) {
  * Format milliseconds according to display format
  * @param {number} ms - Milliseconds
  * @param {string} format - Display format ('H:MM:SS', 'MM:SS', 'SS')
+ * @param {boolean} roundUp - If true, use ceil instead of floor (for countdowns)
  * @returns {string} Formatted time string
  */
-export function formatTime(ms, format = 'MM:SS') {
-  const total = Math.max(0, Math.floor(ms / 1000));
+export function formatTime(ms, format = 'MM:SS', roundUp = false) {
+  const total = Math.max(0, roundUp ? Math.ceil(ms / 1000) : Math.floor(ms / 1000));
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
