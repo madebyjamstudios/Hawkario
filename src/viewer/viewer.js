@@ -106,8 +106,9 @@ function triggerFlash() {
   const originalShadow = timerEl.style.textShadow;
   const originalStroke = timerEl.style.webkitTextStrokeColor;
   const originalStrokeWidth = timerEl.style.webkitTextStrokeWidth;
+  const originalBg = stageEl.style.background;
 
-  // Mark as flashing to prevent applyColorState from overriding
+  // Mark as flashing to prevent applyStyle from overriding
   isFlashing = true;
 
   // Timing
@@ -130,6 +131,10 @@ function triggerFlash() {
     const blur4 = Math.round(glowScale * 8);    // Wide halo
     const blur5 = Math.round(glowScale * 15);   // Large outer glow
 
+    // Brief background flash for visibility
+    stageEl.style.background = '#222';
+    document.body.style.background = '#222';
+
     // Intense white glow - multiple solid layers for brightness
     timerEl.style.color = '#ffffff';
     timerEl.style.webkitTextStrokeColor = '#ffffff';
@@ -148,11 +153,13 @@ function triggerFlash() {
   };
 
   const showGrey = () => {
-    // Grey text - no glow, just grey
+    // Grey text - no glow, reset background
     timerEl.style.color = '#666666';
     timerEl.style.webkitTextStrokeColor = '#666666';
     timerEl.style.webkitTextStrokeWidth = '0px';
     timerEl.style.textShadow = 'none';
+    stageEl.style.background = originalBg;
+    document.body.style.background = originalBg;
 
     flashCount++;
 
@@ -165,6 +172,8 @@ function triggerFlash() {
         timerEl.style.textShadow = originalShadow;
         timerEl.style.webkitTextStrokeColor = originalStroke;
         timerEl.style.webkitTextStrokeWidth = originalStrokeWidth;
+        stageEl.style.background = originalBg;
+        document.body.style.background = originalBg;
         isFlashing = false;
       }, greyDuration);
     }
@@ -179,6 +188,9 @@ function triggerFlash() {
  */
 function applyStyle(style) {
   if (!style) return;
+
+  // Skip style changes during flash animation to prevent overwriting flash effect
+  if (isFlashing) return;
 
   // Use hardcoded FIXED_STYLE values for non-configurable options
   timerEl.style.fontFamily = style.fontFamily || FIXED_STYLE.fontFamily;
