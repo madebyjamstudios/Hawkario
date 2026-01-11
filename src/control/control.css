@@ -1185,16 +1185,16 @@ footer small {
   z-index: 10;
   background: #111;
   margin: -20px -20px 0 -20px;
-  padding: 16px 20px;
+  padding: 10px 20px;
   border-bottom: 1px solid #333;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .modal-preview-wrapper {
   border: 1px solid #333;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #0a0a0a;
-  aspect-ratio: 16 / 9;
+  height: 80px;
   overflow: hidden;
 }
 
@@ -1204,8 +1204,7 @@ footer small {
   display: grid;
   place-items: center;
   position: relative;
-  /* Padding to prevent stroke from being clipped at edges */
-  padding: 8px 12px;
+  padding: 4px 8px;
   box-sizing: border-box;
 }
 
@@ -1221,7 +1220,7 @@ footer small {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px 0;
+  padding: 12px 0;
   gap: 0;
 }
 
@@ -1234,18 +1233,18 @@ footer small {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 28px;
+  width: 36px;
 }
 
 .digit-btn {
-  width: 24px;
-  height: 20px;
+  width: 30px;
+  height: 22px;
   padding: 0;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1;
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 3px;
+  border-radius: 4px;
   color: #ccc;
   cursor: pointer;
   transition: all 0.15s;
@@ -1266,20 +1265,20 @@ footer small {
 }
 
 .digit-value {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 600;
   color: #fff;
-  padding: 4px 0;
+  padding: 2px 0;
   font-variant-numeric: tabular-nums;
-  min-width: 14px;
+  min-width: 20px;
   text-align: center;
 }
 
 .digit-separator {
-  font-size: 18px;
+  font-size: 24px;
   color: #666;
   font-weight: 600;
-  padding: 0 4px;
+  padding: 0 2px;
   align-self: center;
 }
 
