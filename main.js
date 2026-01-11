@@ -244,6 +244,30 @@ ipcMain.handle('app:check-updates', async () => {
   });
 });
 
+// Download updates (git pull from main branch)
+ipcMain.handle('app:download-updates', async () => {
+  const { exec } = require('child_process');
+  const appPath = __dirname;
+
+  return new Promise((resolve) => {
+    exec('git pull origin main', { cwd: appPath }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Git pull error:', error);
+        resolve({ success: false, error: stderr || error.message });
+      } else {
+        console.log('Git pull output:', stdout);
+        resolve({ success: true, output: stdout });
+      }
+    });
+  });
+});
+
+// Restart the app
+ipcMain.on('app:restart', () => {
+  app.relaunch();
+  app.exit(0);
+});
+
 // Stay on top settings
 ipcMain.on('window:set-always-on-top', (_event, { window, value }) => {
   if (window === 'output') {

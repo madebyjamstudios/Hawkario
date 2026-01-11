@@ -759,10 +759,15 @@ function saveAppSettings(settings) {
 
 async function checkForUpdates() {
   const statusEl = document.getElementById('updateStatus');
+  const checkBtn = document.getElementById('checkUpdates');
+  const downloadBtn = document.getElementById('downloadUpdates');
+  const restartBtn = document.getElementById('restartApp');
   if (!statusEl) return;
 
   statusEl.textContent = 'Checking...';
   statusEl.className = '';
+  downloadBtn.classList.add('hidden');
+  restartBtn.classList.add('hidden');
 
   try {
     const result = await window.ninja.checkForUpdates();
@@ -771,8 +776,10 @@ async function checkForUpdates() {
       statusEl.textContent = result.error;
       statusEl.className = 'update-error';
     } else if (result.updateAvailable) {
-      statusEl.innerHTML = `New updates available! <a href="${result.downloadUrl}" target="_blank">View on GitHub</a>`;
+      statusEl.textContent = 'New updates available!';
       statusEl.className = 'update-available';
+      checkBtn.classList.add('hidden');
+      downloadBtn.classList.remove('hidden');
     } else {
       statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date!`;
       statusEl.className = 'update-success';
@@ -782,6 +789,40 @@ async function checkForUpdates() {
     statusEl.textContent = 'Failed to check for updates';
     statusEl.className = 'update-error';
   }
+}
+
+async function downloadUpdates() {
+  const statusEl = document.getElementById('updateStatus');
+  const downloadBtn = document.getElementById('downloadUpdates');
+  const restartBtn = document.getElementById('restartApp');
+
+  statusEl.textContent = 'Downloading...';
+  statusEl.className = '';
+  downloadBtn.disabled = true;
+
+  try {
+    const result = await window.ninja.downloadUpdates();
+
+    if (result.success) {
+      statusEl.innerHTML = `<span class="update-check">✓</span> Updates downloaded!`;
+      statusEl.className = 'update-success';
+      downloadBtn.classList.add('hidden');
+      restartBtn.classList.remove('hidden');
+    } else {
+      statusEl.textContent = result.error || 'Download failed';
+      statusEl.className = 'update-error';
+      downloadBtn.disabled = false;
+    }
+  } catch (e) {
+    console.error('Failed to download updates:', e);
+    statusEl.textContent = 'Download failed';
+    statusEl.className = 'update-error';
+    downloadBtn.disabled = false;
+  }
+}
+
+function restartApp() {
+  window.ninja.restartApp();
 }
 
 function openAppSettings() {
@@ -800,6 +841,13 @@ function openAppSettings() {
   els.controlOnTop.value = settings.controlOnTop ? 'on' : 'off';
 
   els.appSettingsModal.classList.remove('hidden');
+
+  // Reset update buttons state
+  document.getElementById('checkUpdates').classList.remove('hidden');
+  document.getElementById('downloadUpdates').classList.add('hidden');
+  document.getElementById('restartApp').classList.add('hidden');
+  document.getElementById('updateStatus').textContent = '';
+  document.getElementById('updateStatus').className = '';
 
   // Auto-check for updates when settings open
   checkForUpdates();
@@ -2581,6 +2629,8 @@ function setupEventListeners() {
 
   // Check for updates
   document.getElementById('checkUpdates').addEventListener('click', checkForUpdates);
+  document.getElementById('downloadUpdates').addEventListener('click', downloadUpdates);
+  document.getElementById('restartApp').addEventListener('click', restartApp);
 
   // Close app settings on backdrop click
   els.appSettingsModal.addEventListener('click', (e) => {

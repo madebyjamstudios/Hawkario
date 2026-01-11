@@ -1424,6 +1424,27 @@ h3 {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+#downloadUpdates {
+  background: #22c55e;
+  color: white;
+  border-color: #16a34a;
+}
+
+#downloadUpdates:hover {
+  background: #16a34a;
+}
+
+#restartApp {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+#restartApp:hover {
+  background: #2563eb;
 }
 
 #updateStatus {

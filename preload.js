@@ -112,6 +112,8 @@ contextBridge.exposeInMainWorld('ninja', {
   // Get app info
   getVersion: () => ipcRenderer.invoke('app:version'),
   checkForUpdates: () => ipcRenderer.invoke('app:check-updates'),
+  downloadUpdates: () => ipcRenderer.invoke('app:download-updates'),
+  restartApp: () => ipcRenderer.send('app:restart'),
 
   // Show confirm dialog with app icon
   showConfirm: (options) => ipcRenderer.invoke('dialog:confirm', options),
