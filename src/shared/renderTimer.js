@@ -276,11 +276,12 @@ export class FlashAnimator {
       return;
     }
 
-    // Fade-out phase (after last glow)
+    // Fade-out phase (after last glow) - trigger once, CSS handles the rest
     if (elapsed >= this.glowEndTime) {
-      const fadeProgress = (elapsed - this.glowEndTime) / this.fadeOutDuration;
-      this.applyFadeOut(1 - fadeProgress); // 1 → 0
-      this.lastPhase = 'fadeOut';
+      if (this.lastPhase !== 'fadeOut') {
+        this.startFadeOut();
+        this.lastPhase = 'fadeOut';
+      }
       this.rafId = requestAnimationFrame(() => this.tick());
       return;
     }
@@ -319,38 +320,22 @@ export class FlashAnimator {
     this.timerEl.style.textShadow = 'none';
   }
 
-  applyFadeOut(intensity) {
-    // Intensity goes from 1 (full glow) to 0 (original)
-    const metrics = computeGlowMetrics(this.timerEl);
+  startFadeOut() {
+    // Use CSS transition for smooth fade - browser handles interpolation
+    const duration = this.fadeOutDuration + 'ms';
+    this.timerEl.style.transition = `color ${duration} ease-out, text-shadow ${duration} ease-out, -webkit-text-stroke-color ${duration} ease-out, -webkit-text-stroke-width ${duration} ease-out`;
 
-    // Interpolate glow blur values
-    const { glowBlur1, glowBlur2, glowBlur3, glowBlur4, glowBlur5 } = metrics;
-    const b1 = glowBlur1 * intensity;
-    const b2 = glowBlur2 * intensity;
-    const b3 = glowBlur3 * intensity;
-    const b4 = glowBlur4 * intensity;
-    const b5 = glowBlur5 * intensity;
-
-    // Fade glow opacity
-    const glowCSS = intensity > 0.01 ? `
-      0 0 ${b1}px rgba(255,255,255,${intensity}),
-      0 0 ${b1}px rgba(255,255,255,${intensity}),
-      0 0 ${b2}px rgba(255,255,255,${intensity * 0.9}),
-      0 0 ${b2}px rgba(255,255,255,${intensity * 0.9}),
-      0 0 ${b3}px rgba(255,255,255,${intensity * 0.8}),
-      0 0 ${b4}px rgba(255,255,255,${intensity * 0.6}),
-      0 0 ${b5}px rgba(255,255,255,${intensity * 0.3})
-    `.replace(/\s+/g, ' ').trim() : 'none';
-
-    // Interpolate color from white (#fff) toward original
-    // For simplicity, just fade the glow and keep white until end
-    this.timerEl.style.color = '#ffffff';
-    this.timerEl.style.webkitTextStrokeColor = '#ffffff';
-    this.timerEl.style.webkitTextStrokeWidth = (metrics.strokeWidth * intensity) + 'px';
-    this.timerEl.style.textShadow = glowCSS;
+    // Set to original values - CSS will animate the transition
+    this.timerEl.style.color = this.originalColor;
+    this.timerEl.style.textShadow = this.originalShadow;
+    this.timerEl.style.webkitTextStrokeColor = this.originalStroke;
+    this.timerEl.style.webkitTextStrokeWidth = this.originalStrokeWidth;
   }
 
   restore() {
+    // Clear transition so future style changes are instant
+    this.timerEl.style.transition = '';
+
     this.timerEl.style.color = this.originalColor;
     this.timerEl.style.textShadow = this.originalShadow;
     this.timerEl.style.webkitTextStrokeColor = this.originalStroke;
@@ -370,6 +355,8 @@ export class FlashAnimator {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    // Clear transition in case we're mid-fade
+    this.timerEl.style.transition = '';
     if (this.isFlashing) {
       this.restore();
     }
