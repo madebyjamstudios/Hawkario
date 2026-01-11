@@ -76,8 +76,8 @@ export function formatTimePlain(ms, format = 'MM:SS', roundUp = false) {
   const pad = n => String(n).padStart(2, '0');
 
   switch (format) {
-    case 'H:MM:SS':
-      return `${h}:${pad(m)}:${pad(s)}`;
+    case 'HH:MM:SS':
+      return `${pad(h)}:${pad(m)}:${pad(s)}`;
     case 'SS':
       return String(total);
     case 'MM:SS':
@@ -98,8 +98,8 @@ export function formatTime(ms, format = 'MM:SS', roundUp = false) {
   const pad = n => String(n).padStart(2, '0');
 
   switch (format) {
-    case 'H:MM:SS':
-      return `${h}${COLON_HTML}${pad(m)}${COLON_HTML}${pad(s)}`;
+    case 'HH:MM:SS':
+      return `${pad(h)}${COLON_HTML}${pad(m)}${COLON_HTML}${pad(s)}`;
     case 'SS':
       return String(total);
     case 'MM:SS':
