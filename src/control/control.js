@@ -31,6 +31,10 @@ const els = {
   soundVolume: document.getElementById('soundVolume'),
   volumeRow: document.getElementById('volumeRow'),
 
+  // Warning thresholds
+  warnYellowSec: document.getElementById('warnYellowSec'),
+  warnOrangeSec: document.getElementById('warnOrangeSec'),
+
   // Live Preview (main window)
   previewSection: document.getElementById('previewSection'),
   previewResizeHandle: document.getElementById('previewResizeHandle'),
@@ -1229,7 +1233,7 @@ function renderLivePreview() {
           setTimeout(() => {
             sendCommand('start');
             renderPresetList();
-          }, 500);
+          }, 1000);
         }
         // Note: No overtime for ToD mode since it just shows clock
       }
@@ -1303,7 +1307,7 @@ function renderLivePreview() {
           setTimeout(() => {
             sendCommand('start');
             renderPresetList();
-          }, 500);
+          }, 1000);
         } else {
           // Start overtime mode - keep running but count up
           timerState.overtime = true;
@@ -1444,9 +1448,9 @@ function getCurrentConfig() {
       endEnabled: els.soundEndEnable.value === 'on',
       volume: parseFloat(els.soundVolume.value) || 0.7
     },
-    // Warning thresholds (seconds remaining) - defaults, no UI yet
-    warnYellowSec: 60,
-    warnOrangeSec: 15
+    // Warning thresholds (seconds remaining)
+    warnYellowSec: parseInt(els.warnYellowSec.value, 10) || 60,
+    warnOrangeSec: parseInt(els.warnOrangeSec.value, 10) || 15
   };
 }
 
@@ -1475,6 +1479,10 @@ function applyConfig(config) {
     // Update volume row visibility
     updateVolumeRowVisibility();
   }
+
+  // Warning thresholds
+  els.warnYellowSec.value = config.warnYellowSec ?? 60;
+  els.warnOrangeSec.value = config.warnOrangeSec ?? 15;
 
   applyPreview();
 }
@@ -2104,7 +2112,8 @@ function setupEventListeners() {
     els.mode, els.duration, els.format,
     els.fontColor, els.strokeWidth, els.strokeColor,
     els.shadowSize, els.shadowColor, els.bgColor,
-    els.soundEndEnable, els.soundVolume
+    els.soundEndEnable, els.soundVolume,
+    els.warnYellowSec, els.warnOrangeSec
   ];
 
   inputEls.forEach(el => {

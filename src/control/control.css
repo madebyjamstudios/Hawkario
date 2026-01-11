@@ -185,12 +185,12 @@ button:disabled {
   /* Font size set dynamically in JS to match output scaling */
 }
 
-/* ToD line (smaller, below main timer) */
+/* ToD line (same size, below main timer, always white) */
 .tod-line {
-  font-size: 0.4em;
-  opacity: 0.85;
+  font-size: 1em;
   display: block;
   margin-top: 0.1em;
+  color: #ffffff !important;
 }
 
 .live-preview::before {
