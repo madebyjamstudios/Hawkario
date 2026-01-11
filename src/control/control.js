@@ -1272,14 +1272,16 @@ function renderLivePreview() {
     els.remainingTime.textContent = '00:00';
   }
 
-  // Color states (overtime shows different color)
-  if (timerState.overtime) {
-    els.livePreviewTimer.style.color = '#E64A19';
-    els.livePreview.classList.add('overtime');
-  } else {
-    els.livePreviewTimer.style.color = fontColor;
-    els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
-    els.livePreview.classList.remove('overtime');
+  // Color states (skip during flash animation - let FlashAnimator control styles)
+  if (!flashAnimator?.isFlashing) {
+    if (timerState.overtime) {
+      els.livePreviewTimer.style.color = '#E64A19';
+      els.livePreview.classList.add('overtime');
+    } else {
+      els.livePreviewTimer.style.color = fontColor;
+      els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
+      els.livePreview.classList.remove('overtime');
+    }
   }
 
   // Blackout state
