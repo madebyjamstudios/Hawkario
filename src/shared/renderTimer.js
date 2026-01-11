@@ -250,6 +250,9 @@ export class FlashAnimator {
     this.originalStroke = this.timerEl.style.webkitTextStrokeColor;
     this.originalStrokeWidth = this.timerEl.style.webkitTextStrokeWidth;
 
+    // Add smooth transition for phase changes
+    this.timerEl.style.transition = 'color 100ms ease, text-shadow 100ms ease, -webkit-text-stroke-color 100ms ease';
+
     this.startedAt = startedAt;
     this.isFlashing = true;
     this.lastPhase = null;
@@ -303,6 +306,9 @@ export class FlashAnimator {
   }
 
   restore() {
+    // Clear transition so future style changes are instant
+    this.timerEl.style.transition = '';
+
     this.timerEl.style.color = this.originalColor;
     this.timerEl.style.textShadow = this.originalShadow;
     this.timerEl.style.webkitTextStrokeColor = this.originalStroke;
@@ -322,6 +328,7 @@ export class FlashAnimator {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    this.timerEl.style.transition = '';
     if (this.isFlashing) {
       this.restore();
     }
