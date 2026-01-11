@@ -1099,10 +1099,12 @@ function renderLivePreview() {
     // Timer is paused - show paused time
     if (isCountdown) {
       elapsed = Math.max(0, (durationSec * 1000) - timerState.pausedAcc);
+      // Use ceil for countdown so paused time rounds up (shows fuller time)
+      remainingSec = Math.ceil(elapsed / 1000);
     } else {
       elapsed = timerState.pausedAcc;
+      remainingSec = Math.floor(elapsed / 1000);
     }
-    remainingSec = Math.floor(elapsed / 1000);
   } else {
     // Timer is running
     const now = Date.now();
@@ -1110,7 +1112,8 @@ function renderLivePreview() {
 
     if (isCountdown) {
       elapsed = Math.max(0, (durationSec * 1000) - base);
-      remainingSec = Math.floor(elapsed / 1000);
+      // Use ceil so timer shows full duration for the first second (10:00 stays until 9:59)
+      remainingSec = Math.ceil(elapsed / 1000);
 
       // Check if timer ended
       if (elapsed === 0 && !timerState.ended) {
