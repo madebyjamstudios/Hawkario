@@ -70,7 +70,7 @@ export function getDefaultStyle() {
  */
 export const FIXED_STYLE = {
   fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-  fontWeight: '600',
+  fontWeight: '800',
   opacity: 1,
   align: 'center',
   letterSpacing: 0.02
