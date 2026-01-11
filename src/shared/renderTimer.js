@@ -96,9 +96,9 @@ export function computeDisplay(state, now = Date.now()) {
     }
   }
 
-  // Append time of day if needed
+  // Append time of day if needed (on new line)
   if (showToD) {
-    displayText += '  |  ' + formatTimeOfDay(todFormat);
+    displayText += '<br><span class="tod-line">' + formatTimeOfDay(todFormat) + '</span>';
   }
 
   return {

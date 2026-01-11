@@ -919,11 +919,11 @@ function updateModalPreview() {
   } else {
     displayText = formatTime(isCountdown ? durationSec * 1000 : 0, format);
     if (showToD) {
-      displayText += '  |  ' + formatTimeOfDay(loadAppSettings().todFormat);
+      displayText += '<br><span class="tod-line">' + formatTimeOfDay(loadAppSettings().todFormat) + '</span>';
     }
   }
 
-  els.modalPreviewTimer.textContent = displayText;
+  els.modalPreviewTimer.innerHTML = displayText;
 
   // Auto-fit text to fill 90% of container
   autoFitText(els.modalPreviewTimer, els.modalPreview, 0.9);
@@ -1303,11 +1303,11 @@ function renderLivePreview() {
   }
 
   if (showToD) {
-    displayText += '  |  ' + formatTimeOfDay(todFormat);
+    displayText += '<br><span class="tod-line">' + formatTimeOfDay(todFormat) + '</span>';
   }
 
-  // Update display
-  els.livePreviewTimer.textContent = displayText;
+  // Update display (use innerHTML for ToD line breaks)
+  els.livePreviewTimer.innerHTML = displayText;
   autoFitText(els.livePreviewTimer, els.livePreview, 0.9);
 
   // Update progress bar

@@ -34,6 +34,14 @@ html, body {
   box-sizing: border-box;
 }
 
+/* ToD line (smaller, below main timer) */
+.tod-line {
+  font-size: 0.4em;
+  opacity: 0.85;
+  display: block;
+  margin-top: 0.1em;
+}
+
 /* Overtime state - red color when timer has passed */
 .timer.overtime {
   color: #ff3333 !important;

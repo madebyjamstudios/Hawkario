@@ -196,8 +196,8 @@ function render() {
     timerEl.style.visibility = 'visible';
   }
 
-  // Apply display text
-  timerEl.textContent = text;
+  // Apply display text (use innerHTML for ToD line breaks)
+  timerEl.innerHTML = text;
 
   // Auto-fit to viewport
   autoFitTimer();

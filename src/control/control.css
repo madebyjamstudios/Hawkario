@@ -185,6 +185,14 @@ button:disabled {
   /* Font size set dynamically in JS to match output scaling */
 }
 
+/* ToD line (smaller, below main timer) */
+.tod-line {
+  font-size: 0.4em;
+  opacity: 0.85;
+  display: block;
+  margin-top: 0.1em;
+}
+
 .live-preview::before {
   content: '';
   position: absolute;
