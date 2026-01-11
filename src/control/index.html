@@ -74,7 +74,6 @@
         <div class="preset-list-container">
           <div id="presetList" class="preset-list"></div>
         </div>
-        <button id="addTimer" class="add-timer-btn">+ Add Timer</button>
       </div>
 
       <!-- Messages Tab -->
@@ -105,20 +104,19 @@
       </div>
     </div>
 
-    <!-- Tab Bar -->
-    <div class="tab-bar">
-      <button id="timersTabBtn" class="tab-btn active" data-tab="timers">
-        <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- Bottom Bar: Tab Icons + Add Timer -->
+    <div class="bottom-bar">
+      <button id="timersTabBtn" class="tab-icon-btn active" data-tab="timers" title="Timers">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
         </svg>
-        <span>Timers</span>
       </button>
-      <button id="messagesTabBtn" class="tab-btn" data-tab="messages">
-        <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button id="addTimer" class="add-timer-btn">+ Add Timer</button>
+      <button id="messagesTabBtn" class="tab-icon-btn" data-tab="messages" title="Messages">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
-        <span>Messages</span>
       </button>
     </div>
 

@@ -1746,53 +1746,47 @@ button.danger:active {
   background: #388bfd;
 }
 
-/* ============ Tab Bar ============ */
+/* ============ Bottom Bar (Tabs + Add Timer) ============ */
 
-.tab-bar {
+.bottom-bar {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   background: #1a1a1a;
   border-top: 1px solid #333;
 }
 
-.tab-btn {
-  flex: 1;
+.tab-icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
-  color: #888;
-  font-size: 13px;
-  font-weight: 500;
+  color: #666;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.tab-btn:hover {
+.tab-icon-btn:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: #bbb;
+  color: #999;
 }
 
-.tab-btn.active {
+.tab-icon-btn.active {
   background: rgba(31, 111, 235, 0.15);
   border-color: #1f6feb;
   color: #fff;
 }
 
-.tab-btn .tab-icon {
-  width: 16px;
-  height: 16px;
-  opacity: 0.7;
-  transition: opacity 0.15s;
-}
-
-.tab-btn.active .tab-icon {
-  opacity: 1;
+.bottom-bar .add-timer-btn {
+  flex: 1;
+  margin: 0;
+  padding: 10px 16px;
 }
 
 /* ============ Tab Content ============ */
