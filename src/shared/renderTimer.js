@@ -231,9 +231,9 @@ export class FlashAnimator {
     this.maxFlashes = 3;
     this.glowDuration = 400;
     this.greyDuration = 300;
-    this.cycleDuration = this.glowDuration + this.greyDuration; // 700ms per cycle
-    // Pattern: glow→grey→glow→grey→glow→restore (hard cut at end)
-    this.totalDuration = (this.maxFlashes - 1) * this.cycleDuration + this.glowDuration;
+    this.cycleDuration = this.greyDuration + this.glowDuration; // 700ms per cycle
+    // Pattern: grey→glow→grey→glow→grey→glow→restore
+    this.totalDuration = this.maxFlashes * this.cycleDuration;
 
     this.isFlashing = false;
     this.startedAt = null;
@@ -271,9 +271,9 @@ export class FlashAnimator {
       return;
     }
 
-    // Compute current phase from timestamp
+    // Compute current phase from timestamp (grey first, then glow)
     const cyclePosition = elapsed % this.cycleDuration;
-    const phase = cyclePosition < this.glowDuration ? 'glow' : 'grey';
+    const phase = cyclePosition < this.greyDuration ? 'grey' : 'glow';
 
     // Only update DOM if phase changed (performance)
     if (phase !== this.lastPhase) {
