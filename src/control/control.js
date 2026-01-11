@@ -3,7 +3,7 @@
  * Main controller for timer configuration and preset management
  */
 
-import { parseHMS, secondsToHMS, formatTime, formatTimeOfDay, hexToRgba, debounce } from '../shared/timer.js';
+import { parseHMS, secondsToHMS, formatTime, formatTimePlain, formatTimeOfDay, hexToRgba, debounce } from '../shared/timer.js';
 import { validateConfig, validatePresets, safeJSONParse, validateExportData } from '../shared/validation.js';
 import { STORAGE_KEYS } from '../shared/constants.js';
 import { createTimerState, FIXED_STYLE } from '../shared/timerState.js';
@@ -735,8 +735,8 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
 
     els.progressFill.style.width = progressPercent + '%';
     els.progressIndicator.style.left = progressPercent + '%';
-    els.elapsedTime.textContent = formatTime(currentElapsedMs, 'MM:SS');
-    els.remainingTime.textContent = formatTime(remainingMs, 'MM:SS');
+    els.elapsedTime.textContent = formatTimePlain(currentElapsedMs, 'MM:SS');
+    els.remainingTime.textContent = formatTimePlain(remainingMs, 'MM:SS');
 
     // Clear segments for single timer
     if (lastSegmentCount !== 0) {
@@ -771,8 +771,8 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
 
   els.progressFill.style.width = progressPercent + '%';
   els.progressIndicator.style.left = progressPercent + '%';
-  els.elapsedTime.textContent = formatTime(cumulativeElapsedMs, 'MM:SS');
-  els.remainingTime.textContent = formatTime(totalRemainingMs, 'MM:SS');
+  els.elapsedTime.textContent = formatTimePlain(cumulativeElapsedMs, 'MM:SS');
+  els.remainingTime.textContent = formatTimePlain(totalRemainingMs, 'MM:SS');
 
   // Render segment dividers (only if count changed)
   if (chain.length !== lastSegmentCount) {
@@ -1368,7 +1368,7 @@ function renderLivePreview() {
   } else if (isCountup) {
     // For countup, show elapsed time with no max
     els.progressFill.style.width = '0%';
-    els.elapsedTime.textContent = formatTime(elapsed, 'MM:SS');
+    els.elapsedTime.textContent = formatTimePlain(elapsed, 'MM:SS');
     els.remainingTime.textContent = '--:--';
   } else {
     // Reset for other modes
@@ -2417,8 +2417,8 @@ function setupEventListeners() {
         const elapsed = isCountdown ? durationSec * 1000 : 0;
         displayText = formatTime(elapsed, format, isCountdown);
       } else {
-        // Use whatever the live preview is showing
-        displayText = els.livePreviewTimer.textContent || formatTime(isCountdown ? durationSec * 1000 : 0, format, isCountdown);
+        // Use whatever the live preview is showing (innerHTML to preserve HTML colons)
+        displayText = els.livePreviewTimer.innerHTML || formatTime(isCountdown ? durationSec * 1000 : 0, format, isCountdown);
       }
     }
 

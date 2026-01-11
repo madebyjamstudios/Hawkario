@@ -61,9 +61,34 @@ export function secondsToHMS(total) {
  * @param {boolean} roundUp - If true, use ceil instead of floor (for countdowns)
  * @returns {string} Formatted time string
  */
-// Centered colon for time display
-const COLON = '<span class="colon">:</span>';
+// Centered colon for time display (HTML)
+const COLON_HTML = '<span class="colon">:</span>';
 
+/**
+ * Format time as plain text (for inputs and textContent)
+ */
+export function formatTimePlain(ms, format = 'MM:SS', roundUp = false) {
+  const total = Math.max(0, roundUp ? Math.ceil(ms / 1000) : Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+
+  const pad = n => String(n).padStart(2, '0');
+
+  switch (format) {
+    case 'H:MM:SS':
+      return `${h}:${pad(m)}:${pad(s)}`;
+    case 'SS':
+      return String(total);
+    case 'MM:SS':
+    default:
+      return `${pad(m + (h * 60))}:${pad(s)}`;
+  }
+}
+
+/**
+ * Format time as HTML (with centered colons for display)
+ */
 export function formatTime(ms, format = 'MM:SS', roundUp = false) {
   const total = Math.max(0, roundUp ? Math.ceil(ms / 1000) : Math.floor(ms / 1000));
   const h = Math.floor(total / 3600);
@@ -74,12 +99,12 @@ export function formatTime(ms, format = 'MM:SS', roundUp = false) {
 
   switch (format) {
     case 'H:MM:SS':
-      return `${h}${COLON}${pad(m)}${COLON}${pad(s)}`;
+      return `${h}${COLON_HTML}${pad(m)}${COLON_HTML}${pad(s)}`;
     case 'SS':
       return String(total);
     case 'MM:SS':
     default:
-      return `${pad(m + (h * 60))}${COLON}${pad(s)}`;
+      return `${pad(m + (h * 60))}${COLON_HTML}${pad(s)}`;
   }
 }
 
