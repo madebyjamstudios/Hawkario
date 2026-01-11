@@ -2329,6 +2329,28 @@ function setupEventListeners() {
   initTimeInputMS(els.warnYellowSec);
   initTimeInputMS(els.warnOrangeSec);
 
+  // Duration control buttons (up/down for HH:MM:SS)
+  document.querySelectorAll('.dur-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const segment = btn.dataset.segment;
+      const isUp = btn.classList.contains('dur-up');
+      const { h, m, s } = parseTimeValue(els.duration.value);
+
+      let newH = h, newM = m, newS = s;
+
+      if (segment === 'hours') {
+        newH = isUp ? Math.min(99, h + 1) : Math.max(0, h - 1);
+      } else if (segment === 'minutes') {
+        newM = isUp ? (m + 1) % 60 : (m - 1 + 60) % 60;
+      } else if (segment === 'seconds') {
+        newS = isUp ? (s + 1) % 60 : (s - 1 + 60) % 60;
+      }
+
+      els.duration.value = formatTimeValue(newH, newM, newS);
+      updateModalPreview();
+    });
+  });
+
   // Input change listeners (debounced) - update both live and modal preview
   const inputEls = [
     els.mode, els.duration, els.format,

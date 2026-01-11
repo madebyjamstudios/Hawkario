@@ -93,6 +93,28 @@
               <div id="modalPreviewTimer" class="timer-preview">10:00</div>
             </div>
           </div>
+          <!-- Duration controls below preview -->
+          <div class="duration-controls">
+            <div class="duration-segment">
+              <button type="button" class="dur-btn dur-up" data-segment="hours">▲</button>
+              <span class="dur-label">HH</span>
+              <button type="button" class="dur-btn dur-down" data-segment="hours">▼</button>
+            </div>
+            <span class="dur-separator">:</span>
+            <div class="duration-segment">
+              <button type="button" class="dur-btn dur-up" data-segment="minutes">▲</button>
+              <span class="dur-label">MM</span>
+              <button type="button" class="dur-btn dur-down" data-segment="minutes">▼</button>
+            </div>
+            <span class="dur-separator">:</span>
+            <div class="duration-segment">
+              <button type="button" class="dur-btn dur-up" data-segment="seconds">▲</button>
+              <span class="dur-label">SS</span>
+              <button type="button" class="dur-btn dur-down" data-segment="seconds">▼</button>
+            </div>
+          </div>
+          <!-- Hidden duration input for form state -->
+          <input id="duration" type="hidden" value="00:10:00" />
         </div>
 
         <!-- Timer Title -->
@@ -112,10 +134,6 @@
             <option value="countup-tod">C/U + ToD</option>
             <option value="hidden">Hidden</option>
           </select>
-        </div>
-        <div class="kv">
-          <label>Duration</label>
-          <input id="duration" type="text" class="time-input" value="00:10:00" maxlength="8" />
         </div>
         <div class="kv">
           <label for="format">Format</label>
