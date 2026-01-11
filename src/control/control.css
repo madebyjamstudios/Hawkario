@@ -1281,6 +1281,7 @@ footer small {
   font-weight: 600;
   padding: 0 1px;
   align-self: center;
+  transform: translateY(-0.1em);
 }
 
 /* Hide hours group when format is MM:SS */
