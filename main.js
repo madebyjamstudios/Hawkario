@@ -137,6 +137,10 @@ ipcMain.on('window:open-output', () => {
 
 ipcMain.on('window:fullscreen-output', () => {
   if (outputWindow && !outputWindow.isDestroyed()) {
+    // Always bring window to front first
+    outputWindow.show();
+    outputWindow.focus();
+    // Then toggle fullscreen
     outputWindow.setFullScreen(!outputWindow.isFullScreen());
   }
 });
