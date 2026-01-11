@@ -57,7 +57,7 @@ export function secondsToHMS(total) {
 /**
  * Format milliseconds according to display format
  * @param {number} ms - Milliseconds
- * @param {string} format - Display format ('H:MM:SS', 'MM:SS', 'SS')
+ * @param {string} format - Display format ('HH:MM:SS', 'MM:SS', 'SS')
  * @param {boolean} roundUp - If true, use ceil instead of floor (for countdowns)
  * @returns {string} Formatted time string
  */

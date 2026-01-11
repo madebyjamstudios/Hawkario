@@ -46,7 +46,7 @@ export function validateDuration(duration) {
  * Validate time format
  */
 export function validateFormat(format) {
-  const validFormats = ['H:MM:SS', 'MM:SS', 'SS'];
+  const validFormats = ['HH:MM:SS', 'MM:SS', 'SS'];
   return validFormats.includes(format) ? format : 'MM:SS';
 }
 

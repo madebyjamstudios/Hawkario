@@ -24,7 +24,7 @@ export const TIMER_MODES = {
 
 // Time formats
 export const TIME_FORMATS = {
-  HMS: 'H:MM:SS',
+  HMS: 'HH:MM:SS',
   MS: 'MM:SS',
   S: 'SS'
 };
