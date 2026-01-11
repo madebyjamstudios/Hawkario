@@ -18,7 +18,10 @@ export function validateConfig(config) {
     durationSec: validateDuration(config.durationSec),
     format: validateFormat(config.format),
     style: validateStyle(config.style),
-    sound: validateSound(config.sound)
+    sound: validateSound(config.sound),
+    // Warning thresholds (seconds remaining)
+    warnYellowSec: validateNumber(config.warnYellowSec, 60, 0, 359999),
+    warnOrangeSec: validateNumber(config.warnOrangeSec, 15, 0, 359999)
   };
 }
 

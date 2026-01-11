@@ -178,7 +178,23 @@ function render() {
     visible = display.visible;
     text = display.text;
     overtime = display.overtime || canonicalState.overtime;
-    color = overtime ? '#E64A19' : (canonicalState.style?.color || '#ffffff');
+
+    // Calculate warning color based on remaining time
+    const baseColor = canonicalState.style?.color || '#ffffff';
+    const warnYellowSec = canonicalState.warnYellowSec ?? 60;
+    const warnOrangeSec = canonicalState.warnOrangeSec ?? 15;
+    const remainingSec = Math.ceil(display.remainingMs / 1000);
+    const isCountdown = canonicalState.mode === 'countdown' || canonicalState.mode === 'countdown-tod';
+
+    if (overtime) {
+      color = '#dc2626'; // Red for overtime
+    } else if (isCountdown && remainingSec <= warnOrangeSec && remainingSec > 0) {
+      color = '#E64A19'; // Orange for critical warning
+    } else if (isCountdown && remainingSec <= warnYellowSec) {
+      color = '#eab308'; // Yellow for warning
+    } else {
+      color = baseColor;
+    }
   } else {
     // Legacy fallback
     visible = displayState.visible;

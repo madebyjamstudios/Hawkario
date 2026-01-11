@@ -1121,7 +1121,10 @@ function broadcastTimerState() {
       startedAt: flashState.startedAt
     },
     style: activeTimerConfig.style,
-    todFormat: todFormat
+    todFormat: todFormat,
+    // Warning thresholds for color changes
+    warnYellowSec: activeTimerConfig.warnYellowSec ?? 60,
+    warnOrangeSec: activeTimerConfig.warnOrangeSec ?? 15
   });
 }
 
@@ -1200,12 +1203,40 @@ function renderLivePreview() {
     els.livePreview.classList.remove('warning');
 
     // Update row progress bar for ToD mode (internal timer still runs)
-    if (activePresetIndex !== null) {
+    if (activePresetIndex !== null && isRunning && timerState.startedAt) {
       const totalMs = durationSec * 1000;
-      const currentElapsedMs = isRunning && timerState.startedAt
-        ? (Date.now() - timerState.startedAt + timerState.pausedAcc)
-        : timerState.pausedAcc;
+      const currentElapsedMs = Date.now() - timerState.startedAt + timerState.pausedAcc;
       const rowProgressPercent = totalMs > 0 ? Math.min(100, (currentElapsedMs / totalMs) * 100) : 0;
+      updateRowProgressBar(activePresetIndex, rowProgressPercent);
+
+      // Check if internal timer ended (for linked chain)
+      if (currentElapsedMs >= totalMs && !timerState.ended) {
+        timerState.ended = true;
+
+        // Check for linked next timer
+        const presets = loadPresets();
+        const currentPreset = presets[activePresetIndex];
+
+        if (currentPreset?.linkedToNext && activePresetIndex < presets.length - 1) {
+          // Auto-play next linked timer
+          isRunning = false;
+          const nextIdx = activePresetIndex + 1;
+          const nextPreset = presets[nextIdx];
+          activePresetIndex = nextIdx;
+          setActiveTimerConfig(nextPreset.config);
+          applyConfig(nextPreset.config);
+
+          setTimeout(() => {
+            sendCommand('start');
+            renderPresetList();
+          }, 500);
+        }
+        // Note: No overtime for ToD mode since it just shows clock
+      }
+    } else if (activePresetIndex !== null) {
+      // Timer not running, just update progress bar with paused state
+      const totalMs = durationSec * 1000;
+      const rowProgressPercent = totalMs > 0 ? Math.min(100, (timerState.pausedAcc / totalMs) * 100) : 0;
       updateRowProgressBar(activePresetIndex, rowProgressPercent);
     }
     updatePlayingRowState();
@@ -1338,16 +1369,30 @@ function renderLivePreview() {
   }
   updatePlayingRowState();
 
+  // Warning color thresholds (from config or defaults)
+  const warnYellowSec = activeTimerConfig.warnYellowSec ?? 60;
+  const warnOrangeSec = activeTimerConfig.warnOrangeSec ?? 15;
+
+  // Determine warning/overtime color
+  let timerColor = fontColor;
+  let colorState = 'normal';
+
+  if (timerState.overtime) {
+    timerColor = '#dc2626'; // Red for overtime
+    colorState = 'overtime';
+  } else if (isCountdown && remainingSec <= warnOrangeSec && remainingSec > 0) {
+    timerColor = '#E64A19'; // Orange for critical warning
+    colorState = 'warning-orange';
+  } else if (isCountdown && remainingSec <= warnYellowSec) {
+    timerColor = '#eab308'; // Yellow for warning
+    colorState = 'warning-yellow';
+  }
+
   // Color states (skip during flash animation - let FlashAnimator control styles)
   if (!flashAnimator?.isFlashing) {
-    if (timerState.overtime) {
-      els.livePreviewTimer.style.color = '#E64A19';
-      els.livePreview.classList.add('overtime');
-    } else {
-      els.livePreviewTimer.style.color = fontColor;
-      els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
-      els.livePreview.classList.remove('overtime');
-    }
+    els.livePreviewTimer.style.color = timerColor;
+    els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
+    els.livePreview.classList.toggle('overtime', timerState.overtime);
   }
 
   // Blackout state
@@ -1357,15 +1402,9 @@ function renderLivePreview() {
     els.livePreview.classList.remove('blackout');
   }
 
-  // Determine color state for broadcast
-  let colorState = 'normal';
-  let currentColor = fontColor;
+  // For broadcast
+  let currentColor = timerColor;
   let currentOpacity = FIXED_STYLE.opacity;
-
-  if (timerState.overtime) {
-    colorState = 'overtime';
-    currentColor = '#E64A19';
-  }
 
   // Broadcast canonical timer state to output window (new StageTimer-style)
   broadcastTimerState();
@@ -1404,7 +1443,10 @@ function getCurrentConfig() {
     sound: {
       endEnabled: els.soundEndEnable.value === 'on',
       volume: parseFloat(els.soundVolume.value) || 0.7
-    }
+    },
+    // Warning thresholds (seconds remaining) - defaults, no UI yet
+    warnYellowSec: 60,
+    warnOrangeSec: 15
   };
 }
 
