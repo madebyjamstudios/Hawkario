@@ -185,6 +185,12 @@ button:disabled {
   /* Font size set dynamically in JS to match output scaling */
 }
 
+/* Vertically centered colon for time display */
+.colon {
+  display: inline-block;
+  transform: translateY(-0.08em);
+}
+
 /* ToD line (smaller, below main timer, always white) */
 .tod-line {
   font-size: 0.3em;
