@@ -18,7 +18,6 @@ export function validateConfig(config) {
     durationSec: validateDuration(config.durationSec),
     format: validateFormat(config.format),
     style: validateStyle(config.style),
-    warn: validateWarning(config.warn),
     sound: validateSound(config.sound)
   };
 }
@@ -57,19 +56,11 @@ export function validateStyle(style) {
   }
 
   return {
-    fontFamily: validateString(style.fontFamily, 'Inter, sans-serif'),
-    fontWeight: validateFontWeight(style.fontWeight),
-    fontSizeVw: validateNumber(style.fontSizeVw, 10, 1, 50),
     color: validateHexColor(style.color, '#ffffff'),
-    opacity: validateNumber(style.opacity, 1, 0, 1),
     strokeWidth: validateNumber(style.strokeWidth, 2, 0, 20),
     strokeColor: validateHexColor(style.strokeColor, '#000000'),
-    textShadow: validateString(style.textShadow, 'none'),
-    align: validateAlign(style.align),
-    letterSpacing: validateNumber(style.letterSpacing, 0, -0.5, 1),
-    bgMode: validateBgMode(style.bgMode),
-    bgColor: validateHexColor(style.bgColor, '#000000'),
-    bgOpacity: validateNumber(style.bgOpacity, 0, 0, 1)
+    shadowSize: validateNumber(style.shadowSize, 10, 0, 50),
+    bgColor: validateHexColor(style.bgColor, '#000000')
   };
 }
 
@@ -101,7 +92,6 @@ export function validateSound(sound) {
   }
 
   return {
-    warnEnabled: Boolean(sound.warnEnabled),
     endEnabled: Boolean(sound.endEnabled),
     volume: validateNumber(sound.volume, 0.7, 0, 1)
   };
@@ -150,19 +140,11 @@ function validateBgMode(value) {
 
 function getDefaultStyle() {
   return {
-    fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-    fontWeight: '600',
-    fontSizeVw: 10,
     color: '#ffffff',
-    opacity: 1,
     strokeWidth: 2,
     strokeColor: '#000000',
-    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-    align: 'center',
-    letterSpacing: 0,
-    bgMode: 'transparent',
-    bgColor: '#000000',
-    bgOpacity: 0
+    shadowSize: 10,
+    bgColor: '#000000'
   };
 }
 
@@ -180,8 +162,7 @@ function getDefaultWarning() {
 
 function getDefaultSound() {
   return {
-    warnEnabled: false,
-    endEnabled: true,
+    endEnabled: false,
     volume: 0.7
   };
 }
