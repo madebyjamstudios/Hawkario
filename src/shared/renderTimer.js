@@ -311,17 +311,21 @@ export class FlashAnimator {
   }
 
   restore() {
-    // Clear transition and force reflow so restore is instant (no animated shadow)
-    this.timerEl.style.transition = 'none';
-    void this.timerEl.offsetHeight; // Force reflow
+    // Add quick fade transition for color (grey -> original)
+    this.timerEl.style.transition = 'color 200ms ease-out, -webkit-text-stroke-color 200ms ease-out';
 
+    // Restore color with fade
     this.timerEl.style.color = this.originalColor;
-    this.timerEl.style.textShadow = this.originalShadow;
     this.timerEl.style.webkitTextStrokeColor = this.originalStroke;
     this.timerEl.style.webkitTextStrokeWidth = this.originalStrokeWidth;
 
-    // Clear transition property completely
-    this.timerEl.style.transition = '';
+    // Restore shadow instantly (no transition - looks weird animated)
+    this.timerEl.style.textShadow = this.originalShadow;
+
+    // Clear transition after animation completes
+    setTimeout(() => {
+      this.timerEl.style.transition = '';
+    }, 250);
 
     this.isFlashing = false;
     this.startedAt = null;
