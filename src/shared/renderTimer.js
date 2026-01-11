@@ -149,17 +149,22 @@ export function getFlashGlowCSS(metrics) {
 }
 
 /**
- * Generate standard shadow CSS from size value
+ * Generate standard shadow CSS from size and color
  * Used for the regular timer shadow (not flash)
  *
  * @param {number} sizePx - Shadow size in pixels
+ * @param {string} color - Shadow color in hex format (default #000000)
  * @returns {string} CSS text-shadow value
  */
-export function getShadowCSS(sizePx) {
+export function getShadowCSS(sizePx, color = '#000000') {
   if (sizePx === 0) return 'none';
   const blur = sizePx;
   const spread = Math.round(sizePx * 0.3);
-  return `0 ${spread}px ${blur}px rgba(0,0,0,0.5)`;
+  // Convert hex to rgba with 0.5 opacity
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  return `0 ${spread}px ${blur}px rgba(${r},${g},${b},0.5)`;
 }
 
 /**
@@ -180,7 +185,7 @@ export function applyStyle(timerEl, containerEl, style, isFlashing = false) {
   timerEl.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';
   timerEl.style.webkitTextStrokeWidth = (style.strokeWidth ?? 0) + 'px';
   timerEl.style.webkitTextStrokeColor = style.strokeColor || '#000000';
-  timerEl.style.textShadow = getShadowCSS(style.shadowSize ?? 0);
+  timerEl.style.textShadow = getShadowCSS(style.shadowSize ?? 0, style.shadowColor);
   timerEl.style.textAlign = FIXED_STYLE.align;
 
   // Background

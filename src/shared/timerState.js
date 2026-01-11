@@ -40,7 +40,8 @@ export function createTimerState(overrides = {}) {
       bgColor: '#000000',
       strokeWidth: 0,
       strokeColor: '#000000',
-      shadowSize: 0
+      shadowSize: 0,
+      shadowColor: '#000000'
     },
 
     // Time of day format for ToD modes
@@ -59,7 +60,8 @@ export function getDefaultStyle() {
     bgColor: '#000000',
     strokeWidth: 0,
     strokeColor: '#000000',
-    shadowSize: 0
+    shadowSize: 0,
+    shadowColor: '#000000'
   };
 }
 

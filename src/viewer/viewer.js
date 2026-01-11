@@ -83,7 +83,7 @@ function applyStyle(style) {
   if (style.textShadow) {
     timerEl.style.textShadow = style.textShadow;
   } else if (style.shadowSize !== undefined) {
-    timerEl.style.textShadow = getShadowCSS(style.shadowSize);
+    timerEl.style.textShadow = getShadowCSS(style.shadowSize, style.shadowColor);
   }
 
   timerEl.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';

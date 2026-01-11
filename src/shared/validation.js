@@ -91,9 +91,10 @@ export function validateStyle(style) {
 
   return {
     color: validateHexColor(migrated.color, '#ffffff'),
-    strokeWidth: validateNumber(migrated.strokeWidth, 2, 0, 20),
+    strokeWidth: validateNumber(migrated.strokeWidth, 0, 0, 20),
     strokeColor: validateHexColor(migrated.strokeColor, '#000000'),
-    shadowSize: validateNumber(migrated.shadowSize, 10, 0, 50),
+    shadowSize: validateNumber(migrated.shadowSize, 0, 0, 50),
+    shadowColor: validateHexColor(migrated.shadowColor, '#000000'),
     bgColor: validateHexColor(migrated.bgColor, '#000000')
   };
 }
@@ -178,6 +179,7 @@ function getDefaultStyle() {
     strokeWidth: 0,
     strokeColor: '#000000',
     shadowSize: 0,
+    shadowColor: '#000000',
     bgColor: '#000000'
   };
 }

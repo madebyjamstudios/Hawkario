@@ -23,6 +23,7 @@ const els = {
   strokeColor: document.getElementById('strokeColor'),
   shadowSize: document.getElementById('shadowSize'),
   shadowSizeValue: document.getElementById('shadowSizeValue'),
+  shadowColor: document.getElementById('shadowColor'),
   bgColor: document.getElementById('bgColor'),
 
   // Sound (simplified)
@@ -349,6 +350,7 @@ let activeTimerConfig = {
     strokeWidth: 0,
     strokeColor: '#000000',
     shadowSize: 0,
+    shadowColor: '#000000',
     bgColor: '#000000'
   }
 };
@@ -386,6 +388,7 @@ function setActiveTimerConfig(config) {
       strokeWidth: config.style?.strokeWidth ?? 0,
       strokeColor: config.style?.strokeColor || '#000000',
       shadowSize: config.style?.shadowSize ?? 0,
+      shadowColor: config.style?.shadowColor || '#000000',
       bgColor: config.style?.bgColor || '#000000'
     }
   };
@@ -642,6 +645,7 @@ function getDefaultTimerConfig() {
       strokeWidth: 0,
       strokeColor: '#000000',
       shadowSize: 0,
+      shadowColor: '#000000',
       bgColor: '#000000'
     },
     sound: {
@@ -855,6 +859,7 @@ function updateModalPreview() {
   const format = els.format.value;
   const durationSec = getDurationSeconds();
   const shadowSize = parseInt(els.shadowSize.value, 10) || 0;
+  const shadowColor = els.shadowColor.value || '#000000';
 
   // Apply styles (using hardcoded FIXED_STYLE + user settings)
   els.modalPreview.style.background = els.bgColor.value;
@@ -864,7 +869,7 @@ function updateModalPreview() {
   els.modalPreviewTimer.style.opacity = FIXED_STYLE.opacity;
   els.modalPreviewTimer.style.webkitTextStrokeWidth = (parseInt(els.strokeWidth.value, 10) || 0) + 'px';
   els.modalPreviewTimer.style.webkitTextStrokeColor = els.strokeColor.value;
-  els.modalPreviewTimer.style.textShadow = getShadowCSS(shadowSize);
+  els.modalPreviewTimer.style.textShadow = getShadowCSS(shadowSize, shadowColor);
   els.modalPreviewTimer.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';
 
   // Update displayed time based on mode
@@ -1037,6 +1042,7 @@ const debouncedPreview = debounce(applyPreview, 50);
  */
 function applyLivePreviewStyle() {
   const shadowSize = parseInt(els.shadowSize.value, 10) || 0;
+  const shadowColor = els.shadowColor.value || '#000000';
 
   els.livePreview.style.background = els.bgColor.value;
   els.livePreviewTimer.style.fontFamily = FIXED_STYLE.fontFamily;
@@ -1049,7 +1055,7 @@ function applyLivePreviewStyle() {
     els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
     els.livePreviewTimer.style.webkitTextStrokeWidth = (parseInt(els.strokeWidth.value, 10) || 0) + 'px';
     els.livePreviewTimer.style.webkitTextStrokeColor = els.strokeColor.value;
-    els.livePreviewTimer.style.textShadow = getShadowCSS(shadowSize);
+    els.livePreviewTimer.style.textShadow = getShadowCSS(shadowSize, shadowColor);
   }
 
   // Font size is handled by autoFitText in renderLivePreview
@@ -1115,7 +1121,7 @@ function broadcastDisplayState(state) {
       fontWeight: FIXED_STYLE.fontWeight,
       strokeWidth: style.strokeWidth,
       strokeColor: style.strokeColor,
-      textShadow: getShadowCSS(style.shadowSize),
+      textShadow: getShadowCSS(style.shadowSize, style.shadowColor),
       textAlign: FIXED_STYLE.align,
       letterSpacing: FIXED_STYLE.letterSpacing,
       background: style.bgColor
@@ -1339,6 +1345,7 @@ function getCurrentConfig() {
       strokeWidth: parseInt(els.strokeWidth.value, 10) || 0,
       strokeColor: els.strokeColor.value,
       shadowSize: parseInt(els.shadowSize.value, 10) || 0,
+      shadowColor: els.shadowColor.value,
       bgColor: els.bgColor.value
     },
     sound: {
@@ -1361,6 +1368,7 @@ function applyConfig(config) {
     els.strokeWidth.value = config.style.strokeWidth ?? 0;
     els.strokeColor.value = config.style.strokeColor || '#000000';
     els.shadowSize.value = config.style.shadowSize ?? 0;
+    els.shadowColor.value = config.style.shadowColor || '#000000';
     els.bgColor.value = config.style.bgColor || '#000000';
     // Update range value displays
     updateRangeDisplays();
@@ -1990,7 +1998,7 @@ function setupEventListeners() {
   const inputEls = [
     els.mode, els.duration, els.format,
     els.fontColor, els.strokeWidth, els.strokeColor,
-    els.shadowSize, els.bgColor,
+    els.shadowSize, els.shadowColor, els.bgColor,
     els.soundEndEnable, els.soundVolume
   ];
 
