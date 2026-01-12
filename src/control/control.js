@@ -2836,9 +2836,6 @@ function updateVolumeRowVisibility() {
 // ============ Timer Commands ============
 
 function sendCommand(command) {
-  // Use activeTimerConfig instead of form fields
-  window.ninja.sendTimerCommand(command, activeTimerConfig);
-
   // Update local timer state for live preview
   switch (command) {
     case 'start':
@@ -2861,7 +2858,7 @@ function sendCommand(command) {
       // Resume from paused state without resetting
       isRunning = true;
       timerState.startedAt = Date.now();
-      // Keep pausedAcc as is - it contains the elapsed time
+      // Keep pausedAcc as is - it contains the elapsed time (including seeked position)
       break;
 
     case 'reset':
@@ -2879,6 +2876,11 @@ function sendCommand(command) {
       break;
   }
 
+  // Broadcast state to output window (includes seeked position in pausedAcc)
+  broadcastTimerState();
+
+  // Also send legacy command for backward compatibility
+  window.ninja.sendTimerCommand(command, activeTimerConfig);
 }
 
 // ============ Presets ============

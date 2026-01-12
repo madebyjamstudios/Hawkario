@@ -636,14 +636,15 @@ button:disabled {
   z-index: 2;
 }
 
-.progress-fill {
+/* Timer progress bar fill - must be specific to avoid conflict with download progress */
+.progress-track .progress-fill {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
   width: 0%;
   background: rgba(255, 255, 255, 0.08);
-  transition: width 0.1s linear;
+  border-radius: 0;
 }
 
 /* Thin line indicator on progress bar */
