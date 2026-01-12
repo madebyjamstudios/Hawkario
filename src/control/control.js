@@ -3686,7 +3686,12 @@ function showProfileDropdown() {
       allItems.forEach(el => el.style.transition = 'transform 0.15s ease');
     }
 
-    const { fromIndex, items, slotHeight, baseY } = profileDragState;
+    const { fromIndex, items, slotHeight } = profileDragState;
+
+    // Get fresh baseY from first item on each move (accounts for scrolling)
+    const firstItem = items[0];
+    if (!firstItem) return;
+    const baseY = firstItem.getBoundingClientRect().top;
 
     // Calculate which slot the mouse is over
     // Use smaller offset (30% instead of 50%) for more responsive dragging in both directions
