@@ -204,7 +204,7 @@ button:disabled {
   display: grid;
   place-items: center;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   background: transparent;
   box-sizing: border-box;
   user-select: none;
@@ -1317,23 +1317,21 @@ footer small {
   transform: scale(0.95);
 }
 
-.digit-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #fff;
-  padding: 2px 0;
-  font-variant-numeric: tabular-nums;
-  min-width: 16px;
-  text-align: center;
+/* Duration input row */
+.duration-input-row {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 12px 0;
 }
 
-.digit-separator {
-  font-size: 20px;
-  color: #666;
+.duration-input {
+  text-align: center;
+  font-size: 24px;
   font-weight: 600;
-  padding: 0 1px;
-  align-self: center;
-  transform: translateY(-0.1em);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  width: 140px;
+  padding: 8px 12px;
 }
 
 /* Hide hours group when format is MM:SS */

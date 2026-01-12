@@ -1262,27 +1262,24 @@ function updateLivePreviewMessage(message) {
 function autoFitLivePreviewMessage() {
   if (!els.livePreviewMessage || !els.livePreview.classList.contains('with-message')) return;
 
-  // Fixed reference size - MUST match viewer.js for identical layouts
-  const REF_WIDTH = 800;  // Reference width for line wrapping
-  const REF_FONT = 48;    // Reference font size
-
-  els.livePreviewMessage.style.fontSize = REF_FONT + 'px';
-  els.livePreviewMessage.style.maxWidth = REF_WIDTH + 'px';
-  els.livePreviewMessage.style.transform = 'scale(1)';
-  els.livePreviewMessage.style.transformOrigin = 'center center';
+  // Use font-size scaling for preview (simpler, no transform issues)
+  els.livePreviewMessage.style.fontSize = '100px';
+  els.livePreviewMessage.style.transform = 'none';
+  els.livePreviewMessage.style.maxWidth = '90%';
 
   const containerWidth = els.livePreview.clientWidth;
   const containerHeight = els.livePreview.clientHeight;
   const targetWidth = containerWidth * 0.85;
-  const targetHeight = containerHeight * 0.45;
+  const targetHeight = containerHeight * 0.40;
   const naturalWidth = els.livePreviewMessage.scrollWidth;
   const naturalHeight = els.livePreviewMessage.scrollHeight;
 
   if (naturalWidth > 0 && naturalHeight > 0) {
     const widthRatio = targetWidth / naturalWidth;
     const heightRatio = targetHeight / naturalHeight;
-    const scale = Math.max(0.1, Math.min(widthRatio, heightRatio)); // Min 0.1 scale
-    els.livePreviewMessage.style.transform = `scale(${scale})`;
+    const ratio = Math.min(widthRatio, heightRatio);
+    const newFontSize = Math.max(8, 100 * ratio); // Min 8px
+    els.livePreviewMessage.style.fontSize = newFontSize + 'px';
   }
 }
 

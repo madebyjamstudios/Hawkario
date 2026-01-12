@@ -124,52 +124,46 @@
           </div>
         </div>
 
-        <!-- Duration controls - scrollable with settings -->
+        <!-- Duration controls - buttons + unified input -->
         <div class="duration-controls" id="durationControls">
           <!-- Hours (hidden when format is MM:SS) -->
           <div class="digit-group hours-group" id="hoursGroup">
             <div class="digit-col">
               <button type="button" class="digit-btn digit-up" data-digit="h1">▲</button>
-              <span class="digit-value" id="digitH1">0</span>
               <button type="button" class="digit-btn digit-down" data-digit="h1">▼</button>
             </div>
             <div class="digit-col">
               <button type="button" class="digit-btn digit-up" data-digit="h2">▲</button>
-              <span class="digit-value" id="digitH2">0</span>
               <button type="button" class="digit-btn digit-down" data-digit="h2">▼</button>
             </div>
-            <span class="digit-separator">:</span>
           </div>
           <!-- Minutes -->
           <div class="digit-group minutes-group">
             <div class="digit-col">
               <button type="button" class="digit-btn digit-up" data-digit="m1">▲</button>
-              <span class="digit-value" id="digitM1">1</span>
               <button type="button" class="digit-btn digit-down" data-digit="m1">▼</button>
             </div>
             <div class="digit-col">
               <button type="button" class="digit-btn digit-up" data-digit="m2">▲</button>
-              <span class="digit-value" id="digitM2">0</span>
               <button type="button" class="digit-btn digit-down" data-digit="m2">▼</button>
             </div>
-            <span class="digit-separator">:</span>
           </div>
           <!-- Seconds -->
           <div class="digit-group seconds-group">
             <div class="digit-col">
               <button type="button" class="digit-btn digit-up" data-digit="s1">▲</button>
-              <span class="digit-value" id="digitS1">0</span>
               <button type="button" class="digit-btn digit-down" data-digit="s1">▼</button>
             </div>
             <div class="digit-col">
               <button type="button" class="digit-btn digit-up" data-digit="s2">▲</button>
-              <span class="digit-value" id="digitS2">0</span>
               <button type="button" class="digit-btn digit-down" data-digit="s2">▼</button>
             </div>
           </div>
         </div>
-        <!-- Hidden duration input for form state -->
-        <input id="duration" type="hidden" value="00:10:00" />
+        <!-- Duration input field -->
+        <div class="duration-input-row">
+          <input id="duration" type="text" class="time-input duration-input" value="00:10:00" maxlength="8" placeholder="HH:MM:SS" />
+        </div>
 
         <!-- Timer Title -->
         <div class="kv">
