@@ -1004,18 +1004,23 @@ function loadMessages() {
     const data = localStorage.getItem(MESSAGES_KEY);
     let messages = data ? JSON.parse(data) : [];
 
-    // Migrate: add id and visible fields to any messages without them
+    // Migrate: add id, visible, and uppercase fields to any messages without them
     let needsSave = false;
     messages = messages.map(msg => {
+      let updated = msg;
       if (!msg.id) {
         needsSave = true;
-        return {
-          ...msg,
+        updated = {
+          ...updated,
           id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           visible: false
         };
       }
-      return msg;
+      if (msg.uppercase === undefined) {
+        needsSave = true;
+        updated = { ...updated, uppercase: false };
+      }
+      return updated;
     });
 
     if (needsSave) {
@@ -1076,6 +1081,7 @@ function renderMessageList() {
     textInput.style.color = msg.color || '#ffffff';
     if (msg.bold) textInput.style.fontWeight = 'bold';
     if (msg.italic) textInput.style.fontStyle = 'italic';
+    if (msg.uppercase) textInput.style.textTransform = 'uppercase';
 
     const formatRow = document.createElement('div');
     formatRow.className = 'message-format-row';
@@ -1090,13 +1096,18 @@ function renderMessageList() {
     italicBtn.title = 'Italic';
     italicBtn.innerHTML = '<em>I</em>';
 
+    const uppercaseBtn = document.createElement('button');
+    uppercaseBtn.className = 'format-btn uppercase-btn' + (msg.uppercase ? ' active' : '');
+    uppercaseBtn.title = 'ALL CAPS';
+    uppercaseBtn.innerHTML = 'AA';
+
     const colorInput = document.createElement('input');
     colorInput.type = 'color';
     colorInput.className = 'message-color-input';
     colorInput.value = msg.color || '#ffffff';
     colorInput.title = 'Text Color';
 
-    formatRow.append(boldBtn, italicBtn, colorInput);
+    formatRow.append(boldBtn, italicBtn, uppercaseBtn, colorInput);
     content.append(textInput, formatRow);
 
     // Actions
@@ -1118,13 +1129,13 @@ function renderMessageList() {
     els.messageList.appendChild(row);
 
     // Setup events for this message item
-    setupMessageItemEvents(row, msg.id, textInput, boldBtn, italicBtn, colorInput, visibilityBtn, deleteBtn, dragHandle, idx);
+    setupMessageItemEvents(row, msg.id, textInput, boldBtn, italicBtn, uppercaseBtn, colorInput, visibilityBtn, deleteBtn, dragHandle, idx);
   });
 
   updateTabBadges();
 }
 
-function setupMessageItemEvents(row, messageId, textInput, boldBtn, italicBtn, colorInput, visibilityBtn, deleteBtn, dragHandle, idx) {
+function setupMessageItemEvents(row, messageId, textInput, boldBtn, italicBtn, uppercaseBtn, colorInput, visibilityBtn, deleteBtn, dragHandle, idx) {
   // Debounced save for text input
   const debouncedSave = debounce(() => {
     updateMessageField(messageId, 'text', textInput.value);
@@ -1149,6 +1160,13 @@ function setupMessageItemEvents(row, messageId, textInput, boldBtn, italicBtn, c
     const isItalic = italicBtn.classList.contains('active');
     updateMessageField(messageId, 'italic', isItalic);
     textInput.style.fontStyle = isItalic ? 'italic' : 'normal';
+  });
+
+  uppercaseBtn.addEventListener('click', () => {
+    uppercaseBtn.classList.toggle('active');
+    const isUppercase = uppercaseBtn.classList.contains('active');
+    updateMessageField(messageId, 'uppercase', isUppercase);
+    textInput.style.textTransform = isUppercase ? 'uppercase' : 'none';
   });
 
   visibilityBtn.addEventListener('click', () => {
@@ -1192,6 +1210,7 @@ function updateMessageField(messageId, field, value) {
         text: msg.text,
         bold: msg.bold,
         italic: msg.italic,
+        uppercase: msg.uppercase,
         color: msg.color,
         visible: true
       };
@@ -1218,6 +1237,7 @@ function updateLivePreviewMessage(message) {
   els.livePreviewMessage.style.color = message.color || '#ffffff';
   els.livePreviewMessage.style.fontWeight = message.bold ? 'bold' : 'normal';
   els.livePreviewMessage.style.fontStyle = message.italic ? 'italic' : 'normal';
+  els.livePreviewMessage.style.textTransform = message.uppercase ? 'uppercase' : 'none';
   els.livePreviewMessage.style.display = 'block';
   els.livePreview.classList.add('with-message');
   els.livePreviewTimer.style.maxHeight = '45%';
@@ -1243,6 +1263,7 @@ function toggleMessageVisibility(messageId) {
       text: target.text,
       bold: target.bold,
       italic: target.italic,
+      uppercase: target.uppercase,
       color: target.color,
       visible: true
     };
@@ -1301,6 +1322,7 @@ function addNewMessage() {
     text: '',
     bold: false,
     italic: false,
+    uppercase: false,
     color: '#ffffff',
     visible: false
   };
@@ -2010,7 +2032,7 @@ function renderLivePreview() {
   const todFormat = loadAppSettings().todFormat;
   if (mode === 'tod') {
     displayText = formatTimeOfDay(todFormat);
-    els.livePreviewTimer.textContent = displayText;
+    els.livePreviewTimer.innerHTML = displayText;
     autoFitText(els.livePreviewTimer, els.livePreview, 0.95);
     // Skip color changes during flash animation
     if (!flashAnimator?.isFlashing) {

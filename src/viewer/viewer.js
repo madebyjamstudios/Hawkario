@@ -76,7 +76,7 @@ function handleMessageUpdate(message) {
   if (!message || !message.visible) {
     // Hide message and restore full layout
     currentMessage = null;
-    messageOverlayEl.classList.remove('visible', 'bold', 'italic');
+    messageOverlayEl.classList.remove('visible', 'bold', 'italic', 'uppercase');
     stageEl.classList.remove('with-message');
     return;
   }
@@ -89,6 +89,7 @@ function handleMessageUpdate(message) {
   messageOverlayEl.style.color = message.color || '#ffffff';
   messageOverlayEl.classList.toggle('bold', !!message.bold);
   messageOverlayEl.classList.toggle('italic', !!message.italic);
+  messageOverlayEl.classList.toggle('uppercase', !!message.uppercase);
   messageOverlayEl.classList.add('visible');
 
   // Enable split layout

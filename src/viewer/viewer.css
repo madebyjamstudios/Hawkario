@@ -149,3 +149,7 @@ html, body {
 .message-overlay.italic {
   font-style: italic;
 }
+
+.message-overlay.uppercase {
+  text-transform: uppercase;
+}
