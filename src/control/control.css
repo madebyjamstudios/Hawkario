@@ -216,6 +216,41 @@ button:disabled {
   /* Font size set dynamically in JS to match output scaling */
 }
 
+/* Message preview in live preview */
+.live-preview .message-preview {
+  display: none;
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8em;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: center;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.live-preview.with-message {
+  grid-template-rows: 1fr 1fr;
+}
+
+.live-preview.with-message .timer-preview {
+  align-self: end;
+}
+
+.live-preview.with-message .message-preview {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  align-self: start;
+  justify-self: center;
+}
+
 /* Vertically centered colon for time display */
 .colon {
   display: inline-block;

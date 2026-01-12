@@ -42,6 +42,7 @@ const els = {
   livePreviewContainer: document.querySelector('.live-preview-wrapper'),
   livePreview: document.getElementById('livePreview'),
   livePreviewTimer: document.getElementById('livePreviewTimer'),
+  livePreviewMessage: document.getElementById('livePreviewMessage'),
 
   // Modal Preview
   modalPreview: document.getElementById('modalPreview'),
@@ -1185,17 +1186,41 @@ function updateMessageField(messageId, field, value) {
     msg[field] = value;
     saveMessagesToStorage(messages);
 
-    // If this message is currently visible, update the viewer
+    // If this message is currently visible, update the viewer and live preview
     if (msg.visible) {
-      window.ninja.sendMessage({
+      const msgData = {
         text: msg.text,
         bold: msg.bold,
         italic: msg.italic,
         color: msg.color,
         visible: true
-      });
+      };
+      window.ninja.sendMessage(msgData);
+      updateLivePreviewMessage(msgData);
     }
   }
+}
+
+/**
+ * Update the live preview message display
+ */
+function updateLivePreviewMessage(message) {
+  if (!els.livePreviewMessage) return;
+
+  if (!message || !message.visible) {
+    els.livePreviewMessage.style.display = 'none';
+    els.livePreview.classList.remove('with-message');
+    els.livePreviewTimer.style.maxHeight = '';
+    return;
+  }
+
+  els.livePreviewMessage.textContent = message.text || '';
+  els.livePreviewMessage.style.color = message.color || '#ffffff';
+  els.livePreviewMessage.style.fontWeight = message.bold ? 'bold' : 'normal';
+  els.livePreviewMessage.style.fontStyle = message.italic ? 'italic' : 'normal';
+  els.livePreviewMessage.style.display = 'block';
+  els.livePreview.classList.add('with-message');
+  els.livePreviewTimer.style.maxHeight = '45%';
 }
 
 function toggleMessageVisibility(messageId) {
@@ -1214,17 +1239,20 @@ function toggleMessageVisibility(messageId) {
     target.visible = true;
     activeMessage = target;
 
-    window.ninja.sendMessage({
+    const msgData = {
       text: target.text,
       bold: target.bold,
       italic: target.italic,
       color: target.color,
       visible: true
-    });
+    };
+    window.ninja.sendMessage(msgData);
+    updateLivePreviewMessage(msgData);
   } else {
     // Was visible, now hide
     activeMessage = null;
     window.ninja.sendMessage({ visible: false });
+    updateLivePreviewMessage({ visible: false });
   }
 
   saveMessagesToStorage(messages);
@@ -1259,6 +1287,7 @@ async function deleteMessage(messageId) {
   if (msg.visible) {
     activeMessage = null;
     window.ninja.sendMessage({ visible: false });
+    updateLivePreviewMessage({ visible: false });
   }
 
   messages.splice(idx, 1);
@@ -2417,6 +2446,7 @@ function renderPresetList() {
     empty.style.cssText = 'color: #666; text-align: center; padding: 20px;';
     empty.textContent = 'No presets yet';
     els.presetList.appendChild(empty);
+    updateTabBadges();
     return;
   }
 
