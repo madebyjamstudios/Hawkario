@@ -224,4 +224,4 @@ MIT
 
 ## Credits
 
-Made with care by JAM Studios
+Made with care by Made by Jam Studios
