@@ -959,8 +959,10 @@ function showUpdateBadge(result) {
   const checkBtn = document.getElementById('checkUpdates');
 
   console.log('Elements found:', { statusEl: !!statusEl, downloadBtn: !!downloadBtn, checkBtn: !!checkBtn });
+  console.log('Result details:', { hasResult: !!result, downloadUrl: result?.downloadUrl, localSha: result?.localSha, remoteSha: result?.remoteSha });
 
   if (statusEl && result) {
+    console.log('Updating status UI...');
     if (result.downloadUrl) {
       statusEl.innerHTML = `Update available! <span class="version-info">(${result.localSha} → ${result.remoteSha})</span>`;
       downloadBtn?.classList.remove('hidden');
@@ -971,6 +973,7 @@ function showUpdateBadge(result) {
 
     // Always hide check button when update is detected
     checkBtn?.classList.add('hidden');
+    console.log('Status updated, checkBtn hidden');
   }
 }
 
