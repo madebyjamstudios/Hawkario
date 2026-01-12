@@ -131,8 +131,8 @@ html, body {
 
 .virtual-canvas.with-message .message-overlay {
   /* Starts just below middle, horizontally centered */
-  top: 52%;  /* Just below middle line */
-  transform: translate(-50%, 0);  /* Only center horizontally, don't offset vertically */
+  top: 52% !important;  /* Just below middle line */
+  transform: translate(-50%, 0) !important;  /* Only center horizontally */
 }
 
 /* ============ Message Overlay ============ */

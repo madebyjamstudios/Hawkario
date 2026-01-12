@@ -268,8 +268,8 @@ button:disabled {
   /* Starts just below middle, horizontally centered */
   display: block;
   opacity: 1;
-  top: 52%;  /* Just below middle line */
-  transform: translate(-50%, 0);  /* Only center horizontally */
+  top: 52% !important;  /* Just below middle line */
+  transform: translate(-50%, 0) !important;  /* Only center horizontally */
 }
 
 /* Message formatting classes (shared with output) */
