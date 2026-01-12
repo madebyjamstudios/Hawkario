@@ -1180,6 +1180,9 @@ function setupMessageItemEvents(row, messageId, textInput, boldBtn, italicBtn, u
   });
 
   visibilityBtn.addEventListener('click', () => {
+    // Add transitioning animation
+    visibilityBtn.classList.add('transitioning');
+    setTimeout(() => visibilityBtn.classList.remove('transitioning'), 300);
     toggleMessageVisibility(messageId);
   });
 

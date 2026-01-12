@@ -2010,6 +2010,30 @@ button.danger:active {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Diagonal stripes overlay for transitioning state */
+.message-visibility-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(100, 100, 100, 0.4) 3px,
+    rgba(100, 100, 100, 0.4) 6px
+  );
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.message-visibility-btn.transitioning::before {
+  opacity: 1;
 }
 
 .message-visibility-btn:hover {
@@ -2022,10 +2046,27 @@ button.danger:active {
   border-color: #E64A19;
 }
 
+/* Indicator pulse animation */
+@keyframes visibility-indicator-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 #E64A19;
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 10px #E64A19, 0 0 20px #E64A19;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px #E64A19, 0 0 16px #E64A19;
+  }
+}
+
 .message-visibility-btn.active .visibility-indicator {
   background: #E64A19;
   box-shadow: 0 0 8px #E64A19, 0 0 16px #E64A19;
   border-color: #E64A19;
+  animation: visibility-indicator-pulse 0.4s ease;
 }
 
 .visibility-indicator {
@@ -2035,6 +2076,7 @@ button.danger:active {
   border-radius: 50%;
   border: 1px solid #666;
   transition: all 0.5s ease;
+  z-index: 1;
 }
 
 .message-delete-btn {
