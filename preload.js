@@ -141,6 +141,16 @@ contextBridge.exposeInMainWorld('ninja', {
     ipcRenderer.on('message:update', (_event, message) => callback(message));
   },
 
+  // Request current message state (viewer -> control, on load/reload)
+  requestMessageState: () => {
+    ipcRenderer.send('message:request-state');
+  },
+
+  // Listen for message state requests (control responds)
+  onMessageStateRequest: (callback) => {
+    ipcRenderer.on('message:request-state', () => callback());
+  },
+
   // Cleanup listeners (call when window closes)
   removeAllListeners: () => {
     ipcRenderer.removeAllListeners('timer:state');

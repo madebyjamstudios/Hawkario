@@ -1327,9 +1327,8 @@ footer small {
   color: #666;
   font-weight: 600;
   padding: 0 1px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  align-self: center;
+  line-height: 1;
 }
 
 /* Duration input row */
