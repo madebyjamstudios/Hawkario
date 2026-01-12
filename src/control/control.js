@@ -1125,7 +1125,7 @@ function openAppSettings() {
   document.getElementById('progressTime').textContent = '';
   document.getElementById('progressTime').classList.remove('complete');
   document.querySelector('.progress-bar').classList.remove('complete');
-  document.getElementById('restartApp').classList.add('hidden');
+  document.getElementById('restartApp')?.classList.add('hidden');
 
   // Show update status automatically
   const statusEl = document.getElementById('updateStatus');
@@ -3861,7 +3861,7 @@ function setupEventListeners() {
     setTimeout(() => btn?.classList.remove('spinning'), 600);
   });
   document.getElementById('downloadUpdates').addEventListener('click', downloadUpdates);
-  document.getElementById('restartApp').addEventListener('click', restartApp);
+  document.getElementById('restartApp')?.addEventListener('click', restartApp);
 
   // Tab navigation
   els.timersTabBtn.addEventListener('click', () => switchTab('timers'));
