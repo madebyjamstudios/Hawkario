@@ -4,8 +4,8 @@
  */
 
 // Line width in em units - ensures consistent character count per line
-// regardless of font size (roughly 16-20 characters per line)
-const LINE_WIDTH_EM = 16;
+// regardless of font size (roughly 10-12 characters per line for bigger text)
+const LINE_WIDTH_EM = 10;
 
 /**
  * Auto-fit message text using font-size scaling with em-based width
@@ -25,9 +25,9 @@ export function autoFitMessage(messageEl, containerEl) {
 
   const containerWidth = containerEl.clientWidth || containerEl.offsetWidth;
   const containerHeight = containerEl.clientHeight || containerEl.offsetHeight;
-  const targetWidth = containerWidth * 0.85;
-  // Message gets 40% of container (60/40 split), use 35% for padding
-  const targetHeight = containerHeight * 0.35;
+  const targetWidth = containerWidth * 0.9;
+  // Message gets 40% of container (60/40 split), use 38% for padding
+  const targetHeight = containerHeight * 0.38;
   const naturalWidth = messageEl.scrollWidth;
   const naturalHeight = messageEl.scrollHeight;
 
