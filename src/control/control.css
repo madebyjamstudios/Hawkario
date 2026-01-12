@@ -225,7 +225,7 @@ button:disabled {
   bottom: 5%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.8em;
+  /* Font size set dynamically in JS via autoFitLivePreviewMessage */
   font-weight: 600;
   color: #ffffff;
   text-align: center;

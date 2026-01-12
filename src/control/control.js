@@ -1254,6 +1254,34 @@ function updateLivePreviewMessage(message) {
   els.livePreviewMessage.style.display = 'block';
   els.livePreview.classList.add('with-message');
   els.livePreviewTimer.style.maxHeight = '45%';
+
+  // Auto-fit message text to fill container (matching viewer behavior)
+  autoFitLivePreviewMessage();
+}
+
+/**
+ * Auto-fit live preview message text to fill its container
+ */
+function autoFitLivePreviewMessage() {
+  if (!els.livePreviewMessage || els.livePreviewMessage.style.display === 'none') return;
+
+  // Reset to measure natural size
+  els.livePreviewMessage.style.fontSize = '100px';
+
+  const containerWidth = els.livePreview.clientWidth;
+  const containerHeight = els.livePreview.clientHeight;
+  const targetWidth = containerWidth * 0.9;
+  const targetHeight = containerHeight * 0.45;
+  const naturalWidth = els.livePreviewMessage.scrollWidth;
+  const naturalHeight = els.livePreviewMessage.scrollHeight;
+
+  if (naturalWidth > 0 && naturalHeight > 0) {
+    const widthRatio = targetWidth / naturalWidth;
+    const heightRatio = targetHeight / naturalHeight;
+    const ratio = Math.min(widthRatio, heightRatio);
+    const newFontSize = Math.max(10, 100 * ratio);
+    els.livePreviewMessage.style.fontSize = newFontSize + 'px';
+  }
 }
 
 function toggleMessageVisibility(messageId) {
@@ -2204,6 +2232,8 @@ function renderLivePreview() {
   // Timer-only modes get more space (0.95), ToD+timer uses 0.9
   const fitPercent = showToD ? 0.9 : 0.95;
   autoFitText(els.livePreviewTimer, els.livePreview, fitPercent);
+  // Also auto-fit message if visible
+  autoFitLivePreviewMessage();
 
   // Update progress bar
   if (isCountdown) {
