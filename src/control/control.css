@@ -241,23 +241,26 @@ button:disabled {
   -webkit-user-select: none;
 }
 
-/* Split layout - matches viewer.css exactly */
+/* Split layout for timer + message */
 .live-preview.with-message {
-  grid-template-rows: 1fr 1fr;
-  place-items: center center;
+  grid-template-rows: 50% 50%;
 }
 
 .live-preview.with-message .timer-preview {
+  grid-row: 1 !important;
+  grid-column: 1 !important;
   align-self: end !important;
-  justify-self: center;
-  max-height: 45%;
+  justify-self: center !important;
+  max-height: 100%;
 }
 
 .live-preview.with-message .message-preview {
-  display: block;
+  grid-row: 2 !important;
+  grid-column: 1 !important;
+  display: block !important;
   opacity: 1;
   align-self: start !important;
-  justify-self: center;
+  justify-self: center !important;
 }
 
 /* Vertically centered colon for time display */
