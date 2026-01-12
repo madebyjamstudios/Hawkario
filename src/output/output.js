@@ -2,6 +2,9 @@
  * Ninja Timer - Output Window
  * Output display for the timer
  * Uses shared renderer for StageTimer-style sync with control window
+ *
+ * Production Safety: This file includes defensive programming patterns
+ * to prevent crashes and ensure reliable operation during productions.
  */
 
 import { formatTime, formatTimeOfDay, hexToRgba } from '../shared/timer.js';
@@ -9,14 +12,50 @@ import { playWarningSound, playEndSound, initAudio } from '../shared/sounds.js';
 import { FIXED_STYLE } from '../shared/timerState.js';
 import { computeDisplay, getShadowCSS, getCombinedShadowCSS, FlashAnimator } from '../shared/renderTimer.js';
 import { autoFitMessage, applyMessageStyle } from '../shared/renderMessage.js';
+import {
+  safeTimeout,
+  safeClearTimeout,
+  clearAllTimers,
+  clearAllListeners,
+  watchdogHeartbeat,
+  stopWatchdog
+} from '../shared/safeUtils.js';
 
-// DOM Elements
-const timerEl = document.getElementById('timer');
-const stageEl = document.querySelector('.stage');
-const virtualCanvasEl = document.getElementById('virtualCanvas');
-const fsHintEl = document.getElementById('fsHint');
-const messageOverlayEl = document.getElementById('messageOverlay');
-const resolutionEl = document.getElementById('resolutionDisplay');
+// ============================================================================
+// DOM SAFEGUARDING (Production Safety)
+// ============================================================================
+
+/**
+ * Create a safe fallback element that absorbs operations without crashing
+ */
+function createSafeFallback(tagName = 'div') {
+  const el = document.createElement(tagName);
+  el._isFallback = true;
+  el.classList.add = () => {};
+  el.classList.remove = () => {};
+  el.classList.toggle = () => false;
+  return el;
+}
+
+// DOM Elements with safe fallbacks
+const timerEl = document.getElementById('timer') || createSafeFallback('div');
+const stageEl = document.querySelector('.stage') || createSafeFallback('div');
+const virtualCanvasEl = document.getElementById('virtualCanvas') || createSafeFallback('div');
+const fsHintEl = document.getElementById('fsHint') || createSafeFallback('div');
+const messageOverlayEl = document.getElementById('messageOverlay') || createSafeFallback('div');
+const resolutionEl = document.getElementById('resolutionDisplay') || createSafeFallback('span');
+
+// Log any missing elements for debugging
+const missingEls = [];
+if (!document.getElementById('timer')) missingEls.push('timer');
+if (!document.querySelector('.stage')) missingEls.push('.stage');
+if (!document.getElementById('virtualCanvas')) missingEls.push('virtualCanvas');
+if (!document.getElementById('fsHint')) missingEls.push('fsHint');
+if (!document.getElementById('messageOverlay')) missingEls.push('messageOverlay');
+if (!document.getElementById('resolutionDisplay')) missingEls.push('resolutionDisplay');
+if (missingEls.length > 0) {
+  console.warn('[DOM Safety] Missing output elements (using fallbacks):', missingEls.join(', '));
+}
 
 // Virtual canvas reference dimensions
 const REF_WIDTH = 1920;
@@ -298,8 +337,31 @@ function handleDisplayUpdate(newState) {
 /**
  * Main render loop
  * Uses canonical state if available, falls back to legacy displayState
+ *
+ * Production Safety: Wrapped in try-catch to prevent render errors from crashing the app
  */
+let renderLoopActive = true;  // Flag to stop render loop on cleanup
+
 function render() {
+  // Check if we should stop
+  if (!renderLoopActive) return;
+
+  // Record heartbeat for watchdog monitoring
+  watchdogHeartbeat('output');
+
+  try {
+    renderInternal();
+  } catch (err) {
+    console.error('[OutputRender] Error (recovered):', err);
+  }
+
+  // Schedule next frame if still active
+  if (renderLoopActive) {
+    requestAnimationFrame(render);
+  }
+}
+
+function renderInternal() {
   let visible = true;
   let text = '00:00';
   let color = '#ffffff';
@@ -339,8 +401,7 @@ function render() {
   // Handle visibility
   if (!visible) {
     timerEl.style.visibility = 'hidden';
-    requestAnimationFrame(render);
-    return;
+    return; // Next frame scheduled by wrapper
   } else {
     timerEl.style.visibility = 'visible';
   }
@@ -378,8 +439,7 @@ function render() {
   if (!canonicalState && displayState.blackout !== isBlackedOut) {
     setBlackout(displayState.blackout);
   }
-
-  requestAnimationFrame(render);
+  // Next frame scheduled by wrapper
 }
 
 /**
@@ -548,7 +608,31 @@ if (document.readyState === 'loading') {
   init();
 }
 
-// Cleanup on window close
+// Cleanup on window close (Production Safety)
 window.addEventListener('beforeunload', () => {
+  // Stop the render loop
+  renderLoopActive = false;
+
+  // Stop watchdog monitoring
+  stopWatchdog();
+
+  // Clear all tracked timers
+  clearAllTimers();
+
+  // Clear all tracked event listeners
+  clearAllListeners();
+
+  // Stop flash animation if running
+  if (flashAnimator?.isFlashing) {
+    try {
+      flashAnimator.stop();
+    } catch (err) {
+      // Ignore cleanup errors
+    }
+  }
+
+  // Remove IPC listeners
   window.ninja.removeAllListeners();
+
+  console.log('[Cleanup] Output window cleanup complete');
 });

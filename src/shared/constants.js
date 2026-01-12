@@ -6,7 +6,8 @@
 export const STORAGE_KEYS = {
   PROFILES: 'ninja-profiles-v1',
   PRESETS: 'ninja-presets-v1',  // Legacy, kept for migration
-  SETTINGS: 'ninja-settings-v1'
+  SETTINGS: 'ninja-settings-v1',
+  CRASH_RECOVERY: 'ninja-crash-recovery-v1'  // For production safety: auto-save timer state
 };
 
 // Timer modes

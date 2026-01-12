@@ -2919,8 +2919,7 @@ function renderLivePreviewInternal() {
       updateCurrentTimeDisplay();
       lastClockUpdate = nowTod;
     }
-    requestAnimationFrame(renderLivePreview);
-    return;
+    return; // Next frame scheduled by wrapper
   }
 
   // Determine mode type
@@ -3102,8 +3101,7 @@ function renderLivePreviewInternal() {
 
   // Update mode indicator
   updateProgressBarZones();
-
-  requestAnimationFrame(renderLivePreview);
+  // Next frame scheduled by wrapper
 }
 
 // ============ Configuration ============
@@ -5272,12 +5270,187 @@ function calculateMessageTargetSlot(clientY) {
   return items.length - 1;
 }
 
+// ============ Crash Recovery (Production Safety) ============
+
+let crashRecoveryInterval = null;
+
+/**
+ * Save current timer state for crash recovery
+ * Called periodically while timer is running
+ */
+function saveCrashRecoveryState() {
+  if (!isRunning || activePresetIndex === null) {
+    // Clear recovery state when timer is not active
+    try {
+      localStorage.removeItem(STORAGE_KEYS.CRASH_RECOVERY);
+    } catch (e) {
+      // Ignore storage errors
+    }
+    return;
+  }
+
+  try {
+    const recoveryState = {
+      timestamp: Date.now(),
+      activePresetIndex,
+      timerState: {
+        startedAt: timerState.startedAt,
+        pausedAcc: timerState.pausedAcc,
+        ended: timerState.ended,
+        overtime: timerState.overtime,
+        overtimeStartedAt: timerState.overtimeStartedAt
+      },
+      isRunning,
+      activeTimerConfig: { ...activeTimerConfig },
+      profileId: getActiveProfile()?.id || null
+    };
+    localStorage.setItem(STORAGE_KEYS.CRASH_RECOVERY, JSON.stringify(recoveryState));
+  } catch (e) {
+    console.warn('[CrashRecovery] Failed to save state:', e);
+  }
+}
+
+/**
+ * Check for crash recovery state on startup
+ * Returns recovery state if available and recent (within 24 hours)
+ */
+function checkCrashRecovery() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.CRASH_RECOVERY);
+    if (!saved) return null;
+
+    const state = JSON.parse(saved);
+
+    // Only offer recovery if state is recent (within 24 hours)
+    const ageMs = Date.now() - state.timestamp;
+    const maxAgeMs = 24 * 60 * 60 * 1000; // 24 hours
+
+    if (ageMs > maxAgeMs) {
+      localStorage.removeItem(STORAGE_KEYS.CRASH_RECOVERY);
+      return null;
+    }
+
+    return state;
+  } catch (e) {
+    console.warn('[CrashRecovery] Failed to check state:', e);
+    return null;
+  }
+}
+
+/**
+ * Restore timer from crash recovery state
+ */
+function restoreFromCrashRecovery(state) {
+  try {
+    // Restore profile if different
+    if (state.profileId && state.profileId !== getActiveProfile()?.id) {
+      const profiles = loadProfiles();
+      const targetProfile = profiles.find(p => p.id === state.profileId);
+      if (targetProfile) {
+        setActiveProfileId(state.profileId);
+        updateProfileButton();
+        renderPresetList();
+      }
+    }
+
+    // Restore active preset
+    if (state.activePresetIndex !== null && state.activePresetIndex !== undefined) {
+      const presets = loadPresets();
+      if (state.activePresetIndex < presets.length) {
+        activePresetIndex = state.activePresetIndex;
+        setActiveTimerConfig(presets[activePresetIndex].config);
+        applyConfig(presets[activePresetIndex].config);
+      }
+    }
+
+    // Restore timer state
+    if (state.timerState) {
+      // Calculate how much time has passed since crash
+      const elapsedSinceCrash = Date.now() - state.timestamp;
+
+      // Restore with adjusted timestamps
+      timerState.pausedAcc = state.timerState.pausedAcc || 0;
+      timerState.ended = state.timerState.ended || false;
+      timerState.overtime = state.timerState.overtime || false;
+      timerState.overtimeStartedAt = state.timerState.overtimeStartedAt;
+
+      // Timer was running when crashed - adjust startedAt or show as paused
+      if (state.isRunning) {
+        // Show as paused at the last known position
+        // Add the elapsed time since crash to pausedAcc
+        timerState.pausedAcc += elapsedSinceCrash;
+        timerState.startedAt = null;
+        isRunning = false;  // Start paused, let user resume
+
+        console.log(`[CrashRecovery] Restored timer (paused, ${Math.round(elapsedSinceCrash / 1000)}s since crash)`);
+      }
+    }
+
+    // Clear the recovery state
+    localStorage.removeItem(STORAGE_KEYS.CRASH_RECOVERY);
+
+    // Update display
+    renderPresetList();
+    updatePlayingRowState();
+
+    return true;
+  } catch (e) {
+    console.error('[CrashRecovery] Failed to restore:', e);
+    localStorage.removeItem(STORAGE_KEYS.CRASH_RECOVERY);
+    return false;
+  }
+}
+
+/**
+ * Clear crash recovery state (called on normal shutdown)
+ */
+function clearCrashRecoveryState() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.CRASH_RECOVERY);
+  } catch (e) {
+    // Ignore storage errors
+  }
+}
+
+/**
+ * Start periodic crash recovery state saving
+ */
+function startCrashRecoverySaving() {
+  // Save state every second when timer is running
+  if (crashRecoveryInterval) {
+    clearInterval(crashRecoveryInterval);
+  }
+  crashRecoveryInterval = setInterval(saveCrashRecoveryState, 1000);
+}
+
+/**
+ * Stop crash recovery state saving
+ */
+function stopCrashRecoverySaving() {
+  if (crashRecoveryInterval) {
+    clearInterval(crashRecoveryInterval);
+    crashRecoveryInterval = null;
+  }
+}
+
 // ============ Initialization ============
 
 function init() {
   // Load profiles (with migration from legacy presets)
   loadProfiles();
   updateProfileButton();
+
+  // Check for crash recovery state
+  const recoveryState = checkCrashRecovery();
+  if (recoveryState) {
+    // Show recovery notification
+    console.log('[CrashRecovery] Found recovery state from', new Date(recoveryState.timestamp).toLocaleString());
+    // Attempt to restore
+    const restored = restoreFromCrashRecovery(recoveryState);
+    if (restored) {
+      console.log('[CrashRecovery] Timer state restored successfully');
+    }
+  }
 
   // Setup collapsible sections in modal
   setupCollapsibleSections();
@@ -5325,6 +5498,9 @@ function init() {
   // Start live preview render loop
   renderLivePreview();
 
+  // Start crash recovery state saving
+  startCrashRecoverySaving();
+
   // Log version
   window.ninja.getVersion().then(version => {
     const footer = document.querySelector('footer small');
@@ -5342,7 +5518,29 @@ if (document.readyState === 'loading') {
   init();
 }
 
-// Cleanup on window close
+// Cleanup on window close (Production Safety)
 window.addEventListener('beforeunload', () => {
+  // Stop the render loop
+  renderLoopActive = false;
+
+  // Stop watchdog monitoring
+  stopWatchdog();
+
+  // Stop crash recovery saving
+  stopCrashRecoverySaving();
+
+  // Clear crash recovery state on normal shutdown
+  // (only crashes will retain the state for recovery)
+  clearCrashRecoveryState();
+
+  // Clear all tracked timers (setTimeout/setInterval)
+  clearAllTimers();
+
+  // Clear all tracked event listeners
+  clearAllListeners();
+
+  // Remove IPC listeners
   window.ninja.removeAllListeners();
+
+  console.log('[Cleanup] Control window cleanup complete');
 });

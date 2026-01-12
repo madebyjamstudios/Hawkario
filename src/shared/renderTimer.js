@@ -1,19 +1,59 @@
 /**
  * Ninja Timer - Shared Timer Renderer
  * Identical rendering logic for both preview and output windows
+ *
+ * Production Safety: This file includes defensive programming patterns
+ * to prevent display errors from crashing the app.
+ *
+ * TIMING NOTE: This module uses Date.now() for timestamps. While this is
+ * generally reliable, it can be affected by system clock changes (NTP sync,
+ * daylight savings, manual adjustment). For mission-critical timing,
+ * consider using performance.now() for elapsed time calculations in the
+ * control window where timing state is managed.
  */
 
 import { formatTime, formatTimeOfDay } from './timer.js';
 
 /**
+ * Safe default display result for error recovery
+ */
+const SAFE_DEFAULT_DISPLAY = {
+  visible: true,
+  text: '--:--',
+  elapsedMs: 0,
+  remainingMs: 0,
+  overtime: false
+};
+
+/**
  * Compute display values from canonical timer state
  * Both preview and output MUST use this function for identical results
+ *
+ * Production Safety: This function validates input and never throws
  *
  * @param {Object} state - Canonical timer state
  * @param {number} now - Current timestamp (Date.now())
  * @returns {Object} Display values { text, elapsedMs, remainingMs, overtime, visible }
  */
 export function computeDisplay(state, now = Date.now()) {
+  // Validate state object
+  if (!state || typeof state !== 'object') {
+    console.warn('[computeDisplay] Invalid state, using defaults');
+    return { ...SAFE_DEFAULT_DISPLAY };
+  }
+
+  try {
+    return computeDisplayInternal(state, now);
+  } catch (err) {
+    console.error('[computeDisplay] Error (recovered):', err);
+    return { ...SAFE_DEFAULT_DISPLAY };
+  }
+}
+
+/**
+ * Internal compute function (can throw, wrapped by computeDisplay)
+ */
+function computeDisplayInternal(state, now) {
   const { mode, durationMs, format, startedAt, pausedAccMs, isRunning, ended, overtime, overtimeStartedAt, todFormat, timezone } = state;
 
   // Hidden mode
@@ -221,9 +261,17 @@ export function getCombinedShadowCSS(strokeWidth, strokeColor, shadowSize, shado
 /**
  * Flash animation - timestamp-driven for sync across windows
  * Both preview and output use the same startedAt to stay in phase
+ *
+ * Production Safety: Includes error handling and cleanup to prevent
+ * animation issues from affecting the main timer display.
  */
 export class FlashAnimator {
   constructor(timerEl, containerEl, onComplete) {
+    // Validate elements
+    if (!timerEl) {
+      console.warn('[FlashAnimator] No timer element provided');
+    }
+
     this.timerEl = timerEl;
     this.containerEl = containerEl;
     this.onComplete = onComplete;
@@ -265,27 +313,33 @@ export class FlashAnimator {
   tick() {
     if (!this.isFlashing) return;
 
-    const now = Date.now();
-    const elapsed = now - this.startedAt;
+    try {
+      const now = Date.now();
+      const elapsed = now - this.startedAt;
 
-    // Animation complete?
-    if (elapsed >= this.totalDuration) {
-      this.restore();
-      return;
-    }
-
-    // Compute current phase from timestamp (grey first, then glow)
-    const cyclePosition = elapsed % this.cycleDuration;
-    const phase = cyclePosition < this.greyDuration ? 'grey' : 'glow';
-
-    // Only update DOM if phase changed (performance)
-    if (phase !== this.lastPhase) {
-      if (phase === 'glow') {
-        this.applyGlow();
-      } else {
-        this.applyGrey();
+      // Animation complete?
+      if (elapsed >= this.totalDuration) {
+        this.restore();
+        return;
       }
-      this.lastPhase = phase;
+
+      // Compute current phase from timestamp (grey first, then glow)
+      const cyclePosition = elapsed % this.cycleDuration;
+      const phase = cyclePosition < this.greyDuration ? 'grey' : 'glow';
+
+      // Only update DOM if phase changed (performance)
+      if (phase !== this.lastPhase) {
+        if (phase === 'glow') {
+          this.applyGlow();
+        } else {
+          this.applyGrey();
+        }
+        this.lastPhase = phase;
+      }
+    } catch (err) {
+      console.error('[FlashAnimator] Tick error (stopping):', err);
+      this.stop();
+      return;
     }
 
     this.rafId = requestAnimationFrame(() => this.tick());
@@ -329,13 +383,24 @@ export class FlashAnimator {
   }
 
   stop() {
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
+    try {
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+
+      if (this.timerEl) {
+        this.timerEl.style.transition = '';
+      }
+
+      if (this.isFlashing) {
+        this.restore();
+      }
+    } catch (err) {
+      console.error('[FlashAnimator] Stop error:', err);
+      // Force cleanup
+      this.isFlashing = false;
       this.rafId = null;
-    }
-    this.timerEl.style.transition = '';
-    if (this.isFlashing) {
-      this.restore();
     }
   }
 }
