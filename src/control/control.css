@@ -219,17 +219,16 @@ button:disabled {
   padding: 0.1em 0.15em;
   user-select: none;
   -webkit-user-select: none;
+  grid-row: 1;
   /* Font size set dynamically in JS to match output scaling */
 }
 
 /* Message preview in live preview */
 .live-preview .message-preview {
   display: none;
-  position: absolute;
-  bottom: 5%;
-  left: 50%;
-  transform: translateX(-50%);
-  /* Font size set dynamically in JS via autoFitLivePreviewMessage */
+  grid-row: 2;
+  align-self: start;
+  justify-self: center;
   font-weight: 600;
   color: #ffffff;
   text-align: center;
@@ -250,17 +249,11 @@ button:disabled {
 
 .live-preview.with-message .timer-preview {
   align-self: end;
-  max-height: 100%;
-  overflow: hidden;
+  max-height: 45%;
 }
 
 .live-preview.with-message .message-preview {
-  position: relative;
-  bottom: auto;
-  left: auto;
-  transform: none;
-  align-self: start;
-  justify-self: center;
+  display: block;
 }
 
 /* Vertically centered colon for time display */

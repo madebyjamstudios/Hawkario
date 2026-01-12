@@ -1240,9 +1240,7 @@ function updateLivePreviewMessage(message) {
   if (!els.livePreviewMessage) return;
 
   if (!message || !message.visible) {
-    els.livePreviewMessage.style.display = 'none';
     els.livePreview.classList.remove('with-message');
-    els.livePreviewTimer.style.maxHeight = '';
     return;
   }
 
@@ -1251,9 +1249,7 @@ function updateLivePreviewMessage(message) {
   els.livePreviewMessage.style.fontWeight = message.bold ? '800' : '600';
   els.livePreviewMessage.style.fontStyle = message.italic ? 'italic' : 'normal';
   els.livePreviewMessage.style.textTransform = message.uppercase ? 'uppercase' : 'none';
-  els.livePreviewMessage.style.display = 'block';
   els.livePreview.classList.add('with-message');
-  els.livePreviewTimer.style.maxHeight = '45%';
 
   // Auto-fit message text to fill container (matching viewer behavior)
   autoFitLivePreviewMessage();
@@ -1264,7 +1260,7 @@ function updateLivePreviewMessage(message) {
  * Uses 75% width to encourage line wrapping, 48% height (matching output)
  */
 function autoFitLivePreviewMessage() {
-  if (!els.livePreviewMessage || els.livePreviewMessage.style.display === 'none') return;
+  if (!els.livePreviewMessage || !els.livePreview.classList.contains('with-message')) return;
 
   // Reset to measure natural size
   els.livePreviewMessage.style.fontSize = '100px';
