@@ -238,9 +238,9 @@ button:disabled {
   -webkit-user-select: none;
 }
 
-/* Split layout for timer + message (60/40 split - timer gets more space) */
+/* Split layout for timer + message (50/50 split) */
 .live-preview.with-message {
-  grid-template-rows: 60% 40%;
+  grid-template-rows: 50% 50%;
   grid-template-columns: 100%;
 }
 
@@ -2001,11 +2001,12 @@ button.danger:active {
 }
 
 .message-content {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  width: 100%;
 }
 
 .message-text-input {

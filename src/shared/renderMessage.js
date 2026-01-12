@@ -26,8 +26,8 @@ export function autoFitMessage(messageEl, containerEl) {
   const containerWidth = containerEl.clientWidth || containerEl.offsetWidth;
   const containerHeight = containerEl.clientHeight || containerEl.offsetHeight;
   const targetWidth = containerWidth * 0.9;
-  // Message gets 40% of container (60/40 split), use 38% for padding
-  const targetHeight = containerHeight * 0.38;
+  // Message gets 50% of container (50/50 split), use 45% for padding
+  const targetHeight = containerHeight * 0.45;
   const naturalWidth = messageEl.scrollWidth;
   const naturalHeight = messageEl.scrollHeight;
 

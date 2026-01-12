@@ -107,9 +107,9 @@ html, body {
 
 /* ============ Split Layout (Timer + Message) ============ */
 
-/* 60/40 split - timer gets more space (matches preview) */
+/* 50/50 split (matches preview) */
 .stage.with-message {
-  grid-template-rows: 60% 40%;
+  grid-template-rows: 50% 50%;
   grid-template-columns: 100%;
 }
 
@@ -119,7 +119,7 @@ html, body {
   align-self: end;
   justify-self: center;
   text-align: center;
-  max-height: 55vh;
+  max-height: 45vh;
 }
 
 .stage.with-message .message-overlay {
