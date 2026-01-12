@@ -3031,49 +3031,56 @@ function renderPresetList() {
 
     // First button: Clock (select) or Rewind (reset) depending on selection state
     const selectResetBtn = document.createElement('button');
+    selectResetBtn.type = 'button';
     selectResetBtn.className = 'icon-btn';
     if (isSelected) {
       // Selected timer shows rewind icon to reset
       selectResetBtn.innerHTML = ICONS.reset;
       selectResetBtn.title = 'Reset timer';
-      selectResetBtn.onclick = (e) => {
+      selectResetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         sendCommand('reset');
-      };
+      });
     } else {
       // Non-selected timer shows clock icon to select
       selectResetBtn.innerHTML = ICONS.clock;
       selectResetBtn.title = 'Select timer';
-      selectResetBtn.onclick = (e) => {
+      selectResetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         // Select this timer without starting
         setActiveTimerConfig(preset.config);
         applyConfig(preset.config);
         activePresetIndex = idx;
         sendCommand('reset');
         renderPresetList();
-      };
+      });
     }
 
     // Edit button (settings icon)
     const editBtn = document.createElement('button');
+    editBtn.type = 'button';
     editBtn.className = 'icon-btn';
     editBtn.innerHTML = ICONS.settings;
     editBtn.title = 'Edit settings';
-    editBtn.onclick = (e) => {
+    editBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       openModal(idx);
-    };
+    });
 
     // Play/Pause button
     const playBtn = document.createElement('button');
+    playBtn.type = 'button';
     const isActiveAndRunning = isSelected && isRunning;
     const isActiveAndPaused = isSelected && !isRunning && timerState.startedAt !== null;
     playBtn.className = isActiveAndRunning ? 'icon-btn pause-btn' : 'icon-btn play-btn';
     playBtn.innerHTML = isActiveAndRunning ? ICONS.pause : ICONS.play;
     playBtn.title = isActiveAndRunning ? 'Pause' : (isActiveAndPaused ? 'Resume' : 'Load & Start');
-    playBtn.onclick = (e) => {
+    playBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       // Check current state at click time, not captured state from render
       const currentlyRunning = activePresetIndex === idx && isRunning;
       const currentlyPaused = activePresetIndex === idx && !isRunning && timerState.startedAt !== null;
@@ -3092,17 +3099,19 @@ function renderPresetList() {
         sendCommand('start');
       }
       updatePlayingRowState(); // Update button states without re-rendering
-    };
+    });
 
     // More button (three dots)
     const moreBtn = document.createElement('button');
+    moreBtn.type = 'button';
     moreBtn.className = 'icon-btn more-btn';
     moreBtn.innerHTML = ICONS.more;
     moreBtn.title = 'More options';
-    moreBtn.onclick = (e) => {
+    moreBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       showPresetMenu(idx, preset, moreBtn);
-    };
+    });
 
     actions.append(selectResetBtn, editBtn, playBtn, moreBtn);
     row.append(dragHandle, name, duration, actions);
