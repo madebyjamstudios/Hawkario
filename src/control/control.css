@@ -1326,9 +1326,10 @@ footer small {
   font-size: 20px;
   color: #666;
   font-weight: 600;
-  padding: 0 1px;
+  padding: 0 2px;
   align-self: center;
   line-height: 1;
+  margin-top: -0.15em;
 }
 
 /* Duration input row */
