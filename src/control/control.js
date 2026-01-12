@@ -698,7 +698,7 @@ let flashState = { active: false, startedAt: null };
 // Message state
 let activeMessage = null; // { text, bold, italic, color, mode, sentAt, duration }
 let messageTimerId = null;
-const MESSAGES_KEY = 'ninja-messages-v1';
+// Legacy: messages used to be stored in 'ninja-messages-v1', now stored in profiles
 
 // Profile state
 let profiles = [];
@@ -1326,45 +1326,43 @@ function getActiveTab() {
 // ============ Message Management ============
 
 function loadMessages() {
-  try {
-    const data = localStorage.getItem(MESSAGES_KEY);
-    let messages = data ? JSON.parse(data) : [];
+  const profile = getActiveProfile();
+  if (!profile) return [];
 
-    // Migrate: add id, visible, and uppercase fields to any messages without them
-    let needsSave = false;
-    messages = messages.map(msg => {
-      let updated = msg;
-      if (!msg.id) {
-        needsSave = true;
-        updated = {
-          ...updated,
-          id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          visible: false
-        };
-      }
-      if (msg.uppercase === undefined) {
-        needsSave = true;
-        updated = { ...updated, uppercase: false };
-      }
-      return updated;
-    });
+  // Ensure messages array exists
+  if (!profile.messages) profile.messages = [];
 
-    if (needsSave) {
-      saveMessagesToStorage(messages);
+  // Migrate: add id, visible, and uppercase fields to any messages without them
+  let needsSave = false;
+  profile.messages = profile.messages.map(msg => {
+    let updated = msg;
+    if (!msg.id) {
+      needsSave = true;
+      updated = {
+        ...updated,
+        id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        visible: false
+      };
     }
+    if (msg.uppercase === undefined) {
+      needsSave = true;
+      updated = { ...updated, uppercase: false };
+    }
+    return updated;
+  });
 
-    return messages;
-  } catch {
-    return [];
+  if (needsSave) {
+    saveProfiles();
   }
+
+  return profile.messages;
 }
 
 function saveMessagesToStorage(list) {
-  try {
-    localStorage.setItem(MESSAGES_KEY, JSON.stringify(list));
-  } catch (e) {
-    console.error('Failed to save messages:', e);
-  }
+  const profile = getActiveProfile();
+  if (!profile) return;
+  profile.messages = list;
+  saveProfiles();
 }
 
 /**
@@ -3314,6 +3312,34 @@ function loadProfiles() {
           needsSave = true;
         }
       });
+
+      // Migrate: move global messages into profiles
+      const legacyMessages = localStorage.getItem('ninja-messages-v1');
+      if (legacyMessages) {
+        try {
+          const messages = JSON.parse(legacyMessages);
+          // Add messages to active profile
+          const activeProfile = profiles.find(p => p.id === activeProfileId);
+          if (activeProfile && !activeProfile.messages) {
+            activeProfile.messages = messages;
+            needsSave = true;
+          }
+          // Clean up legacy storage
+          localStorage.removeItem('ninja-messages-v1');
+          console.log('[Migration] Moved messages into active profile');
+        } catch (e) {
+          console.error('[Migration] Failed to migrate messages:', e);
+        }
+      }
+
+      // Ensure all profiles have messages array
+      profiles.forEach(p => {
+        if (!p.messages) {
+          p.messages = [];
+          needsSave = true;
+        }
+      });
+
       if (needsSave) {
         saveProfiles();
       }
@@ -3346,7 +3372,8 @@ function loadProfiles() {
       name: 'Default',
       color: PROFILE_COLORS[0],
       createdAt: new Date().toISOString(),
-      presets: legacyPresets
+      presets: legacyPresets,
+      messages: []
     }];
     activeProfileId = 'default';
 
@@ -3364,7 +3391,8 @@ function loadProfiles() {
       name: 'Default',
       color: PROFILE_COLORS[0],
       createdAt: new Date().toISOString(),
-      presets: []
+      presets: [],
+      messages: []
     }];
     activeProfileId = 'default';
   }
@@ -3723,9 +3751,9 @@ function showProfileDropdown(forceRefresh = false) {
     const adjustedBaseY = baseY - scrollDelta;
 
     // Calculate which slot the mouse is over
-    // Use smaller offset (30% instead of 50%) for more responsive dragging in both directions
+    // Use 50% offset for symmetric behavior in both directions (trigger at center)
     const mouseY = e.clientY;
-    let newSlot = Math.floor((mouseY - adjustedBaseY + slotHeight * 0.3) / slotHeight);
+    let newSlot = Math.floor((mouseY - adjustedBaseY + slotHeight * 0.5) / slotHeight);
     newSlot = Math.max(0, Math.min(items.length - 1, newSlot));
 
     if (newSlot !== profileDragState.currentSlot) {
@@ -3998,6 +4026,15 @@ function switchProfile(id) {
   // Update UI
   updateProfileButton();
   renderPresetList();
+  renderMessageList();
+
+  // Hide any currently visible message and restore from new profile
+  if (activeMessage) {
+    window.ninja.sendMessage({ visible: false });
+    updateLivePreviewMessage({ visible: false });
+    activeMessage = null;
+  }
+  restoreActiveMessage();
 
   // Select first timer in new profile if available
   const presets = getActivePresets();
@@ -4297,7 +4334,8 @@ function createNewProfile() {
     presets: [{
       name: 'Timer 1',
       config: defaultConfig
-    }]
+    }],
+    messages: []
   };
 
   profiles.push(newProfile);
