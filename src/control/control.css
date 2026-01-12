@@ -604,7 +604,6 @@ button:disabled {
 .timer-progress-container {
   display: flex;
   align-items: center;
-  gap: 4px;
   padding: 4px 0;
   width: 100%;
   user-select: none;

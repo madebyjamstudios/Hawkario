@@ -60,7 +60,6 @@ const els = {
   presetList: document.getElementById('presetList'),
   presetListContainer: document.querySelector('.preset-list-container'),
   timerProgressContainer: document.getElementById('timerProgressContainer'),
-  remainingTime: document.getElementById('remainingTime'),
   progressFill: document.getElementById('progressFill'),
   progressSegments: document.getElementById('progressSegments'),
   progressIndicator: document.getElementById('progressIndicator'),
@@ -1597,7 +1596,6 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
   if (activePresetIndex === null) {
     els.progressFill.style.width = '0%';
     els.progressIndicator.style.left = '0%';
-    els.remainingTime.textContent = '10:00';
     cachedTotalMs = 600000;
     return;
   }
@@ -1607,7 +1605,6 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
     const durationMs = activeTimerConfig.durationSec * 1000;
     els.progressFill.style.width = '0%';
     els.progressIndicator.style.left = '0%';
-    els.remainingTime.textContent = formatTimePlain(durationMs, durationMs >= 3600000 ? 'HH:MM:SS' : 'MM:SS');
     cachedTotalMs = durationMs;
     renderWarningZones();
     renderSmartSegments();
@@ -1619,12 +1616,10 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
   // If no chain or single timer, use simple progress
   if (chain.length <= 1) {
     cachedTotalMs = currentTotalMs;
-    const remainingMs = Math.max(0, currentTotalMs - currentElapsedMs);
     const progressPercent = Math.min(100, (currentElapsedMs / currentTotalMs) * 100);
 
     els.progressFill.style.width = progressPercent + '%';
     els.progressIndicator.style.left = progressPercent + '%';
-    els.remainingTime.textContent = formatTimePlain(remainingMs, 'MM:SS');
 
     // Clear linked timer segment dividers for single timer, but keep smart segments
     const dividers = els.progressSegments.querySelectorAll('.segment-divider');
@@ -1658,12 +1653,10 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
   // Add current timer's elapsed time
   cumulativeElapsedMs += currentElapsedMs;
 
-  const totalRemainingMs = Math.max(0, totalChainMs - cumulativeElapsedMs);
   const progressPercent = Math.min(100, (cumulativeElapsedMs / totalChainMs) * 100);
 
   els.progressFill.style.width = progressPercent + '%';
   els.progressIndicator.style.left = progressPercent + '%';
-  els.remainingTime.textContent = formatTimePlain(totalRemainingMs, 'MM:SS');
 
   // Render segment dividers for linked timers (only if count changed)
   if (chain.length !== lastSegmentCount) {
@@ -1869,11 +1862,20 @@ function seekToTime(targetElapsedMs) {
 function renderWarningZones() {
   if (!activeTimerConfig || !els.warningZones) return;
 
-  const durationSec = activeTimerConfig.durationSec;
+  const chain = getLinkedTimerChain();
+
+  // Use total chain duration for linked timers
+  let totalDurationSec;
+  if (chain.length > 1) {
+    totalDurationSec = chain.reduce((sum, t) => sum + t.durationMs, 0) / 1000;
+  } else {
+    totalDurationSec = activeTimerConfig.durationSec;
+  }
+
   const yellowSec = activeTimerConfig.warnYellowSec ?? 60;
   const orangeSec = activeTimerConfig.warnOrangeSec ?? 15;
 
-  renderWarningZonesForDuration(durationSec, yellowSec, orangeSec);
+  renderWarningZonesForDuration(totalDurationSec, yellowSec, orangeSec);
 }
 
 /**
@@ -1932,7 +1934,7 @@ function renderSmartSegments() {
 
 /**
  * Render smart segment markers for a specific duration
- * Creates markers at key positions: 0%, 25%, 50%, 75%, 100%
+ * Creates markers at key positions showing TIME REMAINING
  */
 function renderSmartSegmentsForDuration(durationSec) {
   if (!els.progressSegments) return;
@@ -1943,20 +1945,27 @@ function renderSmartSegmentsForDuration(durationSec) {
 
   if (durationSec <= 0) return;
 
-  // Create markers at key positions (25%, 50%, 75%)
-  const positions = [25, 50, 75];
+  // Create markers at key positions (0%, 25%, 50%, 75%)
+  // 0% = full duration remaining, 75% = 25% remaining
+  const positions = [0, 25, 50, 75];
 
   for (const percent of positions) {
-    const timeSec = (percent / 100) * durationSec;
+    // Calculate TIME REMAINING at this position (not elapsed)
+    const timeRemainingSec = durationSec - ((percent / 100) * durationSec);
 
     const marker = document.createElement('div');
     marker.className = 'segment-marker';
     marker.style.left = percent + '%';
 
+    // Hide the line for 0% marker (just show the label)
+    if (percent === 0) {
+      marker.style.background = 'transparent';
+    }
+
     // Format time label
-    const hours = Math.floor(timeSec / 3600);
-    const minutes = Math.floor((timeSec % 3600) / 60);
-    const seconds = Math.round(timeSec % 60);
+    const hours = Math.floor(timeRemainingSec / 3600);
+    const minutes = Math.floor((timeRemainingSec % 3600) / 60);
+    const seconds = Math.round(timeRemainingSec % 60);
 
     if (hours > 0) {
       marker.dataset.time = hours + ':' + String(minutes).padStart(2, '0');
@@ -2693,13 +2702,11 @@ function renderLivePreview() {
     const elapsedMs = totalMs - elapsed;
     updateProgressBar(elapsedMs, totalMs);
   } else if (isCountup) {
-    // For countup, show elapsed time in the time slot
+    // For countup, progress bar not used
     els.progressFill.style.width = '0%';
-    els.remainingTime.textContent = formatTimePlain(elapsed, 'MM:SS');
   } else {
     // Reset for other modes
     els.progressFill.style.width = '0%';
-    els.remainingTime.textContent = '00:00';
   }
 
   // Update row progress bar and playing state
@@ -2761,8 +2768,7 @@ function renderLivePreview() {
     color: currentColor,
     opacity: currentOpacity,
     blackout: isBlackedOut,
-    overtime: timerState.overtime,
-    remaining: els.remainingTime?.textContent || ''
+    overtime: timerState.overtime
   });
 
   // Update mode indicator
