@@ -208,53 +208,105 @@ ipcMain.handle('app:version', () => {
 });
 
 // Check for updates from GitHub (compares local vs remote commit SHA)
+// Local SHA is read from version.json (embedded at build time) for packaged apps
 ipcMain.handle('app:check-updates', async () => {
   const https = require('https');
-  const { exec } = require('child_process');
-  const appPath = __dirname;
+  const fs = require('fs');
+  const pathModule = require('path');
 
-  // Get local commit SHA
-  const getLocalCommitSha = () => new Promise((resolve) => {
-    exec('git rev-parse HEAD', { cwd: appPath }, (error, stdout) => {
-      if (error) {
-        resolve(null);
-      } else {
-        resolve(stdout.trim());
-      }
-    });
-  });
+  // Try to read embedded version info first (for packaged apps)
+  let localSha = null;
+  const versionPath = pathModule.join(__dirname, 'version.json');
 
-  const localSha = await getLocalCommitSha();
-  if (!localSha) {
-    return { error: 'Could not read local git history' };
+  try {
+    if (fs.existsSync(versionPath)) {
+      const versionInfo = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
+      localSha = versionInfo.commit;
+    }
+  } catch (e) {
+    // Fall through to git method
   }
 
+  // Fallback: try git directly (for development)
+  if (!localSha || localSha === 'unknown') {
+    const { exec } = require('child_process');
+    localSha = await new Promise((resolve) => {
+      exec('git rev-parse HEAD', { cwd: __dirname }, (error, stdout) => {
+        resolve(error ? null : stdout.trim());
+      });
+    });
+  }
+
+  if (!localSha) {
+    return { error: 'Could not determine app version' };
+  }
+
+  // Check GitHub for latest commit AND latest release
   return new Promise((resolve) => {
-    const options = {
+    // First, get latest commit on main
+    const commitOptions = {
       hostname: 'api.github.com',
       path: '/repos/madebyjamstudios/ninja-timer/commits/main',
       headers: { 'User-Agent': 'Ninja-Timer-App' }
     };
 
-    https.get(options, (res) => {
+    https.get(commitOptions, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try {
           const commit = JSON.parse(data);
-          if (commit.sha) {
-            const remoteSha = commit.sha;
-            const updateAvailable = localSha !== remoteSha;
+          if (!commit.sha) {
+            resolve({ error: 'Could not fetch latest commit' });
+            return;
+          }
 
+          const remoteSha = commit.sha;
+          const updateAvailable = localSha !== remoteSha;
+
+          // Now check for latest release to get download URL
+          const releaseOptions = {
+            hostname: 'api.github.com',
+            path: '/repos/madebyjamstudios/ninja-timer/releases/latest',
+            headers: { 'User-Agent': 'Ninja-Timer-App' }
+          };
+
+          https.get(releaseOptions, (relRes) => {
+            let relData = '';
+            relRes.on('data', chunk => relData += chunk);
+            relRes.on('end', () => {
+              let downloadUrl = null;
+              let releaseName = null;
+
+              try {
+                const release = JSON.parse(relData);
+                // Find .dmg asset
+                const dmgAsset = release.assets?.find(a => a.name.endsWith('.dmg'));
+                downloadUrl = dmgAsset?.browser_download_url || null;
+                releaseName = release.name || release.tag_name || null;
+              } catch (e) {
+                // No release found, that's okay
+              }
+
+              resolve({
+                updateAvailable,
+                localSha: localSha.substring(0, 7),
+                remoteSha: remoteSha.substring(0, 7),
+                downloadUrl,
+                releaseName,
+                repoUrl: 'https://github.com/madebyjamstudios/ninja-timer'
+              });
+            });
+          }).on('error', () => {
+            // Release check failed, but commit check succeeded
             resolve({
               updateAvailable,
               localSha: localSha.substring(0, 7),
               remoteSha: remoteSha.substring(0, 7),
-              downloadUrl: 'https://github.com/madebyjamstudios/ninja-timer'
+              downloadUrl: null,
+              repoUrl: 'https://github.com/madebyjamstudios/ninja-timer'
             });
-          } else {
-            resolve({ updateAvailable: false });
-          }
+          });
         } catch (e) {
           resolve({ error: 'Failed to parse response' });
         }
@@ -265,21 +317,80 @@ ipcMain.handle('app:check-updates', async () => {
   });
 });
 
-// Download updates (git pull from main branch)
-ipcMain.handle('app:download-updates', async () => {
-  const { exec } = require('child_process');
-  const appPath = __dirname;
+// Download updates from GitHub Releases
+ipcMain.handle('app:download-updates', async (_event, downloadUrl) => {
+  const https = require('https');
+  const fs = require('fs');
+  const pathModule = require('path');
+  const { shell } = require('electron');
+
+  if (!downloadUrl) {
+    return { success: false, error: 'No download URL available. Please create a GitHub Release with the .dmg attached.' };
+  }
+
+  const downloadsPath = app.getPath('downloads');
+  const fileName = 'Ninja-Timer-latest.dmg';
+  const filePath = pathModule.join(downloadsPath, fileName);
 
   return new Promise((resolve) => {
-    exec('git pull origin main', { cwd: appPath }, (error, stdout, stderr) => {
-      if (error) {
-        console.error('Git pull error:', error);
-        resolve({ success: false, error: stderr || error.message });
-      } else {
-        console.log('Git pull output:', stdout);
-        resolve({ success: true, output: stdout });
+    // Delete existing file if present
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
       }
-    });
+    } catch (e) {
+      // Ignore deletion errors
+    }
+
+    const file = fs.createWriteStream(filePath);
+
+    const download = (url) => {
+      const urlObj = new URL(url);
+      const options = {
+        hostname: urlObj.hostname,
+        path: urlObj.pathname + urlObj.search,
+        headers: { 'User-Agent': 'Ninja-Timer-App' }
+      };
+
+      https.get(options, (response) => {
+        // Handle redirects (GitHub uses them for asset downloads)
+        if (response.statusCode === 302 || response.statusCode === 301) {
+          download(response.headers.location);
+          return;
+        }
+
+        if (response.statusCode !== 200) {
+          file.close();
+          fs.unlink(filePath, () => {});
+          resolve({ success: false, error: `Download failed with status ${response.statusCode}` });
+          return;
+        }
+
+        response.pipe(file);
+
+        file.on('finish', () => {
+          file.close();
+          // Open the downloaded .dmg
+          shell.openPath(filePath).then(() => {
+            resolve({ success: true, filePath });
+          }).catch((err) => {
+            resolve({ success: true, filePath, openError: err.message });
+          });
+        });
+
+        file.on('error', (err) => {
+          file.close();
+          fs.unlink(filePath, () => {});
+          resolve({ success: false, error: err.message });
+        });
+      }).on('error', (err) => {
+        file.close();
+        fs.unlink(filePath, () => {});
+        resolve({ success: false, error: err.message });
+      });
+    };
+
+    download(downloadUrl);
   });
 });
 

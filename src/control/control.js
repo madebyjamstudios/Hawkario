@@ -866,37 +866,95 @@ function saveAppSettings(settings) {
   }
 }
 
-async function checkForUpdates() {
+// Store pending update info for download
+let pendingUpdate = null;
+
+async function checkForUpdates(silent = false) {
   const statusEl = document.getElementById('updateStatus');
   const checkBtn = document.getElementById('checkUpdates');
   const downloadBtn = document.getElementById('downloadUpdates');
   const restartBtn = document.getElementById('restartApp');
-  if (!statusEl) return;
 
-  statusEl.textContent = 'Checking...';
-  statusEl.className = '';
-  downloadBtn.classList.add('hidden');
-  restartBtn.classList.add('hidden');
+  if (!statusEl) {
+    console.error('updateStatus element not found');
+    return null;
+  }
+
+  if (!silent) {
+    statusEl.textContent = 'Checking...';
+    statusEl.className = '';
+    downloadBtn?.classList.add('hidden');
+    restartBtn?.classList.add('hidden');
+  }
 
   try {
     const result = await window.ninja.checkForUpdates();
+    console.log('Update check result:', result);
 
     if (result.error) {
-      statusEl.textContent = result.error;
-      statusEl.className = 'update-error';
+      if (!silent) {
+        statusEl.textContent = result.error;
+        statusEl.className = 'update-error';
+      }
+      return null;
     } else if (result.updateAvailable) {
-      statusEl.textContent = 'New updates available!';
-      statusEl.className = 'update-available';
-      checkBtn.classList.add('hidden');
-      downloadBtn.classList.remove('hidden');
+      // Store update info for download
+      pendingUpdate = result;
+
+      if (!silent) {
+        if (result.downloadUrl) {
+          statusEl.innerHTML = `Update available! <span class="version-info">(${result.localSha} → ${result.remoteSha})</span>`;
+        } else {
+          statusEl.innerHTML = `Update available! <span class="version-info">(${result.localSha} → ${result.remoteSha})</span><br><span class="no-release">No release found - visit GitHub to download</span>`;
+        }
+        statusEl.className = 'update-available';
+        checkBtn.classList.add('hidden');
+
+        if (result.downloadUrl) {
+          downloadBtn.classList.remove('hidden');
+        }
+      }
+      return result;
     } else {
-      statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date!`;
-      statusEl.className = 'update-success';
+      if (!silent) {
+        statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date! <span class="version-info">(${result.localSha})</span>`;
+        statusEl.className = 'update-success';
+      }
+      return null;
     }
   } catch (e) {
     console.error('Failed to check for updates:', e);
-    statusEl.textContent = 'Failed to check for updates';
-    statusEl.className = 'update-error';
+    if (!silent) {
+      statusEl.textContent = 'Failed to check for updates';
+      statusEl.className = 'update-error';
+    }
+    return null;
+  }
+}
+
+// Show update badge on settings button
+function showUpdateBadge() {
+  const settingsBtn = els.appSettingsBtn;
+  if (settingsBtn && !settingsBtn.querySelector('.update-badge')) {
+    const badge = document.createElement('span');
+    badge.className = 'update-badge';
+    badge.title = 'Update available';
+    settingsBtn.appendChild(badge);
+  }
+}
+
+// Auto-check for updates on startup (silent)
+async function checkForUpdatesOnStartup() {
+  // Delay to not slow down initial load
+  await new Promise(resolve => setTimeout(resolve, 3000));
+
+  try {
+    const result = await checkForUpdates(true);
+    if (result?.updateAvailable) {
+      showUpdateBadge();
+    }
+  } catch (e) {
+    // Silent fail on startup check
   }
 }
 
@@ -949,7 +1007,7 @@ async function downloadUpdates() {
   }, 100);
 
   try {
-    const result = await window.ninja.downloadUpdates();
+    const result = await window.ninja.downloadUpdates(pendingUpdate?.downloadUrl);
     clearInterval(progressInterval);
 
     if (result.success) {
@@ -966,9 +1024,9 @@ async function downloadUpdates() {
         progressContainer.classList.add('hidden');
         progressBar.classList.remove('complete');
         progressTime.classList.remove('complete');
-        statusEl.innerHTML = `<span class="update-check">✓</span> Updates downloaded!`;
+        statusEl.innerHTML = `<span class="update-check">✓</span> Downloaded! Drag to Applications to install.`;
         statusEl.className = 'update-success';
-        restartBtn.classList.remove('hidden');
+        // Don't show restart button - user needs to install manually
       }, 1200);
     } else {
       progressContainer.classList.add('hidden');
@@ -1979,15 +2037,20 @@ function renderSmartSegments() {
   if (!activeTimerConfig || !els.progressSegments) return;
   if (activeTimerConfig.mode === 'tod') return;
 
+  // Check if count-up mode
+  const isCountUp = activeTimerConfig.mode === 'countup' || activeTimerConfig.mode === 'countup-tod';
+
   // Always use current timer's duration only
-  renderSmartSegmentsForDuration(activeTimerConfig.durationSec);
+  renderSmartSegmentsForDuration(activeTimerConfig.durationSec, isCountUp);
 }
 
 /**
  * Render smart segment markers for a specific duration
- * Creates markers at key positions showing TIME REMAINING
+ * Creates markers at key positions showing:
+ * - Countdown: TIME REMAINING (10:00 at 0%, 2:30 at 75%)
+ * - Count-up: TIME ELAPSED (0:00 at 0%, 7:30 at 75%)
  */
-function renderSmartSegmentsForDuration(durationSec) {
+function renderSmartSegmentsForDuration(durationSec, isCountUp = false) {
   if (!els.progressSegments) return;
 
   // Clear existing markers
@@ -1997,15 +2060,17 @@ function renderSmartSegmentsForDuration(durationSec) {
   if (durationSec <= 0) return;
 
   // Create markers at key positions (0%, 25%, 50%, 75%)
-  // 0% = full duration remaining, 75% = 25% remaining
   const positions = [0, 25, 50, 75];
 
   // Determine if we need to show hours based on total duration
   const needsHours = durationSec >= 3600;
 
   for (const percent of positions) {
-    // Calculate TIME REMAINING at this position (not elapsed)
-    const timeRemainingSec = durationSec - ((percent / 100) * durationSec);
+    // For countdown: show time remaining (decreases as progress increases)
+    // For count-up: show time elapsed (increases as progress increases)
+    const timeSec = isCountUp
+      ? (percent / 100) * durationSec  // Elapsed time
+      : durationSec - ((percent / 100) * durationSec);  // Remaining time
 
     const marker = document.createElement('div');
     marker.className = 'segment-marker';
@@ -2017,9 +2082,9 @@ function renderSmartSegmentsForDuration(durationSec) {
     }
 
     // Format time label - use consistent format based on total duration
-    const hours = Math.floor(timeRemainingSec / 3600);
-    const minutes = Math.floor((timeRemainingSec % 3600) / 60);
-    const seconds = Math.round(timeRemainingSec % 60);
+    const hours = Math.floor(timeSec / 3600);
+    const minutes = Math.floor((timeSec % 3600) / 60);
+    const seconds = Math.round(timeSec % 60);
 
     if (needsHours) {
       // For timers >= 1 hour, always show H:MM:SS format
@@ -2161,7 +2226,9 @@ function updateModalPreview() {
     const appSettings = loadAppSettings();
     displayText = formatTimeOfDay(appSettings.todFormat, appSettings.timezone);
   } else {
-    displayText = formatTime(isCountdown ? durationSec * 1000 : 0, format);
+    // Always show duration in modal preview so button clicks have visible feedback
+    // (countdown shows this at start, count-up uses it as the limit)
+    displayText = formatTime(durationSec * 1000, format);
 
     // Pad first segment with leading zero for modal preview (button alignment)
     // formatTime returns "9<span..." but we need "09<span..." for buttons to align
@@ -2691,8 +2758,10 @@ function renderLivePreview() {
       // Use ceil for countdown so paused time rounds up (shows fuller time)
       remainingSec = Math.ceil(elapsed / 1000);
     } else {
+      // Count-up paused - elapsed is time passed, remainingSec is time until goal
       elapsed = timerState.pausedAcc;
-      remainingSec = Math.floor(elapsed / 1000);
+      const elapsedSec = Math.floor(elapsed / 1000);
+      remainingSec = Math.max(0, durationSec - elapsedSec);
     }
   } else {
     // Timer is running
@@ -2733,9 +2802,10 @@ function renderLivePreview() {
         }
       }
     } else if (isCountup) {
-      // Count up mode
+      // Count up mode - elapsed is time passed, remainingSec is time until goal
       elapsed = base;
-      remainingSec = Math.floor(elapsed / 1000);
+      const elapsedSec = Math.floor(elapsed / 1000);
+      remainingSec = Math.max(0, durationSec - elapsedSec);
     }
   }
 
@@ -2772,8 +2842,9 @@ function renderLivePreview() {
     const elapsedMs = totalMs - elapsed;
     updateProgressBar(elapsedMs, totalMs);
   } else if (isCountup) {
-    // For countup, progress bar not used
-    els.progressFill.style.width = '0%';
+    // For count-up, show progress toward the goal
+    const totalMs = durationSec * 1000;
+    updateProgressBar(elapsed, totalMs);
   } else {
     // Reset for other modes
     els.progressFill.style.width = '0%';
@@ -2801,10 +2872,10 @@ function renderLivePreview() {
   if (timerState.overtime) {
     timerColor = '#dc2626'; // Red for overtime
     colorState = 'overtime';
-  } else if (isCountdown && remainingSec <= warnOrangeSec && remainingSec > 0) {
+  } else if ((isCountdown || isCountup) && remainingSec <= warnOrangeSec && remainingSec > 0) {
     timerColor = '#E64A19'; // Orange for critical warning
     colorState = 'warning-orange';
-  } else if (isCountdown && remainingSec <= warnYellowSec) {
+  } else if ((isCountdown || isCountup) && remainingSec <= warnYellowSec) {
     timerColor = '#eab308'; // Yellow for warning
     colorState = 'warning-yellow';
   }
@@ -4542,8 +4613,8 @@ function init() {
     if (footer) footer.textContent = `v${version}`;
   });
 
-  // Check for updates on startup (non-blocking)
-  checkForUpdates();
+  // Check for updates on startup (silent, shows badge if available)
+  checkForUpdatesOnStartup();
 }
 
 // Start when DOM is ready

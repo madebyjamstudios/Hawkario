@@ -1315,6 +1315,7 @@ header {
 }
 
 .header-settings-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1749,6 +1750,40 @@ h3 {
 
 #updateStatus a:hover {
   text-decoration: underline;
+}
+
+#updateStatus .version-info {
+  color: #666;
+  font-size: 11px;
+}
+
+#updateStatus .no-release {
+  color: #888;
+  font-size: 11px;
+}
+
+/* Update badge on settings button */
+.update-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #1a1a1a;
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
 }
 
 /* Download progress bar */
