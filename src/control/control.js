@@ -2205,21 +2205,17 @@ function fitPreviewTimer() {
 /**
  * Fit preview message text to reference canvas size
  * Only called when message content changes, NOT on resize
- * max-width is FIXED - transform: scale() handles all resizing
+ * No max-width constraint - text flows naturally, transform: scale() handles resizing
  */
 function fitPreviewMessage() {
   if (!els.livePreviewMessage) return;
-
-  // FIXED max-width in reference pixels - NEVER changes
-  // Transform: scale() handles all resizing
-  const REF_MAX_WIDTH = 1400;
 
   // Target: 90% of reference width, 45% height (bottom half of 50/50 split)
   const targetWidth = REF_WIDTH * 0.9;
   const targetHeight = REF_HEIGHT * 0.45;
 
-  // Set fixed max-width (never changes after this)
-  els.livePreviewMessage.style.maxWidth = REF_MAX_WIDTH + 'px';
+  // No max-width - let text flow naturally
+  els.livePreviewMessage.style.maxWidth = 'none';
 
   // Measure at 100px base to calculate needed font-size
   els.livePreviewMessage.style.fontSize = '100px';
@@ -2233,7 +2229,6 @@ function fitPreviewMessage() {
     const ratio = Math.min(widthRatio, heightRatio);
     const newFontSize = Math.max(8, 100 * ratio);
     els.livePreviewMessage.style.fontSize = newFontSize + 'px';
-    // max-width stays FIXED at REF_MAX_WIDTH - scale handles resizing
   }
 }
 
