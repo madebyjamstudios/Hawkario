@@ -614,6 +614,54 @@ button:disabled {
   z-index: 1;
 }
 
+/* Profile button */
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #333;
+  border: 2px solid #555;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #eee;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  max-width: 160px;
+}
+
+.profile-btn:hover {
+  background: #444;
+  border-color: #666;
+}
+
+.profile-btn.active {
+  background: #1a1a1a;
+  border-color: #1f6feb;
+}
+
+.profile-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+#profileName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+.profile-chevron {
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+}
+
+.profile-btn.active .profile-chevron {
+  transform: rotate(180deg);
+}
+
 /* Presets */
 .preset-list-container {
   flex: 1;

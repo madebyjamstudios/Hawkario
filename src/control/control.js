@@ -57,6 +57,10 @@ const els = {
   flashBtn: document.getElementById('flashBtn'),
   openOutput: document.getElementById('openOutput'),
 
+  // Profile dropdown
+  profileBtn: document.getElementById('profileBtn'),
+  profileName: document.getElementById('profileName'),
+
   // Presets
   presetName: document.getElementById('presetName'),
   presetList: document.getElementById('presetList'),
@@ -3271,6 +3275,17 @@ function saveActivePresets(presets) {
   }
 }
 
+/**
+ * Update the profile button to show the current profile name
+ */
+function updateProfileButton() {
+  const profile = getActiveProfile();
+  if (profile && els.profileName) {
+    els.profileName.textContent = profile.name;
+    els.profileName.title = profile.name; // Full name on hover
+  }
+}
+
 // ============ Presets ============
 
 /**
@@ -4781,6 +4796,7 @@ function calculateMessageTargetSlot(clientY) {
 function init() {
   // Load profiles (with migration from legacy presets)
   loadProfiles();
+  updateProfileButton();
 
   // Setup collapsible sections in modal
   setupCollapsibleSections();
