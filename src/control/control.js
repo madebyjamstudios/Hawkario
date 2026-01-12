@@ -4364,8 +4364,14 @@ function init() {
   setupPreviewResize();
   restorePreviewWidth();
 
-  // Update preview scale on window resize
+  // Update preview scale on window resize, clamping width to fit container
   window.addEventListener('resize', () => {
+    const containerWidth = els.previewSection.offsetWidth;
+    const currentWidth = els.previewWrapper.offsetWidth;
+    // Shrink preview if it exceeds available space (min 150px)
+    if (currentWidth > containerWidth && containerWidth >= 150) {
+      els.previewWrapper.style.width = containerWidth + 'px';
+    }
     updatePreviewScale();
   });
 
