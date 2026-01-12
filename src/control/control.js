@@ -1834,9 +1834,18 @@ function renderWarningZonesForDuration(durationSec, yellowSec, orangeSec) {
 
   if (durationSec <= 0) return;
 
-  // Yellow zone: from (duration - yellow) to (duration - orange)
+  // Calculate zone boundaries
   const yellowStartPercent = Math.max(0, ((durationSec - yellowSec) / durationSec) * 100);
   const orangeStartPercent = Math.max(0, ((durationSec - orangeSec) / durationSec) * 100);
+
+  // Green zone (from start to yellow threshold)
+  if (yellowStartPercent > 0) {
+    const greenZone = document.createElement('div');
+    greenZone.className = 'warning-zone green';
+    greenZone.style.left = '0';
+    greenZone.style.width = yellowStartPercent + '%';
+    els.warningZones.appendChild(greenZone);
+  }
 
   // Yellow zone (between yellow and orange thresholds)
   if (yellowSec > orangeSec && yellowStartPercent < orangeStartPercent) {

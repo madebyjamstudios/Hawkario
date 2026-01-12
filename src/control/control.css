@@ -658,12 +658,16 @@ button:disabled {
   bottom: 0;
 }
 
+.warning-zone.green {
+  background: rgba(74, 222, 128, 0.35);
+}
+
 .warning-zone.yellow {
-  background: rgba(250, 204, 21, 0.25);
+  background: rgba(250, 204, 21, 0.4);
 }
 
 .warning-zone.orange {
-  background: rgba(251, 146, 60, 0.3);
+  background: rgba(251, 146, 60, 0.45);
 }
 
 /* Container for segment dividers */
