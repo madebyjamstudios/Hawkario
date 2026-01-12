@@ -3696,17 +3696,20 @@ function showProfileDropdown(forceRefresh = false) {
       // Activate drag - set up visual feedback
       profileDragState.dragActivated = true;
 
-      const allItems = Array.from(listSection.querySelectorAll('.profile-item'));
+      const section = profileDragState.listSection;
+      if (!section) return;
+
+      const allItems = Array.from(section.querySelectorAll('.profile-item'));
       const itemRect = profileDragState.draggedEl.getBoundingClientRect();
       const firstRect = allItems[0].getBoundingClientRect();
 
       profileDragState.items = allItems;
       profileDragState.slotHeight = itemRect.height;
       profileDragState.baseY = firstRect.top;
-      profileDragState.initialScrollTop = listSection.scrollTop;
+      profileDragState.initialScrollTop = section.scrollTop;
 
       profileDragState.draggedEl.classList.add('dragging');
-      listSection.classList.add('has-drag');
+      section.classList.add('has-drag');
 
       // Add transition class to all items for smooth movement
       allItems.forEach(el => el.style.transition = 'transform 0.15s ease');
@@ -3774,7 +3777,7 @@ function showProfileDropdown(forceRefresh = false) {
       return;
     }
 
-    const { fromIndex, currentSlot, items, draggedEl } = profileDragState;
+    const { fromIndex, currentSlot, items, draggedEl, listSection: section } = profileDragState;
 
     // Remove transitions and transforms
     items.forEach(el => {
@@ -3783,7 +3786,7 @@ function showProfileDropdown(forceRefresh = false) {
     });
 
     draggedEl?.classList.remove('dragging');
-    listSection.classList.remove('has-drag');
+    section?.classList.remove('has-drag');
 
     // Commit the reorder if position changed
     if (fromIndex !== currentSlot) {
