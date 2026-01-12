@@ -1687,14 +1687,11 @@ function updateModalPreview() {
   els.modalPreviewTimer.style.opacity = FIXED_STYLE.opacity;
   // Use shadow-based stroke instead of -webkit-text-stroke to avoid intersection artifacts
   els.modalPreviewTimer.style.webkitTextStrokeWidth = '0px';
-  // Get font size for proportional stroke scaling
-  const modalFontSize = parseFloat(getComputedStyle(els.modalPreviewTimer).fontSize) || 100;
   els.modalPreviewTimer.style.textShadow = getCombinedShadowCSS(
     parseInt(els.strokeWidth.value, 10) || 0,
     els.strokeColor.value,
     shadowSize,
-    shadowColor,
-    modalFontSize
+    shadowColor
   );
   els.modalPreviewTimer.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';
 
@@ -1945,14 +1942,11 @@ function applyLivePreviewStyle() {
     els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
     // Use shadow-based stroke instead of -webkit-text-stroke to avoid intersection artifacts
     els.livePreviewTimer.style.webkitTextStrokeWidth = '0px';
-    // Get font size for proportional stroke scaling
-    const liveFontSize = parseFloat(getComputedStyle(els.livePreviewTimer).fontSize) || 100;
     els.livePreviewTimer.style.textShadow = getCombinedShadowCSS(
       parseInt(els.strokeWidth.value, 10) || 0,
       els.strokeColor.value,
       shadowSize,
-      shadowColor,
-      liveFontSize
+      shadowColor
     );
   }
 

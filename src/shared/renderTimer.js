@@ -153,29 +153,23 @@ export function getFlashGlowCSS(metrics) {
  * Uses 8 shadows at cardinal/diagonal directions to create a solid outline
  * This avoids the intersection artifacts of -webkit-text-stroke
  *
- * @param {number} width - Stroke width in pixels (user setting)
+ * @param {number} width - Stroke width in absolute pixels
  * @param {string} color - Stroke color in hex format
- * @param {number} fontSize - Current font size in pixels for scaling (default 100)
  * @returns {string} CSS text-shadow value for outline
  */
-export function getStrokeShadowCSS(width, color = '#000000', fontSize = 100) {
+export function getStrokeShadowCSS(width, color = '#000000') {
   if (width === 0) return '';
 
-  // Scale stroke based on font size (reference: 100px)
-  const scale = fontSize / 100;
-  const scaledWidth = width * scale;
-
-  // Create shadows at 8 directions for a solid outline
   const shadows = [];
   const offsets = [
     [0, -1], [1, -1], [1, 0], [1, 1],
     [0, 1], [-1, 1], [-1, 0], [-1, -1]
   ];
 
-  // Layer multiple passes for thicker strokes
-  const passes = Math.max(1, Math.round(scaledWidth));
+  // Cap passes for performance (1-4 layers is sufficient for clean outlines)
+  const passes = Math.min(4, Math.max(1, Math.round(width)));
   for (let i = 1; i <= passes; i++) {
-    const offset = (i / passes) * scaledWidth;
+    const offset = (i / passes) * width;
     for (const [dx, dy] of offsets) {
       shadows.push(`${dx * offset}px ${dy * offset}px 0 ${color}`);
     }
@@ -206,15 +200,14 @@ export function getShadowCSS(sizePx, color = '#000000') {
 /**
  * Get combined text-shadow for stroke and glow effects
  *
- * @param {number} strokeWidth - Stroke width in pixels
+ * @param {number} strokeWidth - Stroke width in absolute pixels
  * @param {string} strokeColor - Stroke color in hex
  * @param {number} shadowSize - Glow shadow size in pixels
  * @param {string} shadowColor - Glow shadow color in hex
- * @param {number} fontSize - Current font size in pixels for scaling (default 100)
  * @returns {string} Combined CSS text-shadow value
  */
-export function getCombinedShadowCSS(strokeWidth, strokeColor, shadowSize, shadowColor, fontSize = 100) {
-  const strokeShadow = getStrokeShadowCSS(strokeWidth, strokeColor, fontSize);
+export function getCombinedShadowCSS(strokeWidth, strokeColor, shadowSize, shadowColor) {
+  const strokeShadow = getStrokeShadowCSS(strokeWidth, strokeColor);
   const glowShadow = getShadowCSS(shadowSize, shadowColor);
 
   if (strokeShadow && glowShadow && glowShadow !== 'none') {
@@ -243,17 +236,13 @@ export function applyStyle(timerEl, containerEl, style, isFlashing = false) {
   timerEl.style.opacity = FIXED_STYLE.opacity;
   timerEl.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';
 
-  // Get font size for proportional stroke scaling
-  const fontSize = parseFloat(getComputedStyle(timerEl).fontSize) || 100;
-
   // Use shadow-based stroke instead of -webkit-text-stroke to avoid intersection artifacts
   timerEl.style.webkitTextStrokeWidth = '0px';
   timerEl.style.textShadow = getCombinedShadowCSS(
     style.strokeWidth ?? 0,
     style.strokeColor || '#000000',
     style.shadowSize ?? 0,
-    style.shadowColor,
-    fontSize
+    style.shadowColor
   );
   timerEl.style.textAlign = FIXED_STYLE.align;
 
