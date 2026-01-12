@@ -3432,6 +3432,7 @@ let profileDropdown = null;
 // Profile drag state (transform-based like timers)
 let profileDragState = {
   isDragging: false,
+  justDragged: false, // Prevents click from firing right after drag
   fromIndex: null,
   currentSlot: null,
   draggedEl: null,
@@ -3501,9 +3502,9 @@ function showProfileDropdown() {
       </svg>
     `;
 
-    // Click to switch profile (but not if dragging)
+    // Click to switch profile (but not if dragging or just finished dragging)
     item.addEventListener('click', (e) => {
-      if (profileDragState.isDragging) return;
+      if (profileDragState.isDragging || profileDragState.justDragged) return;
       switchProfile(profile.id);
       hideProfileDropdown();
     });
@@ -3584,6 +3585,10 @@ function showProfileDropdown() {
 
     const { fromIndex, currentSlot, items, draggedEl } = profileDragState;
 
+    // Set justDragged to prevent click from firing
+    profileDragState.justDragged = true;
+    setTimeout(() => { profileDragState.justDragged = false; }, 100);
+
     // Remove transitions and transforms
     items.forEach(el => {
       el.style.transition = '';
@@ -3597,9 +3602,11 @@ function showProfileDropdown() {
     if (fromIndex !== currentSlot) {
       reorderProfiles(fromIndex, currentSlot);
 
-      // Re-render the dropdown to reflect new order
-      hideProfileDropdown();
-      showProfileDropdown();
+      // Re-render the dropdown to reflect new order (after a tiny delay to let click pass)
+      setTimeout(() => {
+        hideProfileDropdown();
+        showProfileDropdown();
+      }, 50);
     }
 
     // Reset drag state
