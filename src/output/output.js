@@ -145,6 +145,10 @@ let currentMessage = null;
 let lastTimerText = '';
 let lastMessageText = '';
 
+// Cache for shadow CSS to avoid recalculating every frame
+let cachedShadowCSS = '';
+let cachedShadowKey = '';
+
 /**
  * Fit timer text to reference canvas size
  * Only called when timer content changes, NOT on resize
@@ -421,14 +425,21 @@ function renderInternal() {
     timerEl.style.opacity = FIXED_STYLE.opacity;
 
     // Reapply stroke shadow (ensures it persists across resize)
+    // Performance: Cache shadow CSS to avoid recalculating every frame
     if (canonicalState?.style) {
       const style = canonicalState.style;
-      timerEl.style.textShadow = getCombinedShadowCSS(
-        style.strokeWidth ?? 0,
-        style.strokeColor || '#000000',
-        style.shadowSize ?? 0,
-        style.shadowColor
-      );
+      const shadowKey = `${style.strokeWidth ?? 0}|${style.strokeColor || '#000000'}|${style.shadowSize ?? 0}|${style.shadowColor || '#000000'}`;
+
+      if (shadowKey !== cachedShadowKey) {
+        cachedShadowKey = shadowKey;
+        cachedShadowCSS = getCombinedShadowCSS(
+          style.strokeWidth ?? 0,
+          style.strokeColor || '#000000',
+          style.shadowSize ?? 0,
+          style.shadowColor
+        );
+      }
+      timerEl.style.textShadow = cachedShadowCSS;
     }
 
     // Apply overtime class

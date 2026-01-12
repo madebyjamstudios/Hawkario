@@ -94,10 +94,14 @@ function createMainWindow() {
 }
 
 function createOutputWindow() {
-  if (outputWindow) {
+  // Production Safety: Check if window exists AND is not destroyed
+  if (outputWindow && !outputWindow.isDestroyed()) {
     outputWindow.focus();
     return;
   }
+
+  // Reset reference if window was destroyed
+  outputWindow = null;
 
   // Get display for positioning
   const displays = screen.getAllDisplays();
@@ -292,10 +296,14 @@ ipcMain.handle('app:check-updates', async () => {
   }
 
   // Fallback: try git directly (for development)
+  // Production Safety: Use execFile instead of exec, with timeout
   if (!localSha || localSha === 'unknown') {
-    const { exec } = require('child_process');
+    const { execFile } = require('child_process');
     localSha = await new Promise((resolve) => {
-      exec('git rev-parse HEAD', { cwd: __dirname }, (error, stdout) => {
+      const child = execFile('git', ['rev-parse', 'HEAD'], {
+        cwd: __dirname,
+        timeout: 5000  // 5 second timeout
+      }, (error, stdout) => {
         resolve(error ? null : stdout.trim());
       });
     });
@@ -306,17 +314,33 @@ ipcMain.handle('app:check-updates', async () => {
   }
 
   // Check GitHub for latest commit AND latest release
+  // Production Safety: Added timeouts, size limits, and proper stream cleanup
+  const NETWORK_TIMEOUT = 10000;  // 10 seconds
+  const MAX_RESPONSE_SIZE = 1024 * 100;  // 100KB limit
+
   return new Promise((resolve) => {
     // First, get latest commit on main
     const commitOptions = {
       hostname: 'api.github.com',
       path: '/repos/madebyjamstudios/ninja-timer/commits/main',
-      headers: { 'User-Agent': 'Ninja-Timer-App' }
+      headers: { 'User-Agent': 'Ninja-Timer-App' },
+      timeout: NETWORK_TIMEOUT
     };
 
-    https.get(commitOptions, (res) => {
+    const req = https.get(commitOptions, (res) => {
       let data = '';
-      res.on('data', chunk => data += chunk);
+      let totalSize = 0;
+
+      res.on('data', chunk => {
+        totalSize += chunk.length;
+        if (totalSize > MAX_RESPONSE_SIZE) {
+          res.destroy();
+          resolve({ error: 'Response too large' });
+          return;
+        }
+        data += chunk;
+      });
+
       res.on('end', () => {
         try {
           const commit = JSON.parse(data);
@@ -332,12 +356,31 @@ ipcMain.handle('app:check-updates', async () => {
           const releaseOptions = {
             hostname: 'api.github.com',
             path: '/repos/madebyjamstudios/ninja-timer/releases/latest',
-            headers: { 'User-Agent': 'Ninja-Timer-App' }
+            headers: { 'User-Agent': 'Ninja-Timer-App' },
+            timeout: NETWORK_TIMEOUT
           };
 
-          https.get(releaseOptions, (relRes) => {
+          const relReq = https.get(releaseOptions, (relRes) => {
             let relData = '';
-            relRes.on('data', chunk => relData += chunk);
+            let relTotalSize = 0;
+
+            relRes.on('data', chunk => {
+              relTotalSize += chunk.length;
+              if (relTotalSize > MAX_RESPONSE_SIZE) {
+                relRes.destroy();
+                // Still return partial result
+                resolve({
+                  updateAvailable,
+                  localSha: localSha.substring(0, 7),
+                  remoteSha: remoteSha.substring(0, 7),
+                  downloadUrl: null,
+                  repoUrl: 'https://github.com/madebyjamstudios/ninja-timer'
+                });
+                return;
+              }
+              relData += chunk;
+            });
+
             relRes.on('end', () => {
               let downloadUrl = null;
               let releaseName = null;
@@ -361,7 +404,13 @@ ipcMain.handle('app:check-updates', async () => {
                 repoUrl: 'https://github.com/madebyjamstudios/ninja-timer'
               });
             });
-          }).on('error', () => {
+
+            relRes.on('error', () => {
+              relRes.destroy();
+            });
+          });
+
+          relReq.on('error', () => {
             // Release check failed, but commit check succeeded
             resolve({
               updateAvailable,
@@ -371,25 +420,68 @@ ipcMain.handle('app:check-updates', async () => {
               repoUrl: 'https://github.com/madebyjamstudios/ninja-timer'
             });
           });
+
+          relReq.on('timeout', () => {
+            relReq.destroy();
+            resolve({
+              updateAvailable,
+              localSha: localSha.substring(0, 7),
+              remoteSha: remoteSha.substring(0, 7),
+              downloadUrl: null,
+              repoUrl: 'https://github.com/madebyjamstudios/ninja-timer'
+            });
+          });
         } catch (e) {
+          res.destroy();
           resolve({ error: 'Failed to parse response' });
         }
       });
-    }).on('error', () => {
+
+      res.on('error', () => {
+        res.destroy();
+      });
+    });
+
+    req.on('error', () => {
       resolve({ error: 'Failed to connect to GitHub' });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ error: 'Connection timed out' });
     });
   });
 });
 
 // Download updates from GitHub Releases
+// Production Safety: URL validation, redirect limits, proper stream cleanup
 ipcMain.handle('app:download-updates', async (_event, downloadUrl) => {
   const https = require('https');
   const fs = require('fs');
   const pathModule = require('path');
   const { shell } = require('electron');
 
+  // Security: Allowed download hosts
+  const ALLOWED_HOSTS = [
+    'github.com',
+    'objects.githubusercontent.com',  // GitHub release assets
+    'github-releases.githubusercontent.com'
+  ];
+  const MAX_REDIRECTS = 5;
+  const DOWNLOAD_TIMEOUT = 60000;  // 60 seconds for large files
+
   if (!downloadUrl) {
     return { success: false, error: 'No download URL available. Please create a GitHub Release with the .dmg attached.' };
+  }
+
+  // Validate initial URL
+  try {
+    const initialUrl = new URL(downloadUrl);
+    if (!ALLOWED_HOSTS.some(host => initialUrl.hostname.endsWith(host))) {
+      return { success: false, error: 'Download URL must be from GitHub' };
+    }
+  } catch (e) {
+    return { success: false, error: 'Invalid download URL' };
   }
 
   const downloadsPath = app.getPath('downloads');
@@ -406,51 +498,109 @@ ipcMain.handle('app:download-updates', async (_event, downloadUrl) => {
       // Ignore deletion errors
     }
 
-    const file = fs.createWriteStream(filePath);
+    let file = null;
+    let redirectCount = 0;
+    let resolved = false;
+
+    const cleanup = () => {
+      if (file) {
+        try {
+          file.close();
+        } catch (e) {
+          // Ignore
+        }
+      }
+    };
+
+    const fail = (error) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      try {
+        fs.unlink(filePath, () => {});
+      } catch (e) {
+        // Ignore
+      }
+      resolve({ success: false, error });
+    };
 
     const download = (url) => {
-      const urlObj = new URL(url);
+      // Check redirect limit
+      if (redirectCount >= MAX_REDIRECTS) {
+        fail('Too many redirects');
+        return;
+      }
+
+      // Validate redirect URL
+      let urlObj;
+      try {
+        urlObj = new URL(url);
+        if (!ALLOWED_HOSTS.some(host => urlObj.hostname.endsWith(host))) {
+          fail('Redirect to unauthorized host');
+          return;
+        }
+      } catch (e) {
+        fail('Invalid redirect URL');
+        return;
+      }
+
       const options = {
         hostname: urlObj.hostname,
         path: urlObj.pathname + urlObj.search,
-        headers: { 'User-Agent': 'Ninja-Timer-App' }
+        headers: { 'User-Agent': 'Ninja-Timer-App' },
+        timeout: DOWNLOAD_TIMEOUT
       };
 
-      https.get(options, (response) => {
+      const req = https.get(options, (response) => {
         // Handle redirects (GitHub uses them for asset downloads)
         if (response.statusCode === 302 || response.statusCode === 301) {
+          response.destroy();  // Clean up current response
+          redirectCount++;
           download(response.headers.location);
           return;
         }
 
         if (response.statusCode !== 200) {
-          file.close();
-          fs.unlink(filePath, () => {});
-          resolve({ success: false, error: `Download failed with status ${response.statusCode}` });
+          response.destroy();
+          fail(`Download failed with status ${response.statusCode}`);
           return;
         }
 
-        response.pipe(file);
+        // Create file stream only after successful response
+        file = fs.createWriteStream(filePath);
+
+        file.on('error', (err) => {
+          response.destroy();
+          fail(err.message);
+        });
 
         file.on('finish', () => {
-          file.close();
-          // Open the downloaded .dmg
-          shell.openPath(filePath).then(() => {
-            resolve({ success: true, filePath });
-          }).catch((err) => {
-            resolve({ success: true, filePath, openError: err.message });
+          if (resolved) return;
+          resolved = true;
+          file.close(() => {
+            // Open the downloaded .dmg
+            shell.openPath(filePath).then(() => {
+              resolve({ success: true, filePath });
+            }).catch((err) => {
+              resolve({ success: true, filePath, openError: err.message });
+            });
           });
         });
 
-        file.on('error', (err) => {
-          file.close();
-          fs.unlink(filePath, () => {});
-          resolve({ success: false, error: err.message });
+        response.pipe(file);
+
+        response.on('error', (err) => {
+          fail(err.message);
         });
-      }).on('error', (err) => {
-        file.close();
-        fs.unlink(filePath, () => {});
-        resolve({ success: false, error: err.message });
+      });
+
+      req.on('error', (err) => {
+        fail(err.message);
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        fail('Download timed out');
       });
     };
 

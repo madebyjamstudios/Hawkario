@@ -74,6 +74,13 @@ Professional countdown timer with customizable display for broadcasts, presentat
 - **New Timer Defaults** - Configure default mode, duration, format, and sound
 - **Auto Update Check** - Checks for updates on startup
 
+### Production Reliability
+- **Crash Recovery** - Timer state auto-saved every second, recoverable after unexpected quit
+- **Error Resilience** - Protected render loops and DOM operations never crash the app
+- **Safe Resource Management** - All timers, listeners, and animations properly tracked and cleaned up
+- **Network Safety** - Timeouts, size limits, and URL validation on all network operations
+- **Window Recovery** - Automatic recovery if output window crashes
+
 ## Getting Started
 
 ### Prerequisites
@@ -166,7 +173,9 @@ ninja-timer/
 │       ├── timerState.js
 │       ├── renderTimer.js
 │       ├── renderMessage.js
-│       └── validation.js
+│       ├── validation.js
+│       ├── sounds.js
+│       └── safeUtils.js # Production safety utilities
 ├── icon.icns            # App icon
 ├── package.json
 └── README.md
@@ -201,6 +210,16 @@ ninja-timer/
 | **Volume** | Sound volume level (0-100%) |
 
 ## Version History
+
+### v2.1.0
+- **Profiles** - Save and switch between multiple timer sets
+- **Production Safety** - Comprehensive crash prevention and recovery
+  - Auto-save timer state for crash recovery
+  - Protected render loops (errors don't crash the app)
+  - Safe DOM access with fallbacks
+  - Network operation timeouts and validation
+  - Proper resource cleanup on window close
+- Security hardening for update downloads
 
 ### v2.0.0
 - Messages system with rich formatting
