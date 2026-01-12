@@ -659,11 +659,11 @@ button:disabled {
 }
 
 .warning-zone.yellow {
-  background: rgba(250, 204, 21, 0.5);
+  background: rgba(250, 204, 21, 0.25);
 }
 
 .warning-zone.orange {
-  background: rgba(251, 146, 60, 0.55);
+  background: rgba(251, 146, 60, 0.3);
 }
 
 /* Container for segment dividers */
@@ -719,10 +719,23 @@ button:disabled {
   left: 0;
   height: 100%;
   width: 0%;
-  background: rgba(74, 222, 128, 0.7);
+  background: #4ade80;
   border-radius: 0 !important;
-  box-shadow: none !important;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
   animation: none !important;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Yellow warning state */
+.progress-track .progress-fill.warning-yellow {
+  background: #facc15;
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+}
+
+/* Orange warning state */
+.progress-track .progress-fill.warning-orange {
+  background: #fb923c;
+  box-shadow: 0 0 12px rgba(251, 146, 60, 0.7);
 }
 
 .progress-track .progress-fill::after {

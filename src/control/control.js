@@ -1593,6 +1593,7 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
   if (activePresetIndex === null) {
     els.progressFill.style.width = '0%';
     els.progressIndicator.style.left = '0%';
+    els.progressFill.classList.remove('warning-yellow', 'warning-orange');
     cachedTotalMs = 600000;
     return;
   }
@@ -1602,6 +1603,7 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
     const durationMs = activeTimerConfig.durationSec * 1000;
     els.progressFill.style.width = '0%';
     els.progressIndicator.style.left = '0%';
+    els.progressFill.classList.remove('warning-yellow', 'warning-orange');
     cachedTotalMs = durationMs;
     renderWarningZones();
     renderSmartSegments();
@@ -1614,6 +1616,22 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
 
   els.progressFill.style.width = progressPercent + '%';
   els.progressIndicator.style.left = progressPercent + '%';
+
+  // Update fill color based on warning zone
+  const remainingMs = currentTotalMs - currentElapsedMs;
+  const remainingSec = remainingMs / 1000;
+  const yellowSec = activeTimerConfig.warnYellowSec ?? 60;
+  const orangeSec = activeTimerConfig.warnOrangeSec ?? 15;
+
+  // Remove existing warning classes
+  els.progressFill.classList.remove('warning-yellow', 'warning-orange');
+
+  // Add appropriate warning class based on remaining time
+  if (remainingSec <= orangeSec) {
+    els.progressFill.classList.add('warning-orange');
+  } else if (remainingSec <= yellowSec) {
+    els.progressFill.classList.add('warning-yellow');
+  }
 
   // Render warning zones and smart segments for current timer only
   renderWarningZones();
