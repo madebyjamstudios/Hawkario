@@ -3502,24 +3502,145 @@ function switchProfile(id) {
   showToast(`Switched to "${profile.name}"`, 'success');
 }
 
+/**
+ * Prompt user to rename the current profile
+ */
 function promptRenameProfile() {
-  // TODO: Implement in Phase 5
-  console.log('Rename profile');
+  const profile = getActiveProfile();
+  if (!profile) return;
+
+  // Use browser prompt for simplicity
+  const newName = prompt('Enter new profile name:', profile.name);
+  if (newName === null) return; // Cancelled
+
+  const trimmedName = newName.trim();
+  if (!trimmedName) {
+    showToast('Profile name cannot be empty', 'error');
+    return;
+  }
+
+  profile.name = trimmedName;
+  saveProfiles();
+  updateProfileButton();
+  showToast('Profile renamed', 'success');
 }
 
+/**
+ * Duplicate a profile
+ */
 function duplicateProfile(id) {
-  // TODO: Implement in Phase 5
-  console.log('Duplicate profile:', id);
+  const profile = profiles.find(p => p.id === id);
+  if (!profile) return;
+
+  // Create a deep copy of the profile
+  const newProfile = {
+    id: generateProfileId(),
+    name: profile.name + ' (Copy)',
+    createdAt: new Date().toISOString(),
+    presets: JSON.parse(JSON.stringify(profile.presets))
+  };
+
+  profiles.push(newProfile);
+  saveProfiles();
+
+  // Switch to the new profile
+  switchProfile(newProfile.id);
+  showToast('Profile duplicated', 'success');
 }
 
-function deleteProfile(id) {
-  // TODO: Implement in Phase 5
-  console.log('Delete profile:', id);
+/**
+ * Delete a profile
+ */
+async function deleteProfile(id) {
+  // Don't delete if it's the only profile
+  if (profiles.length <= 1) {
+    showToast('Cannot delete the only profile', 'error');
+    return;
+  }
+
+  const profile = profiles.find(p => p.id === id);
+  if (!profile) return;
+
+  // Confirm deletion
+  const appSettings = loadAppSettings();
+  if (appSettings.confirmDelete) {
+    const confirmed = await showConfirm({
+      title: 'Delete Profile',
+      message: `Delete "${profile.name}" and all its timers?`,
+      showDontAsk: true,
+      dontAskKey: 'confirmDelete'
+    });
+    if (!confirmed) return;
+  }
+
+  // Find the index of the profile to delete
+  const idx = profiles.findIndex(p => p.id === id);
+  if (idx === -1) return;
+
+  // Remove the profile
+  profiles.splice(idx, 1);
+
+  // If we deleted the active profile, switch to another one
+  if (id === activeProfileId) {
+    // Switch to the next profile, or the previous if this was the last
+    const newIdx = Math.min(idx, profiles.length - 1);
+    activeProfileId = profiles[newIdx].id;
+
+    // Reset timer state
+    isRunning = false;
+    timerState.startedAt = null;
+    timerState.pausedAcc = 0;
+    timerState.ended = false;
+    timerState.overtime = false;
+    activePresetIndex = null;
+
+    // Select first timer in new profile
+    const presets = getActivePresets();
+    if (presets.length > 0) {
+      activePresetIndex = 0;
+      setActiveTimerConfig(presets[0].config);
+      applyConfig(presets[0].config);
+    }
+  }
+
+  saveProfiles();
+  updateProfileButton();
+  renderPresetList();
+  updateProgressBar();
+  broadcastTimerState();
+  showToast('Profile deleted', 'success');
 }
 
+/**
+ * Create a new profile
+ */
 function createNewProfile() {
-  // TODO: Implement in Phase 5
-  console.log('Create new profile');
+  // Generate unique name
+  let counter = 1;
+  let name = 'Profile 1';
+  while (profiles.some(p => p.name === name)) {
+    counter++;
+    name = `Profile ${counter}`;
+  }
+
+  // Create profile with one default timer
+  const defaultConfig = getDefaultTimerConfig();
+  const newProfile = {
+    id: generateProfileId(),
+    name: name,
+    createdAt: new Date().toISOString(),
+    presets: [{
+      name: 'Timer 1',
+      config: defaultConfig
+    }]
+  };
+
+  profiles.push(newProfile);
+  saveProfiles();
+
+  // Switch to the new profile
+  switchProfile(newProfile.id);
+  showToast('Profile created', 'success');
 }
 
 // ============ Presets ============
