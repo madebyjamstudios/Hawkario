@@ -1797,6 +1797,40 @@ h3 {
   right: auto;
 }
 
+/* Refresh updates icon button */
+#refreshUpdates {
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+#refreshUpdates:hover {
+  color: #fff;
+  background: #333;
+}
+
+#refreshUpdates:active {
+  transform: rotate(180deg);
+}
+
+#refreshUpdates.spinning svg {
+  animation: spin 0.6s linear;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 
 /* Download progress bar */
 .download-progress {

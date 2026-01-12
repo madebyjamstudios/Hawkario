@@ -866,8 +866,8 @@ function saveAppSettings(settings) {
   }
 }
 
-// Store pending update info for download
-let pendingUpdate = null;
+// Store update check result (whether update available or up to date)
+let updateResult = null;
 
 async function checkForUpdates(silent = false) {
   const statusEl = document.getElementById('updateStatus');
@@ -893,10 +893,10 @@ async function checkForUpdates(silent = false) {
         statusEl.className = 'update-error';
       }
       return null;
-    } else if (result.updateAvailable) {
-      // Store update info for download
-      pendingUpdate = result;
+    // Store result regardless of update status
+    updateResult = result;
 
+    if (result.updateAvailable) {
       if (!silent) {
         if (result.downloadUrl) {
           statusEl.innerHTML = `Update available! <span class="version-info">(${result.localSha} → ${result.remoteSha})</span>`;
@@ -904,20 +904,20 @@ async function checkForUpdates(silent = false) {
           statusEl.innerHTML = `Update available! <span class="version-info">(${result.localSha} → ${result.remoteSha})</span><br><span class="no-release">No release found - visit GitHub to download</span>`;
         }
         statusEl.className = 'update-available';
-        checkBtn.classList.add('hidden');
+        checkBtn?.classList.add('hidden');
 
         if (result.downloadUrl) {
-          downloadBtn.classList.remove('hidden');
+          downloadBtn?.classList.remove('hidden');
         }
       }
-      return result;
     } else {
       if (!silent) {
         statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date! <span class="version-info">(${result.localSha})</span>`;
         statusEl.className = 'update-success';
+        checkBtn?.classList.add('hidden');
       }
-      return null;
     }
+    return result;
   } catch (e) {
     console.error('Failed to check for updates:', e);
     if (!silent) {
@@ -928,41 +928,19 @@ async function checkForUpdates(silent = false) {
   }
 }
 
-// Show update badge on settings button and status in modal
-function showUpdateBadge(result) {
-  console.log('showUpdateBadge called with result:', result);
-  const settingsBtn = els.appSettingsBtn;
+// Show update status in the settings modal
+function showUpdateStatus(result) {
+  if (!result) return;
 
-  // Add badge to settings button (if not already there)
-  if (settingsBtn && !settingsBtn.querySelector('.update-badge')) {
-    const badge = document.createElement('span');
-    badge.className = 'update-badge';
-    settingsBtn.appendChild(badge);
-  }
-
-  // Add badge to Updates section title in modal
-  const updatesSectionTitle = document.getElementById('updatesSectionTitle');
-  if (updatesSectionTitle && !updatesSectionTitle.querySelector('.update-badge')) {
-    updatesSectionTitle.style.position = 'relative';
-    updatesSectionTitle.style.display = 'inline-flex';
-    updatesSectionTitle.style.alignItems = 'center';
-    updatesSectionTitle.style.gap = '8px';
-
-    const badge = document.createElement('span');
-    badge.className = 'update-badge section-badge';
-    updatesSectionTitle.appendChild(badge);
-  }
-
-  // Update the status text in the settings modal
   const statusEl = document.getElementById('updateStatus');
   const downloadBtn = document.getElementById('downloadUpdates');
-  const checkBtn = document.getElementById('checkUpdates');
+  const refreshBtn = document.getElementById('refreshUpdates');
+  const settingsBtn = els.appSettingsBtn;
 
-  console.log('Elements found:', { statusEl: !!statusEl, downloadBtn: !!downloadBtn, checkBtn: !!checkBtn });
-  console.log('Result details:', { hasResult: !!result, downloadUrl: result?.downloadUrl, localSha: result?.localSha, remoteSha: result?.remoteSha });
+  if (!statusEl) return;
 
-  if (statusEl && result) {
-    console.log('Updating status UI...');
+  if (result.updateAvailable) {
+    // Show update available status
     if (result.downloadUrl) {
       statusEl.innerHTML = `Update available! <span class="version-info">(${result.localSha} → ${result.remoteSha})</span>`;
       downloadBtn?.classList.remove('hidden');
@@ -971,10 +949,36 @@ function showUpdateBadge(result) {
     }
     statusEl.className = 'update-available';
 
-    // Always hide check button when update is detected
-    checkBtn?.classList.add('hidden');
-    console.log('Status updated, checkBtn hidden');
+    // Add badge to settings button
+    if (settingsBtn && !settingsBtn.querySelector('.update-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'update-badge';
+      settingsBtn.appendChild(badge);
+    }
+
+    // Add badge to Updates section title
+    const updatesSectionTitle = document.getElementById('updatesSectionTitle');
+    if (updatesSectionTitle && !updatesSectionTitle.querySelector('.update-badge')) {
+      updatesSectionTitle.style.position = 'relative';
+      updatesSectionTitle.style.display = 'inline-flex';
+      updatesSectionTitle.style.alignItems = 'center';
+      updatesSectionTitle.style.gap = '8px';
+
+      const badge = document.createElement('span');
+      badge.className = 'update-badge section-badge';
+      updatesSectionTitle.appendChild(badge);
+    }
+  } else {
+    // Show up to date status
+    statusEl.innerHTML = `<span class="update-check">✓</span> You're up to date! <span class="version-info">(${result.localSha})</span>`;
+    statusEl.className = 'update-success';
+    downloadBtn?.classList.add('hidden');
   }
+}
+
+// Legacy alias for backward compatibility
+function showUpdateBadge(result) {
+  showUpdateStatus(result);
 }
 
 // Auto-check for updates on startup (silent)
@@ -1041,7 +1045,7 @@ async function downloadUpdates() {
   }, 100);
 
   try {
-    const result = await window.ninja.downloadUpdates(pendingUpdate?.downloadUrl);
+    const result = await window.ninja.downloadUpdates(updateResult?.downloadUrl);
     clearInterval(progressInterval);
 
     if (result.success) {
@@ -1123,15 +1127,19 @@ function openAppSettings() {
   document.querySelector('.progress-bar').classList.remove('complete');
   document.getElementById('restartApp').classList.add('hidden');
 
-  // If update was already detected, re-apply the status instead of resetting
-  if (pendingUpdate?.updateAvailable) {
-    showUpdateBadge(pendingUpdate);
+  // Show update status automatically
+  const statusEl = document.getElementById('updateStatus');
+  const downloadBtn = document.getElementById('downloadUpdates');
+
+  if (updateResult) {
+    // We have a result - show it
+    showUpdateStatus(updateResult);
   } else {
-    // No update detected yet - show check button and clear status
-    document.getElementById('checkUpdates').classList.remove('hidden');
-    document.getElementById('downloadUpdates').classList.add('hidden');
-    document.getElementById('updateStatus').textContent = '';
-    document.getElementById('updateStatus').className = '';
+    // No result yet - show checking and trigger check
+    statusEl.textContent = 'Checking for updates...';
+    statusEl.className = '';
+    downloadBtn?.classList.add('hidden');
+    checkForUpdates(false);
   }
 }
 
@@ -3845,8 +3853,13 @@ function setupEventListeners() {
   els.settingsExport.addEventListener('click', handleExport);
   els.settingsImport.addEventListener('click', () => els.importFile.click());
 
-  // Check for updates
-  document.getElementById('checkUpdates')?.addEventListener('click', () => checkForUpdates());
+  // Refresh updates button
+  document.getElementById('refreshUpdates')?.addEventListener('click', async () => {
+    const btn = document.getElementById('refreshUpdates');
+    btn?.classList.add('spinning');
+    await checkForUpdates(false);
+    setTimeout(() => btn?.classList.remove('spinning'), 600);
+  });
   document.getElementById('downloadUpdates').addEventListener('click', downloadUpdates);
   document.getElementById('restartApp').addEventListener('click', restartApp);
 
