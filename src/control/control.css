@@ -243,6 +243,7 @@ button:disabled {
 /* Split layout for timer + message */
 .live-preview.with-message {
   grid-template-rows: 50% 50%;
+  grid-template-columns: 100%;
 }
 
 .live-preview.with-message .timer-preview {
@@ -250,6 +251,8 @@ button:disabled {
   grid-column: 1 !important;
   align-self: end !important;
   justify-self: center !important;
+  text-align: center;
+  width: 100%;
   max-height: 100%;
 }
 
@@ -260,6 +263,8 @@ button:disabled {
   opacity: 1;
   align-self: start !important;
   justify-self: center !important;
+  text-align: center;
+  width: 100%;
 }
 
 /* Vertically centered colon for time display */

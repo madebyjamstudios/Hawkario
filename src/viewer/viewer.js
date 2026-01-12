@@ -115,7 +115,7 @@ function autoFitMessage() {
   messageOverlayEl.style.fontSize = REF_FONT + 'px';
   messageOverlayEl.style.maxWidth = REF_WIDTH + 'px';
   messageOverlayEl.style.transform = 'scale(1)';
-  messageOverlayEl.style.transformOrigin = 'center top';
+  messageOverlayEl.style.transformOrigin = 'center center';
 
   const containerWidth = window.innerWidth;
   const containerHeight = window.innerHeight;

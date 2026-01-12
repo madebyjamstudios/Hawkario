@@ -108,13 +108,27 @@ html, body {
 /* ============ Split Layout (Timer + Message) ============ */
 
 .stage.with-message {
-  grid-template-rows: 1fr 1fr;
-  place-items: center center;
+  grid-template-rows: 50% 50%;
+  grid-template-columns: 100%;
 }
 
 .stage.with-message .timer {
+  grid-row: 1;
+  grid-column: 1;
   align-self: end;
+  justify-self: center;
+  text-align: center;
+  width: 100%;
   max-height: 45vh;
+}
+
+.stage.with-message .message-overlay {
+  grid-row: 2;
+  grid-column: 1;
+  align-self: start;
+  justify-self: center;
+  text-align: center;
+  width: 100%;
 }
 
 /* ============ Message Overlay ============ */

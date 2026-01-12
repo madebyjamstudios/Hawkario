@@ -1269,7 +1269,7 @@ function autoFitLivePreviewMessage() {
   els.livePreviewMessage.style.fontSize = REF_FONT + 'px';
   els.livePreviewMessage.style.maxWidth = REF_WIDTH + 'px';
   els.livePreviewMessage.style.transform = 'scale(1)';
-  els.livePreviewMessage.style.transformOrigin = 'center top';
+  els.livePreviewMessage.style.transformOrigin = 'center center';
 
   const containerWidth = els.livePreview.clientWidth;
   const containerHeight = els.livePreview.clientHeight;
