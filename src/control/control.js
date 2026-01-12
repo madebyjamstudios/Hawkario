@@ -1067,6 +1067,7 @@ function updateTabBadges() {
 
 // Message tooltip element (created once, reused)
 let messageTooltip = null;
+let messageTooltipTimer = null;
 
 function getMessageTooltip() {
   if (!messageTooltip) {
@@ -1078,27 +1079,40 @@ function getMessageTooltip() {
 }
 
 function showMessageTooltip(msg, targetEl) {
-  const tooltip = getMessageTooltip();
-  if (!msg.text) {
-    tooltip.style.display = 'none';
-    return;
+  // Clear any existing timer
+  if (messageTooltipTimer) {
+    clearTimeout(messageTooltipTimer);
   }
 
-  // Apply formatting
-  tooltip.textContent = msg.text;
-  tooltip.style.color = msg.color || '#ffffff';
-  tooltip.style.fontWeight = msg.bold ? 'bold' : 'normal';
-  tooltip.style.fontStyle = msg.italic ? 'italic' : 'normal';
-  tooltip.style.textTransform = msg.uppercase ? 'uppercase' : 'none';
+  // Delay showing tooltip by 1 second
+  messageTooltipTimer = setTimeout(() => {
+    const tooltip = getMessageTooltip();
+    if (!msg.text) {
+      tooltip.style.display = 'none';
+      return;
+    }
 
-  // Position tooltip above the target element
-  const rect = targetEl.getBoundingClientRect();
-  tooltip.style.display = 'block';
-  tooltip.style.left = rect.left + (rect.width / 2) + 'px';
-  tooltip.style.top = (rect.top - 8) + 'px';
+    // Apply formatting
+    tooltip.textContent = msg.text;
+    tooltip.style.color = msg.color || '#ffffff';
+    tooltip.style.fontWeight = msg.bold ? 'bold' : 'normal';
+    tooltip.style.fontStyle = msg.italic ? 'italic' : 'normal';
+    tooltip.style.textTransform = msg.uppercase ? 'uppercase' : 'none';
+
+    // Position tooltip above the target element
+    const rect = targetEl.getBoundingClientRect();
+    tooltip.style.display = 'block';
+    tooltip.style.left = rect.left + (rect.width / 2) + 'px';
+    tooltip.style.top = (rect.top - 8) + 'px';
+  }, 1000);
 }
 
 function hideMessageTooltip() {
+  // Clear timer if hovering off before tooltip shows
+  if (messageTooltipTimer) {
+    clearTimeout(messageTooltipTimer);
+    messageTooltipTimer = null;
+  }
   const tooltip = getMessageTooltip();
   tooltip.style.display = 'none';
 }
