@@ -2162,6 +2162,11 @@ function updateModalPreview() {
     displayText = formatTimeOfDay(appSettings.todFormat, appSettings.timezone);
   } else {
     displayText = formatTime(isCountdown ? durationSec * 1000 : 0, format);
+
+    // Pad first segment with leading zero for modal preview (button alignment)
+    // formatTime returns "9<span..." but we need "09<span..." for buttons to align
+    displayText = displayText.replace(/^(\d)(<span)/, '0$1$2');
+
     if (showToD) {
       const appSettings = loadAppSettings();
       displayText += '<br><span class="tod-line">' + formatTimeOfDay(appSettings.todFormat, appSettings.timezone) + '</span>';

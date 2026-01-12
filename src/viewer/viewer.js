@@ -415,11 +415,7 @@ function setupKeyboardShortcuts() {
 
       case 'escape':
         e.preventDefault();
-        if (document.fullscreenElement) {
-          document.exitFullscreen().catch(() => {});
-        } else {
-          document.documentElement.requestFullscreen().catch(() => {});
-        }
+        window.ninja.fullscreenOutput();
         break;
     }
   });
