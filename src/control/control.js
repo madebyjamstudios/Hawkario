@@ -1574,9 +1574,6 @@ function getLinkedTimerChain() {
   return chain;
 }
 
-// Track last rendered segment count to avoid unnecessary DOM updates
-let lastSegmentCount = 0;
-
 // Cached total duration for seek calculations
 let cachedTotalMs = 0;
 
@@ -1611,74 +1608,14 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
     return;
   }
 
-  const chain = getLinkedTimerChain();
-
-  // If no chain or single timer, use simple progress
-  if (chain.length <= 1) {
-    cachedTotalMs = currentTotalMs;
-    const progressPercent = Math.min(100, (currentElapsedMs / currentTotalMs) * 100);
-
-    els.progressFill.style.width = progressPercent + '%';
-    els.progressIndicator.style.left = progressPercent + '%';
-
-    // Clear linked timer segment dividers for single timer, but keep smart segments
-    const dividers = els.progressSegments.querySelectorAll('.segment-divider');
-    dividers.forEach(d => d.remove());
-    lastSegmentCount = 0;
-
-    // Render warning zones and smart segments
-    renderWarningZones();
-    renderSmartSegments();
-    return;
-  }
-
-  // Calculate total duration of chain
-  const totalChainMs = chain.reduce((sum, t) => sum + t.durationMs, 0);
-  cachedTotalMs = totalChainMs;
-
-  // Calculate cumulative elapsed time
-  // Sum up all completed timers before active + current timer's elapsed
-  let cumulativeElapsedMs = 0;
-  let activeIndexInChain = -1;
-
-  for (let i = 0; i < chain.length; i++) {
-    if (chain[i].index === activePresetIndex) {
-      activeIndexInChain = i;
-      break;
-    }
-    // Add full duration of completed timers
-    cumulativeElapsedMs += chain[i].durationMs;
-  }
-
-  // Add current timer's elapsed time
-  cumulativeElapsedMs += currentElapsedMs;
-
-  const progressPercent = Math.min(100, (cumulativeElapsedMs / totalChainMs) * 100);
+  // Simple progress bar showing only current timer's status
+  cachedTotalMs = currentTotalMs;
+  const progressPercent = Math.min(100, (currentElapsedMs / currentTotalMs) * 100);
 
   els.progressFill.style.width = progressPercent + '%';
   els.progressIndicator.style.left = progressPercent + '%';
 
-  // Render segment dividers for linked timers (only if count changed)
-  if (chain.length !== lastSegmentCount) {
-    // Clear only dividers, keep segment markers
-    const dividers = els.progressSegments.querySelectorAll('.segment-divider');
-    dividers.forEach(d => d.remove());
-
-    // Add dividers between segments (not at 0% or 100%)
-    let cumulativePercent = 0;
-    for (let i = 0; i < chain.length - 1; i++) {
-      cumulativePercent += (chain[i].durationMs / totalChainMs) * 100;
-
-      const divider = document.createElement('div');
-      divider.className = 'segment-divider';
-      divider.style.left = cumulativePercent + '%';
-      els.progressSegments.appendChild(divider);
-    }
-
-    lastSegmentCount = chain.length;
-  }
-
-  // Render warning zones and smart segments
+  // Render warning zones and smart segments for current timer only
   renderWarningZones();
   renderSmartSegments();
 }
@@ -1862,20 +1799,11 @@ function seekToTime(targetElapsedMs) {
 function renderWarningZones() {
   if (!activeTimerConfig || !els.warningZones) return;
 
-  const chain = getLinkedTimerChain();
-
-  // Use total chain duration for linked timers
-  let totalDurationSec;
-  if (chain.length > 1) {
-    totalDurationSec = chain.reduce((sum, t) => sum + t.durationMs, 0) / 1000;
-  } else {
-    totalDurationSec = activeTimerConfig.durationSec;
-  }
-
+  const durationSec = activeTimerConfig.durationSec;
   const yellowSec = activeTimerConfig.warnYellowSec ?? 60;
   const orangeSec = activeTimerConfig.warnOrangeSec ?? 15;
 
-  renderWarningZonesForDuration(totalDurationSec, yellowSec, orangeSec);
+  renderWarningZonesForDuration(durationSec, yellowSec, orangeSec);
 }
 
 /**
@@ -1918,18 +1846,8 @@ function renderSmartSegments() {
   if (!activeTimerConfig || !els.progressSegments) return;
   if (activeTimerConfig.mode === 'tod') return;
 
-  const chain = getLinkedTimerChain();
-
-  // Calculate total duration (either single timer or linked chain)
-  let totalDurationSec;
-  if (chain.length > 1) {
-    // Sum all linked timer durations
-    totalDurationSec = chain.reduce((sum, t) => sum + t.durationMs, 0) / 1000;
-  } else {
-    totalDurationSec = activeTimerConfig.durationSec;
-  }
-
-  renderSmartSegmentsForDuration(totalDurationSec);
+  // Always use current timer's duration only
+  renderSmartSegmentsForDuration(activeTimerConfig.durationSec);
 }
 
 /**
