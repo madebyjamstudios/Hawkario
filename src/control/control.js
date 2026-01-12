@@ -754,35 +754,35 @@ const APP_SETTINGS_KEY = 'ninja:appSettings';
 // Global timezone options
 const TIMEZONES = [
   { value: 'auto', label: 'Auto (System)' },
-  // Americas
-  { value: 'Pacific/Honolulu', label: 'Hawaii (HST)' },
-  { value: 'America/Anchorage', label: 'Alaska (AKST)' },
-  { value: 'America/Los_Angeles', label: 'Pacific (PST)' },
-  { value: 'America/Denver', label: 'Mountain (MST)' },
-  { value: 'America/Chicago', label: 'Central (CST)' },
-  { value: 'America/New_York', label: 'Eastern (EST)' },
-  { value: 'America/Sao_Paulo', label: 'São Paulo (BRT)' },
+  // Americas (West to East)
+  { value: 'Pacific/Honolulu', label: '(GMT-10) Hawaii' },
+  { value: 'America/Anchorage', label: '(GMT-9) Alaska' },
+  { value: 'America/Los_Angeles', label: '(GMT-8) Los Angeles' },
+  { value: 'America/Denver', label: '(GMT-7) Denver' },
+  { value: 'America/Chicago', label: '(GMT-6) Chicago' },
+  { value: 'America/New_York', label: '(GMT-5) New York' },
+  { value: 'America/Sao_Paulo', label: '(GMT-3) São Paulo' },
   // Europe & Africa
-  { value: 'Atlantic/Reykjavik', label: 'Iceland (GMT)' },
-  { value: 'Europe/London', label: 'London (GMT/BST)' },
-  { value: 'Europe/Paris', label: 'Paris (CET)' },
-  { value: 'Europe/Berlin', label: 'Berlin (CET)' },
-  { value: 'Europe/Moscow', label: 'Moscow (MSK)' },
-  { value: 'Africa/Cairo', label: 'Cairo (EET)' },
-  { value: 'Africa/Johannesburg', label: 'Johannesburg (SAST)' },
+  { value: 'Atlantic/Reykjavik', label: '(GMT+0) Reykjavik' },
+  { value: 'Europe/London', label: '(GMT+0) London' },
+  { value: 'Europe/Paris', label: '(GMT+1) Paris' },
+  { value: 'Europe/Berlin', label: '(GMT+1) Berlin' },
+  { value: 'Africa/Cairo', label: '(GMT+2) Cairo' },
+  { value: 'Africa/Johannesburg', label: '(GMT+2) Johannesburg' },
+  { value: 'Europe/Moscow', label: '(GMT+3) Moscow' },
   // Middle East & Asia
-  { value: 'Asia/Dubai', label: 'Dubai (GST)' },
-  { value: 'Asia/Kolkata', label: 'India (IST)' },
-  { value: 'Asia/Bangkok', label: 'Bangkok (ICT)' },
-  { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
-  { value: 'Asia/Hong_Kong', label: 'Hong Kong (HKT)' },
-  { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
-  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
-  { value: 'Asia/Seoul', label: 'Seoul (KST)' },
+  { value: 'Asia/Dubai', label: '(GMT+4) Dubai' },
+  { value: 'Asia/Kolkata', label: '(GMT+5:30) India' },
+  { value: 'Asia/Bangkok', label: '(GMT+7) Bangkok' },
+  { value: 'Asia/Singapore', label: '(GMT+8) Singapore' },
+  { value: 'Asia/Hong_Kong', label: '(GMT+8) Hong Kong' },
+  { value: 'Asia/Shanghai', label: '(GMT+8) Shanghai' },
+  { value: 'Asia/Tokyo', label: '(GMT+9) Tokyo' },
+  { value: 'Asia/Seoul', label: '(GMT+9) Seoul' },
   // Australia & Pacific
-  { value: 'Australia/Perth', label: 'Perth (AWST)' },
-  { value: 'Australia/Sydney', label: 'Sydney (AEST)' },
-  { value: 'Pacific/Auckland', label: 'Auckland (NZST)' },
+  { value: 'Australia/Perth', label: '(GMT+8) Perth' },
+  { value: 'Australia/Sydney', label: '(GMT+10) Sydney' },
+  { value: 'Pacific/Auckland', label: '(GMT+12) Auckland' },
 ];
 
 const DEFAULT_APP_SETTINGS = {
@@ -1305,9 +1305,18 @@ function setupMessageItemEvents(row, messageId, textInput, boldBtn, italicBtn, u
   });
 
   visibilityBtn.addEventListener('click', () => {
+    const wasActive = visibilityBtn.classList.contains('active');
+
     // Add transitioning animation
     visibilityBtn.classList.add('transitioning');
     setTimeout(() => visibilityBtn.classList.remove('transitioning'), 300);
+
+    // Add deactivation animation if turning off
+    if (wasActive) {
+      visibilityBtn.classList.add('deactivating');
+      setTimeout(() => visibilityBtn.classList.remove('deactivating'), 350);
+    }
+
     toggleMessageVisibility(messageId);
   });
 
@@ -1368,24 +1377,14 @@ function updateLivePreviewMessage(message) {
   const wasVisible = els.livePreviewCanvas.classList.contains('with-message');
 
   if (!message || !message.visible) {
-    // Hide message with animation
-    if (wasVisible) {
-      // Trigger hide animation
-      els.livePreviewMessage.classList.add('hiding');
-
-      // Wait for animation to complete before cleanup
-      setTimeout(() => {
-        els.livePreviewMessage.classList.remove('hiding', 'bold', 'italic', 'uppercase');
-        els.livePreviewCanvas.classList.remove('with-message');
-        fitPreviewTimer();
-      }, 250); // Match animation duration
-    } else {
-      // Not currently visible, just cleanup
-      els.livePreviewMessage.classList.remove('hiding', 'bold', 'italic', 'uppercase');
-      els.livePreviewCanvas.classList.remove('with-message');
-    }
-
+    els.livePreviewCanvas.classList.remove('with-message');
+    els.livePreviewMessage.classList.remove('bold', 'italic', 'uppercase');
     lastPreviewMessageText = '';
+
+    // Refit timer since it now has full height
+    if (wasVisible) {
+      fitPreviewTimer();
+    }
     return;
   }
 

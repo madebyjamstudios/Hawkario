@@ -166,26 +166,6 @@ html, body {
 .message-overlay.visible {
   display: block;
   opacity: 1;
-  scale: 1;
-  animation: messageShow 0.3s ease-out;
-  transition: opacity 0.25s ease-in, scale 0.25s ease-in;
-}
-
-.message-overlay.visible.hiding {
-  opacity: 0;
-  scale: 0.85;
-  animation: none;
-}
-
-@keyframes messageShow {
-  from {
-    opacity: 0;
-    scale: 0.8;
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-  }
 }
 
 .message-overlay.bold {
