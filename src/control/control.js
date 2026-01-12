@@ -717,13 +717,21 @@ const MAX_UNDO_STATES = 20;
 
 /**
  * Save current presets state to undo stack
+ * @param {boolean} includeProfiles - If true, saves full profiles state (for profile deletion)
  */
-function saveUndoState() {
-  const presets = loadPresets();
+function saveUndoState(includeProfiles = false) {
   const state = {
-    presets: JSON.parse(JSON.stringify(presets)),
+    presets: JSON.parse(JSON.stringify(loadPresets())),
     activePresetIndex: activePresetIndex
   };
+
+  // For profile-level operations, save full profiles state
+  if (includeProfiles) {
+    state.profiles = JSON.parse(JSON.stringify(profiles));
+    state.activeProfileId = activeProfileId;
+    state.isProfileUndo = true;
+  }
+
   undoStack.push(state);
 
   // Limit stack size
@@ -742,6 +750,20 @@ function undo() {
   }
 
   const previousState = undoStack.pop();
+
+  // Handle profile-level undo (e.g., profile deletion)
+  if (previousState.isProfileUndo) {
+    profiles = previousState.profiles;
+    activeProfileId = previousState.activeProfileId;
+    saveProfiles();
+    updateProfileButton();
+    activePresetIndex = previousState.activePresetIndex;
+    renderPresetList();
+    showToast('Profile restored', 'success');
+    return true;
+  }
+
+  // Handle preset-level undo
   savePresets(previousState.presets);
   activePresetIndex = previousState.activePresetIndex;
 
@@ -3727,6 +3749,9 @@ async function deleteProfile(id) {
   const idx = profiles.findIndex(p => p.id === id);
   if (idx === -1) return;
 
+  // Save state for undo (with full profiles)
+  saveUndoState(true);
+
   // Remove the profile
   profiles.splice(idx, 1);
 
@@ -3758,7 +3783,7 @@ async function deleteProfile(id) {
   renderPresetList();
   updateProgressBar();
   broadcastTimerState();
-  showToast('Profile deleted', 'success');
+  showToast('Profile deleted (Cmd/Ctrl+Z to undo)', 'success');
 }
 
 /**
