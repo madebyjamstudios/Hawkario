@@ -3286,6 +3286,200 @@ function updateProfileButton() {
   }
 }
 
+// Current profile dropdown element (for cleanup)
+let profileDropdown = null;
+
+/**
+ * Hide the profile dropdown
+ */
+function hideProfileDropdown() {
+  if (profileDropdown) {
+    profileDropdown.remove();
+    profileDropdown = null;
+  }
+  els.profileBtn?.classList.remove('active');
+}
+
+/**
+ * Show the profile dropdown menu
+ */
+function showProfileDropdown() {
+  // If already open, close it
+  if (profileDropdown) {
+    hideProfileDropdown();
+    return;
+  }
+
+  // Position dropdown below the button
+  const btnRect = els.profileBtn.getBoundingClientRect();
+
+  // Create dropdown element
+  profileDropdown = document.createElement('div');
+  profileDropdown.className = 'profile-dropdown';
+  profileDropdown.style.top = (btnRect.bottom + 4) + 'px';
+  profileDropdown.style.right = (window.innerWidth - btnRect.right) + 'px';
+
+  // Profile list section
+  const listSection = document.createElement('div');
+  listSection.className = 'profile-dropdown-section';
+
+  profiles.forEach(profile => {
+    const item = document.createElement('div');
+    item.className = 'profile-item' + (profile.id === activeProfileId ? ' current' : '');
+    item.innerHTML = `
+      <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span class="profile-item-name">${escapeHtml(profile.name)}</span>
+    `;
+    item.addEventListener('click', () => {
+      switchProfile(profile.id);
+      hideProfileDropdown();
+    });
+    listSection.appendChild(item);
+  });
+
+  profileDropdown.appendChild(listSection);
+
+  // Divider
+  const divider1 = document.createElement('div');
+  divider1.className = 'profile-dropdown-divider';
+  profileDropdown.appendChild(divider1);
+
+  // Actions section (rename, duplicate, delete)
+  const actionsSection = document.createElement('div');
+  actionsSection.className = 'profile-dropdown-section';
+
+  // Rename action
+  const renameAction = document.createElement('div');
+  renameAction.className = 'profile-action';
+  renameAction.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+    Rename
+  `;
+  renameAction.addEventListener('click', () => {
+    hideProfileDropdown();
+    promptRenameProfile();
+  });
+  actionsSection.appendChild(renameAction);
+
+  // Duplicate action
+  const duplicateAction = document.createElement('div');
+  duplicateAction.className = 'profile-action';
+  duplicateAction.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>
+    Duplicate
+  `;
+  duplicateAction.addEventListener('click', () => {
+    hideProfileDropdown();
+    duplicateProfile(activeProfileId);
+  });
+  actionsSection.appendChild(duplicateAction);
+
+  // Delete action
+  const deleteAction = document.createElement('div');
+  const canDelete = profiles.length > 1;
+  deleteAction.className = 'profile-action delete' + (canDelete ? '' : ' disabled');
+  deleteAction.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>
+    Delete
+  `;
+  if (canDelete) {
+    deleteAction.addEventListener('click', () => {
+      hideProfileDropdown();
+      deleteProfile(activeProfileId);
+    });
+  } else {
+    deleteAction.title = 'Cannot delete the only profile';
+  }
+  actionsSection.appendChild(deleteAction);
+
+  profileDropdown.appendChild(actionsSection);
+
+  // Divider
+  const divider2 = document.createElement('div');
+  divider2.className = 'profile-dropdown-divider';
+  profileDropdown.appendChild(divider2);
+
+  // New profile section
+  const newSection = document.createElement('div');
+  newSection.className = 'profile-dropdown-section';
+
+  const newAction = document.createElement('div');
+  newAction.className = 'profile-action new-profile';
+  newAction.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    New Profile
+  `;
+  newAction.addEventListener('click', () => {
+    hideProfileDropdown();
+    createNewProfile();
+  });
+  newSection.appendChild(newAction);
+
+  profileDropdown.appendChild(newSection);
+
+  // Add to DOM
+  document.body.appendChild(profileDropdown);
+  els.profileBtn.classList.add('active');
+
+  // Close on click outside
+  const closeHandler = (e) => {
+    if (!profileDropdown?.contains(e.target) && e.target !== els.profileBtn && !els.profileBtn?.contains(e.target)) {
+      hideProfileDropdown();
+      document.removeEventListener('click', closeHandler);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeHandler), 0);
+}
+
+/**
+ * Escape HTML entities for safe display
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Placeholder functions for profile management (to be implemented in Phase 5)
+function switchProfile(id) {
+  // TODO: Implement in Phase 4
+  console.log('Switch to profile:', id);
+}
+
+function promptRenameProfile() {
+  // TODO: Implement in Phase 5
+  console.log('Rename profile');
+}
+
+function duplicateProfile(id) {
+  // TODO: Implement in Phase 5
+  console.log('Duplicate profile:', id);
+}
+
+function deleteProfile(id) {
+  // TODO: Implement in Phase 5
+  console.log('Delete profile:', id);
+}
+
+function createNewProfile() {
+  // TODO: Implement in Phase 5
+  console.log('Create new profile');
+}
+
 // ============ Presets ============
 
 /**
@@ -4012,6 +4206,9 @@ function setupEventListeners() {
     // Broadcast state immediately so output starts with same timestamp
     broadcastTimerState();
   });
+
+  // Profile dropdown button
+  els.profileBtn.addEventListener('click', showProfileDropdown);
 
   // Output button - opens window if not open, toggles fullscreen if already open
   els.openOutput.addEventListener('click', () => {

@@ -662,6 +662,114 @@ button:disabled {
   transform: rotate(180deg);
 }
 
+/* Profile dropdown menu */
+.profile-dropdown {
+  position: fixed;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  min-width: 180px;
+  max-width: 250px;
+  animation: popup-in 0.15s ease;
+  overflow: hidden;
+}
+
+.profile-dropdown-section {
+  padding: 4px 0;
+}
+
+.profile-dropdown-divider {
+  height: 1px;
+  background: #333;
+  margin: 4px 0;
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #ddd;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.profile-item:hover {
+  background: #2a2a2a;
+}
+
+.profile-item.current {
+  color: #fff;
+}
+
+.profile-item .check-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+}
+
+.profile-item.current .check-icon {
+  opacity: 1;
+  color: #1f6feb;
+}
+
+.profile-item .profile-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.profile-action:hover {
+  background: #2a2a2a;
+  color: #ddd;
+}
+
+.profile-action svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.profile-action.delete {
+  color: #E64A19;
+}
+
+.profile-action.delete:hover {
+  background: rgba(248, 81, 73, 0.15);
+}
+
+.profile-action.delete.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.profile-action.delete.disabled:hover {
+  background: transparent;
+}
+
+.profile-action.new-profile {
+  color: #1f6feb;
+}
+
+.profile-action.new-profile:hover {
+  background: rgba(31, 111, 235, 0.15);
+}
+
 /* Presets */
 .preset-list-container {
   flex: 1;
