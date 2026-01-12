@@ -3429,13 +3429,17 @@ function updateProfileButton() {
 // Current profile dropdown element (for cleanup)
 let profileDropdown = null;
 
-// Profile drag state (simpler than timers - no complex transforms needed)
+// Profile drag state (transform-based like timers)
 let profileDragState = {
   isDragging: false,
   fromIndex: null,
-  toIndex: null,
+  currentSlot: null,
   draggedEl: null,
-  startY: 0
+  items: [],        // All profile item elements
+  slotHeight: 0,    // Height of each profile item
+  baseY: 0,         // Y position of first item
+  startY: 0,
+  offsetY: 0        // Mouse offset within dragged item
 };
 
 // Store close handler reference for cleanup
@@ -3510,73 +3514,100 @@ function showProfileDropdown() {
       e.preventDefault();
       e.stopPropagation();
 
+      // Capture all items and their dimensions
+      const allItems = Array.from(listSection.querySelectorAll('.profile-item'));
+      const itemRect = item.getBoundingClientRect();
+      const firstRect = allItems[0].getBoundingClientRect();
+
       profileDragState.isDragging = true;
       profileDragState.fromIndex = idx;
-      profileDragState.toIndex = idx;
+      profileDragState.currentSlot = idx;
       profileDragState.draggedEl = item;
+      profileDragState.items = allItems;
+      profileDragState.slotHeight = itemRect.height;
+      profileDragState.baseY = firstRect.top;
       profileDragState.startY = e.clientY;
+      profileDragState.offsetY = e.clientY - itemRect.top;
 
       item.classList.add('dragging');
       listSection.classList.add('has-drag');
+
+      // Add transition class to all items for smooth movement
+      allItems.forEach(el => el.style.transition = 'transform 0.15s ease');
     });
 
     listSection.appendChild(item);
   });
 
-  // Profile drag mousemove and mouseup handlers
+  // Profile drag mousemove handler - uses transforms like timers
   const handleProfileDragMove = (e) => {
     if (!profileDragState.isDragging) return;
 
-    const items = listSection.querySelectorAll('.profile-item');
-    const draggedIdx = profileDragState.toIndex;
+    const { fromIndex, items, slotHeight, baseY } = profileDragState;
 
-    // Find which item we're hovering over
-    for (let i = 0; i < items.length; i++) {
-      if (i === draggedIdx) continue;
+    // Calculate which slot the mouse is over
+    const mouseY = e.clientY;
+    let newSlot = Math.floor((mouseY - baseY + slotHeight / 2) / slotHeight);
+    newSlot = Math.max(0, Math.min(items.length - 1, newSlot));
 
-      const rect = items[i].getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
+    if (newSlot !== profileDragState.currentSlot) {
+      profileDragState.currentSlot = newSlot;
 
-      if (e.clientY < midY && i < draggedIdx) {
-        // Move dragged item up
-        profileDragState.toIndex = i;
-        listSection.insertBefore(profileDragState.draggedEl, items[i]);
-        break;
-      } else if (e.clientY > midY && i > draggedIdx) {
-        // Move dragged item down
-        profileDragState.toIndex = i;
-        listSection.insertBefore(profileDragState.draggedEl, items[i].nextSibling);
-        break;
-      }
+      // Apply transforms to shift items
+      items.forEach((el, i) => {
+        if (i === fromIndex) {
+          // Dragged item stays in place visually (we move it with transforms)
+          const delta = (newSlot - fromIndex) * slotHeight;
+          el.style.transform = `translateY(${delta}px)`;
+        } else {
+          // Other items shift to make room
+          let shift = 0;
+          if (fromIndex < newSlot) {
+            // Dragging down: items between from+1 and newSlot shift UP
+            if (i > fromIndex && i <= newSlot) {
+              shift = -slotHeight;
+            }
+          } else if (fromIndex > newSlot) {
+            // Dragging up: items between newSlot and from-1 shift DOWN
+            if (i >= newSlot && i < fromIndex) {
+              shift = slotHeight;
+            }
+          }
+          el.style.transform = shift ? `translateY(${shift}px)` : '';
+        }
+      });
     }
   };
 
   const handleProfileDragEnd = () => {
     if (!profileDragState.isDragging) return;
 
-    const { fromIndex, toIndex, draggedEl } = profileDragState;
+    const { fromIndex, currentSlot, items, draggedEl } = profileDragState;
+
+    // Remove transitions and transforms
+    items.forEach(el => {
+      el.style.transition = '';
+      el.style.transform = '';
+    });
 
     draggedEl?.classList.remove('dragging');
     listSection.classList.remove('has-drag');
 
     // Commit the reorder if position changed
-    if (fromIndex !== toIndex) {
-      reorderProfiles(fromIndex, toIndex);
-      // Update shortcut hints after reorder
-      const items = listSection.querySelectorAll('.profile-item');
-      items.forEach((item, i) => {
-        const shortcut = item.querySelector('.profile-shortcut');
-        if (shortcut && i < 9) {
-          shortcut.textContent = i + 1;
-        }
-      });
+    if (fromIndex !== currentSlot) {
+      reorderProfiles(fromIndex, currentSlot);
+
+      // Re-render the dropdown to reflect new order
+      hideProfileDropdown();
+      showProfileDropdown();
     }
 
     // Reset drag state
     profileDragState.isDragging = false;
     profileDragState.fromIndex = null;
-    profileDragState.toIndex = null;
+    profileDragState.currentSlot = null;
     profileDragState.draggedEl = null;
+    profileDragState.items = [];
 
     document.removeEventListener('mousemove', handleProfileDragMove);
     document.removeEventListener('mouseup', handleProfileDragEnd);
