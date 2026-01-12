@@ -299,10 +299,23 @@ function render() {
   autoFitTimer();
   autoFitMessage();
 
-  // Apply color state (skip during flash animation)
+  // Apply color state and stroke (skip during flash animation)
   if (!flashAnimator?.isFlashing) {
     timerEl.style.color = color;
     timerEl.style.opacity = FIXED_STYLE.opacity;
+
+    // Recompute stroke shadow after auto-fit (font size may have changed)
+    if (canonicalState?.style) {
+      const style = canonicalState.style;
+      const fontSize = parseFloat(getComputedStyle(timerEl).fontSize) || 100;
+      timerEl.style.textShadow = getCombinedShadowCSS(
+        style.strokeWidth ?? 0,
+        style.strokeColor || '#000000',
+        style.shadowSize ?? 0,
+        style.shadowColor,
+        fontSize
+      );
+    }
 
     // Apply overtime class
     timerEl.classList.toggle('overtime', overtime);
