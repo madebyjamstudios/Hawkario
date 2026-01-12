@@ -1065,6 +1065,44 @@ function updateTabBadges() {
   if (messagesBadge) messagesBadge.textContent = messageCount > 0 ? messageCount : '';
 }
 
+// Message tooltip element (created once, reused)
+let messageTooltip = null;
+
+function getMessageTooltip() {
+  if (!messageTooltip) {
+    messageTooltip = document.createElement('div');
+    messageTooltip.className = 'message-tooltip';
+    document.body.appendChild(messageTooltip);
+  }
+  return messageTooltip;
+}
+
+function showMessageTooltip(msg, targetEl) {
+  const tooltip = getMessageTooltip();
+  if (!msg.text) {
+    tooltip.style.display = 'none';
+    return;
+  }
+
+  // Apply formatting
+  tooltip.textContent = msg.text;
+  tooltip.style.color = msg.color || '#ffffff';
+  tooltip.style.fontWeight = msg.bold ? 'bold' : 'normal';
+  tooltip.style.fontStyle = msg.italic ? 'italic' : 'normal';
+  tooltip.style.textTransform = msg.uppercase ? 'uppercase' : 'none';
+
+  // Position tooltip above the target element
+  const rect = targetEl.getBoundingClientRect();
+  tooltip.style.display = 'block';
+  tooltip.style.left = rect.left + (rect.width / 2) + 'px';
+  tooltip.style.top = (rect.top - 8) + 'px';
+}
+
+function hideMessageTooltip() {
+  const tooltip = getMessageTooltip();
+  tooltip.style.display = 'none';
+}
+
 function renderMessageList() {
   const messages = loadMessages();
   els.messageList.innerHTML = '';
@@ -1146,6 +1184,10 @@ function renderMessageList() {
     actions.append(visibilityBtn);
     row.append(leftCol, content, actions);
     els.messageList.appendChild(row);
+
+    // Tooltip on hover
+    row.addEventListener('mouseenter', () => showMessageTooltip(msg, row));
+    row.addEventListener('mouseleave', hideMessageTooltip);
 
     // Setup events for this message item
     setupMessageItemEvents(row, msg.id, textInput, boldBtn, italicBtn, uppercaseBtn, colorInput, visibilityBtn, deleteBtn, dragHandle, idx);
