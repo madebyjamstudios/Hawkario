@@ -59,7 +59,6 @@ const els = {
   presetList: document.getElementById('presetList'),
   presetListContainer: document.querySelector('.preset-list-container'),
   timerProgressContainer: document.getElementById('timerProgressContainer'),
-  timerModeIndicator: document.getElementById('timerModeIndicator'),
   remainingTime: document.getElementById('remainingTime'),
   progressFill: document.getElementById('progressFill'),
   progressSegments: document.getElementById('progressSegments'),
@@ -1958,26 +1957,17 @@ function renderSmartSegmentsForDuration(durationSec) {
 }
 
 /**
- * Update the timer indicator to show total duration
+ * Update progress bar warning zones and segments for current timer
  */
-function updateModeIndicator() {
-  if (!els.timerModeIndicator) return;
-
+function updateProgressBarZones() {
   // Default to 10:00 if no timer selected
   if (!activeTimerConfig || activePresetIndex === null) {
-    els.timerModeIndicator.textContent = '10:00';
-    // Also render default warning zones and segments
     renderWarningZonesForDuration(600, 60, 15);
     renderSmartSegmentsForDuration(600);
     return;
   }
 
-  // Show total duration formatted as MM:SS or HH:MM:SS
-  const durationSec = activeTimerConfig.durationSec || 600;
-  els.timerModeIndicator.textContent = formatTimePlain(durationSec * 1000,
-    durationSec >= 3600 ? 'HH:MM:SS' : 'MM:SS');
-
-  // Always render warning zones and segments when timer is selected
+  // Render warning zones and segments for selected timer
   renderWarningZones();
   renderSmartSegments();
 }
@@ -2423,7 +2413,7 @@ function renderLivePreview() {
     els.livePreviewTimer.style.visibility = 'hidden';
     broadcastTimerState();
     broadcastDisplayState({ visible: false });
-    updateModeIndicator();
+    updateProgressBarZones();
     requestAnimationFrame(renderLivePreview);
     return;
   } else {
@@ -2671,7 +2661,7 @@ function renderLivePreview() {
   });
 
   // Update mode indicator
-  updateModeIndicator();
+  updateProgressBarZones();
 
   requestAnimationFrame(renderLivePreview);
 }

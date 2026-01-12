@@ -531,15 +531,6 @@ button:disabled {
   display: none;
 }
 
-/* Timer mode indicator (C/D, C/U, TOD) */
-.timer-mode-indicator {
-  color: #888;
-  font-size: 10px;
-  font-weight: 600;
-  min-width: 28px;
-  text-align: center;
-  text-transform: uppercase;
-}
 
 .progress-time {
   color: #fff;
