@@ -1235,20 +1235,20 @@ function renderMessageList() {
     colorInput.value = msg.color || '#ffffff';
     colorInput.title = 'Text Color';
 
-    formatRow.append(boldBtn, italicBtn, uppercaseBtn, colorInput);
-    content.append(textInput, formatRow);
-
-    // Actions (visibility only - delete moved to left column)
-    const actions = document.createElement('div');
-    actions.className = 'message-actions';
-
+    // Visibility button (moved to format row)
     const visibilityBtn = document.createElement('button');
     visibilityBtn.className = 'message-visibility-btn' + (msg.visible ? ' active' : '');
     visibilityBtn.title = msg.visible ? 'Hide from viewer' : 'Show on viewer';
     visibilityBtn.innerHTML = '<span class="visibility-indicator"></span>';
 
-    actions.append(visibilityBtn);
-    row.append(leftCol, content, actions);
+    // Spacer pushes visibility button to far right
+    const spacer = document.createElement('div');
+    spacer.style.flex = '1';
+
+    formatRow.append(boldBtn, italicBtn, uppercaseBtn, colorInput, spacer, visibilityBtn);
+    content.append(textInput, formatRow);
+
+    row.append(leftCol, content);
     els.messageList.appendChild(row);
 
     // Tooltip on hover (only on text input, not whole row)
@@ -1307,23 +1307,14 @@ function setupMessageItemEvents(row, messageId, textInput, boldBtn, italicBtn, u
   });
 
   visibilityBtn.addEventListener('click', () => {
-    const wasActive = visibilityBtn.classList.contains('active');
-
-    // Add transitioning animation (diagonal stripes)
+    // Add transitioning stripes briefly (same as blackout button)
     visibilityBtn.classList.add('transitioning');
+    setTimeout(() => {
+      visibilityBtn.classList.remove('transitioning');
+    }, 300);
 
-    if (wasActive) {
-      // Deactivating - play shrink animation first, then toggle
-      visibilityBtn.classList.add('deactivating');
-      setTimeout(() => {
-        toggleMessageVisibility(messageId);
-      }, 300);
-    } else {
-      // Activating - show stripes briefly, then toggle
-      setTimeout(() => {
-        toggleMessageVisibility(messageId);
-      }, 200);
-    }
+    // Toggle immediately (like blackout)
+    toggleMessageVisibility(messageId);
   });
 
   deleteBtn.addEventListener('click', () => {

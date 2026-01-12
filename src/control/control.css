@@ -2248,6 +2248,7 @@ button.danger:active {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
 }
 
 /* Message tooltip (shows formatted preview on hover) */
