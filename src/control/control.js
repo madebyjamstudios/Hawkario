@@ -3078,11 +3078,15 @@ function renderPresetList() {
     playBtn.title = isActiveAndRunning ? 'Pause' : (isActiveAndPaused ? 'Resume' : 'Load & Start');
     playBtn.onclick = (e) => {
       e.stopPropagation();
-      if (isActiveAndRunning) {
+      // Check current state at click time, not captured state from render
+      const currentlyRunning = activePresetIndex === idx && isRunning;
+      const currentlyPaused = activePresetIndex === idx && !isRunning && timerState.startedAt !== null;
+
+      if (currentlyRunning) {
         // Pause the timer
         sendCommand('pause');
-      } else if (isActiveAndPaused) {
-        // Resume the paused timer
+      } else if (currentlyPaused) {
+        // Resume the paused timer (preserves seeked position)
         sendCommand('resume');
       } else {
         // Start this preset fresh
