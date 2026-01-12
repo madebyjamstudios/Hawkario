@@ -1585,21 +1585,24 @@ let lastDurationSec = null;
  * @param {number} currentTotalMs - Current timer's total duration (milliseconds)
  */
 function updateProgressBar(currentElapsedMs, currentTotalMs) {
-  // Show empty state when no timer is active
-  if (activePresetIndex === null || (!isRunning && timerState.startedAt === null)) {
+  // Show default state when no timer is selected
+  if (activePresetIndex === null) {
     els.progressFill.style.width = '0%';
     els.progressIndicator.style.left = '0%';
-    els.remainingTime.textContent = '00:00';
-    cachedTotalMs = 0;
-    // Clear segments and warning zones
-    if (lastSegmentCount !== 0) {
-      els.progressSegments.innerHTML = '';
-      lastSegmentCount = 0;
-    }
-    els.warningZones.innerHTML = '';
-    lastWarnYellowSec = null;
-    lastWarnOrangeSec = null;
-    lastDurationSec = null;
+    els.remainingTime.textContent = '10:00';
+    cachedTotalMs = 600000;
+    return;
+  }
+
+  // Timer selected but not started - show full duration at 0%
+  if (!isRunning && timerState.startedAt === null && timerState.pausedAcc === 0) {
+    const durationMs = activeTimerConfig.durationSec * 1000;
+    els.progressFill.style.width = '0%';
+    els.progressIndicator.style.left = '0%';
+    els.remainingTime.textContent = formatTimePlain(durationMs, durationMs >= 3600000 ? 'HH:MM:SS' : 'MM:SS');
+    cachedTotalMs = durationMs;
+    renderWarningZones();
+    renderSmartSegments();
     return;
   }
 
@@ -1845,21 +1848,17 @@ function renderWarningZones() {
   const yellowSec = activeTimerConfig.warnYellowSec ?? 60;
   const orangeSec = activeTimerConfig.warnOrangeSec ?? 15;
 
-  // Skip if nothing changed
-  if (durationSec === lastDurationSec &&
-      yellowSec === lastWarnYellowSec &&
-      orangeSec === lastWarnOrangeSec) {
-    return;
-  }
+  renderWarningZonesForDuration(durationSec, yellowSec, orangeSec);
+}
 
-  lastDurationSec = durationSec;
-  lastWarnYellowSec = yellowSec;
-  lastWarnOrangeSec = orangeSec;
+/**
+ * Render warning zones for a specific duration (used when no timer selected)
+ */
+function renderWarningZonesForDuration(durationSec, yellowSec, orangeSec) {
+  if (!els.warningZones) return;
 
   els.warningZones.innerHTML = '';
 
-  // Don't show warning zones for TOD mode
-  if (activeTimerConfig.mode === 'tod') return;
   if (durationSec <= 0) return;
 
   // Yellow zone: from (duration - yellow) to (duration - orange)
@@ -1901,15 +1900,22 @@ function renderSmartSegments() {
   }
 
   const durationSec = activeTimerConfig.durationSec;
+  if (activeTimerConfig.mode === 'tod') return;
 
-  // Skip if duration hasn't changed
-  if (durationSec === lastDurationSec) return;
+  renderSmartSegmentsForDuration(durationSec);
+}
+
+/**
+ * Render smart segment markers for a specific duration
+ */
+function renderSmartSegmentsForDuration(durationSec) {
+  if (!els.progressSegments) return;
 
   // Clear existing markers
   const markers = els.progressSegments.querySelectorAll('.segment-marker');
   markers.forEach(m => m.remove());
 
-  if (durationSec <= 0 || activeTimerConfig.mode === 'tod') return;
+  if (durationSec <= 0) return;
 
   // Determine smart segment intervals based on duration
   let intervalSec;
@@ -1952,28 +1958,28 @@ function renderSmartSegments() {
 }
 
 /**
- * Update the timer mode indicator (C/D, C/U, TOD)
+ * Update the timer indicator to show total duration
  */
 function updateModeIndicator() {
   if (!els.timerModeIndicator) return;
 
+  // Default to 10:00 if no timer selected
   if (!activeTimerConfig || activePresetIndex === null) {
-    els.timerModeIndicator.textContent = '--';
+    els.timerModeIndicator.textContent = '10:00';
+    // Also render default warning zones and segments
+    renderWarningZonesForDuration(600, 60, 15);
+    renderSmartSegmentsForDuration(600);
     return;
   }
 
-  const mode = activeTimerConfig.mode;
-  if (mode === 'countdown' || mode === 'countdown-tod') {
-    els.timerModeIndicator.textContent = 'C/D';
-  } else if (mode === 'countup' || mode === 'countup-tod') {
-    els.timerModeIndicator.textContent = 'C/U';
-  } else if (mode === 'tod') {
-    els.timerModeIndicator.textContent = 'TOD';
-  } else if (mode === 'hidden') {
-    els.timerModeIndicator.textContent = '--';
-  } else {
-    els.timerModeIndicator.textContent = '--';
-  }
+  // Show total duration formatted as MM:SS or HH:MM:SS
+  const durationSec = activeTimerConfig.durationSec || 600;
+  els.timerModeIndicator.textContent = formatTimePlain(durationSec * 1000,
+    durationSec >= 3600 ? 'HH:MM:SS' : 'MM:SS');
+
+  // Always render warning zones and segments when timer is selected
+  renderWarningZones();
+  renderSmartSegments();
 }
 
 // ============ Modal Management ============

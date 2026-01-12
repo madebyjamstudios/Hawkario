@@ -520,8 +520,8 @@ button:disabled {
 .timer-progress-container {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px 16px 10px;
+  gap: 6px;
+  padding: 4px 6px;
   width: 100%;
   user-select: none;
   overflow: visible;
@@ -551,17 +551,12 @@ button:disabled {
 
 .progress-track {
   flex: 1;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 7px;
+  height: 28px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
   position: relative;
   cursor: pointer;
-  transition: height 0.15s ease, border-radius 0.15s ease;
-}
-
-.progress-track:hover {
-  height: 18px;
-  border-radius: 9px;
 }
 
 /* Warning zone container */
@@ -634,13 +629,15 @@ button:disabled {
 
 .progress-fill {
   height: 100%;
-  background: #444;
+  background: rgba(255, 255, 255, 0.1);
+  border-right: 3px solid #1f6feb;
   width: 0%;
   transition: width 0.1s linear;
-  border-radius: 7px;
+  border-radius: 4px 0 0 4px;
   position: absolute;
   top: 0;
   left: 0;
+  box-sizing: border-box;
 }
 
 /* Blue circle indicator on progress bar */
@@ -649,12 +646,12 @@ button:disabled {
   top: 50%;
   left: 0%;
   transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   background: #1f6feb;
   border-radius: 50%;
   border: 2px solid #fff;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
   z-index: 3;
   transition: left 0.1s linear;
 }
