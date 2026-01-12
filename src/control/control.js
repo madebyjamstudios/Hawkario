@@ -3358,6 +3358,23 @@ function setupEventListeners() {
     broadcastTimerState();
   });
 
+  // Message state request - output window asks for current message (on load/reload)
+  window.ninja.onMessageStateRequest(() => {
+    if (activeMessage && activeMessage.visible) {
+      const msgData = {
+        text: activeMessage.text,
+        bold: activeMessage.bold,
+        italic: activeMessage.italic,
+        uppercase: activeMessage.uppercase,
+        color: activeMessage.color,
+        visible: true
+      };
+      window.ninja.sendMessage(msgData);
+    } else {
+      window.ninja.sendMessage({ visible: false });
+    }
+  });
+
   // Blackout toggle listener (legacy - kept for backwards compatibility)
   window.ninja.onBlackoutToggle(() => {
     isBlackedOut = !isBlackedOut;

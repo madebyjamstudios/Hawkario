@@ -453,6 +453,9 @@ function init() {
 
   // Request current timer state from control window
   window.ninja.requestTimerState();
+
+  // Request current message state from control window
+  window.ninja.requestMessageState();
 }
 
 // Start when DOM is ready

@@ -298,6 +298,13 @@ ipcMain.on('message:send', (_event, message) => {
   }
 });
 
+// Message state request: viewer -> main -> control
+ipcMain.on('message:request-state', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('message:request-state');
+  }
+});
+
 // Stay on top settings
 ipcMain.on('window:set-always-on-top', (_event, { window, value }) => {
   if (window === 'output') {
