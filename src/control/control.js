@@ -1276,7 +1276,7 @@ function restoreActiveMessage() {
     };
     // Update preview
     updateLivePreviewMessage(msgData);
-    // Send to viewer (if connected)
+    // Send to output (if connected)
     window.ninja.sendMessage(msgData);
   }
 }
@@ -1413,7 +1413,7 @@ function renderMessageList() {
     // Visibility button (moved to format row)
     const visibilityBtn = document.createElement('button');
     visibilityBtn.className = 'message-visibility-btn' + (msg.visible ? ' active' : '');
-    visibilityBtn.title = msg.visible ? 'Hide from viewer' : 'Show on viewer';
+    visibilityBtn.title = msg.visible ? 'Hide from output' : 'Show on output';
     visibilityBtn.innerHTML = '<span class="visibility-indicator"></span>';
 
     // Spacer pushes visibility button to far right
@@ -1523,7 +1523,7 @@ function updateMessageField(messageId, field, value) {
     msg[field] = value;
     saveMessagesToStorage(messages);
 
-    // If this message is currently visible, update the viewer and live preview
+    // If this message is currently visible, update the output and live preview
     if (msg.visible) {
       const msgData = {
         text: msg.text,
@@ -2368,7 +2368,7 @@ let isResizing = false;
 let startY = 0;
 let startWidth = 0;
 
-// Virtual canvas reference dimensions (same as viewer)
+// Virtual canvas reference dimensions (same as output)
 const REF_WIDTH = 1920;
 const REF_HEIGHT = 1080;
 

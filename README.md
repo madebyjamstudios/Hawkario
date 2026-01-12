@@ -155,10 +155,10 @@ ninja-timer/
 │   │   ├── index.html
 │   │   ├── control.js
 │   │   └── control.css
-│   ├── viewer/          # Output window
-│   │   ├── viewer.html
-│   │   ├── viewer.js
-│   │   └── viewer.css
+│   ├── output/          # Output window
+│   │   ├── output.html
+│   │   ├── output.js
+│   │   └── output.css
 │   └── shared/          # Shared utilities
 │       ├── base.css
 │       ├── constants.js

@@ -1,5 +1,5 @@
 /**
- * Ninja Timer - Viewer Window
+ * Ninja Timer - Output Window
  * Output display for the timer
  * Uses shared renderer for StageTimer-style sync with control window
  */
@@ -494,7 +494,7 @@ function setupAudioInit() {
 }
 
 /**
- * Initialize viewer
+ * Initialize output window
  */
 function init() {
   // Apply initial styles
@@ -531,8 +531,8 @@ function init() {
   // Start render loop
   render();
 
-  // Signal to main process that viewer is fully initialized
-  window.ninja.signalViewerReady();
+  // Signal to main process that output window is fully initialized
+  window.ninja.signalOutputReady();
 
   // Request current timer state from control window
   window.ninja.requestTimerState();
