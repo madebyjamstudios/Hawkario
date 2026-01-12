@@ -219,14 +219,12 @@ button:disabled {
   padding: 0.1em 0.15em;
   user-select: none;
   -webkit-user-select: none;
-  grid-row: 1;
   /* Font size set dynamically in JS to match output scaling */
 }
 
 /* Message preview in live preview */
 .live-preview .message-preview {
   display: none;
-  grid-row: 2;
   align-self: start;
   justify-self: center;
   font-weight: 600;
@@ -245,6 +243,7 @@ button:disabled {
 
 .live-preview.with-message {
   grid-template-rows: 1fr 1fr;
+  place-items: center center;
 }
 
 .live-preview.with-message .timer-preview {
@@ -254,6 +253,7 @@ button:disabled {
 
 .live-preview.with-message .message-preview {
   display: block;
+  align-self: start;
 }
 
 /* Vertically centered colon for time display */
