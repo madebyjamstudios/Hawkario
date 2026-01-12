@@ -1818,6 +1818,7 @@ function seekToTime(targetElapsedMs) {
         const now = Date.now();
         if (isRunning) {
           timerState.startedAt = now - timerElapsed;
+          timerState.pausedAcc = 0; // Clear pausedAcc since seeked position is encoded in startedAt
         } else {
           timerState.pausedAcc = timerElapsed;
           timerState.startedAt = now;
@@ -1843,6 +1844,7 @@ function seekToTime(targetElapsedMs) {
     const now = Date.now();
     if (isRunning) {
       timerState.startedAt = now - clampedElapsed;
+      timerState.pausedAcc = 0; // Clear pausedAcc since seeked position is encoded in startedAt
     } else {
       timerState.pausedAcc = clampedElapsed;
       if (timerState.startedAt === null) {
