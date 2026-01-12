@@ -134,7 +134,7 @@ html, body {
   -webkit-user-select: none;
   padding: 0.1em 0.15em;
   box-sizing: border-box;
-  max-width: 95vw;
+  max-width: 75vw;
   max-height: 48vh;
   overflow: hidden;
   word-wrap: break-word;

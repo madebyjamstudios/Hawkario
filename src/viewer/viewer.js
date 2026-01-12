@@ -100,8 +100,8 @@ function handleMessageUpdate(message) {
 }
 
 /**
- * Auto-fit message text to fill its container aggressively
- * Uses 95% width and 48% height to maximize visual impact
+ * Auto-fit message text to fill its container
+ * Uses 75% width to encourage line wrapping, 48% height for visual impact
  */
 function autoFitMessage() {
   if (!currentMessage) return;
@@ -110,7 +110,7 @@ function autoFitMessage() {
 
   const containerWidth = window.innerWidth;
   const containerHeight = window.innerHeight;
-  const targetWidth = containerWidth * 0.95;
+  const targetWidth = containerWidth * 0.75;
   const targetHeight = containerHeight * 0.48;
   const naturalWidth = messageOverlayEl.scrollWidth;
   const naturalHeight = messageOverlayEl.scrollHeight;
