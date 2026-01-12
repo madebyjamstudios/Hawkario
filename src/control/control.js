@@ -3589,26 +3589,90 @@ function switchProfile(id) {
 }
 
 /**
- * Prompt user to rename the current profile
+ * Show rename popup for the current profile
  */
 function promptRenameProfile() {
   const profile = getActiveProfile();
   if (!profile) return;
 
-  // Use browser prompt for simplicity
-  const newName = prompt('Enter new profile name:', profile.name);
-  if (newName === null) return; // Cancelled
+  // Remove any existing popup
+  const existing = document.querySelector('.profile-rename-popup');
+  if (existing) existing.remove();
 
-  const trimmedName = newName.trim();
-  if (!trimmedName) {
-    showToast('Profile name cannot be empty', 'error');
-    return;
-  }
+  const popup = document.createElement('div');
+  popup.className = 'quick-edit-popup profile-rename-popup';
 
-  profile.name = trimmedName;
-  saveProfiles();
-  updateProfileButton();
-  showToast('Profile renamed', 'success');
+  const inputRow = document.createElement('div');
+  inputRow.className = 'quick-edit-input-row';
+
+  const label = document.createElement('label');
+  label.textContent = 'Profile name:';
+  label.className = 'quick-edit-label';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = profile.name;
+  input.placeholder = 'Profile name';
+
+  inputRow.append(label, input);
+
+  const buttons = document.createElement('div');
+  buttons.className = 'quick-edit-buttons';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cancel-btn';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => popup.remove();
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'save-btn';
+  saveBtn.textContent = 'Save';
+  saveBtn.onclick = () => {
+    const newName = input.value.trim();
+    if (!newName) {
+      showToast('Profile name cannot be empty', 'error');
+      return;
+    }
+    profile.name = newName;
+    saveProfiles();
+    updateProfileButton();
+    popup.remove();
+    showToast('Profile renamed', 'success');
+  };
+
+  // Handle Enter key to save
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveBtn.click();
+    } else if (e.key === 'Escape') {
+      popup.remove();
+    }
+  });
+
+  buttons.append(cancelBtn, saveBtn);
+  popup.append(inputRow, buttons);
+
+  // Position popup near the profile button
+  const rect = els.profileBtn.getBoundingClientRect();
+  popup.style.top = `${rect.bottom + 6}px`;
+  popup.style.right = `${window.innerWidth - rect.right}px`;
+  popup.style.left = 'auto';
+
+  document.body.appendChild(popup);
+
+  // Focus and select the input
+  input.focus();
+  input.select();
+
+  // Close on click outside
+  const closeHandler = (e) => {
+    if (!popup.contains(e.target)) {
+      popup.remove();
+      document.removeEventListener('click', closeHandler);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeHandler), 0);
 }
 
 /**
