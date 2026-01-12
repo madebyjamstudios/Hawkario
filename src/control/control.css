@@ -748,6 +748,40 @@ button:disabled {
   text-align: center;
 }
 
+/* Profile drag handle */
+.profile-drag-handle {
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  cursor: grab;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+  margin-right: 4px;
+}
+
+.profile-item:hover .profile-drag-handle {
+  opacity: 0.5;
+}
+
+.profile-drag-handle:hover {
+  opacity: 1 !important;
+}
+
+.profile-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Profile dragging state */
+.profile-item.dragging {
+  background: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.profile-dropdown-section.has-drag {
+  user-select: none;
+}
+
 .profile-item .profile-item-name {
   flex: 1;
   overflow: hidden;

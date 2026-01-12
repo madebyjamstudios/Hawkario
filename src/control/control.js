@@ -3429,6 +3429,15 @@ function updateProfileButton() {
 // Current profile dropdown element (for cleanup)
 let profileDropdown = null;
 
+// Profile drag state (simpler than timers - no complex transforms needed)
+let profileDragState = {
+  isDragging: false,
+  fromIndex: null,
+  toIndex: null,
+  draggedEl: null,
+  startY: 0
+};
+
 /**
  * Hide the profile dropdown
  */
@@ -3466,9 +3475,15 @@ function showProfileDropdown() {
   profiles.forEach((profile, idx) => {
     const item = document.createElement('div');
     item.className = 'profile-item' + (profile.id === activeProfileId ? ' current' : '');
+    item.dataset.index = idx;
     const color = profile.color || PROFILE_COLORS[idx % PROFILE_COLORS.length];
     const shortcutHint = idx < 9 ? `<span class="profile-shortcut">${idx + 1}</span>` : '';
     item.innerHTML = `
+      <svg class="profile-drag-handle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="16" y2="6"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+        <line x1="8" y1="18" x2="16" y2="18"/>
+      </svg>
       <span class="profile-color-dot" style="background: ${color}; box-shadow: 0 0 6px ${color};"></span>
       <span class="profile-item-name">${escapeHtml(profile.name)}</span>
       ${shortcutHint}
@@ -3476,12 +3491,94 @@ function showProfileDropdown() {
         <polyline points="20 6 9 17 4 12"/>
       </svg>
     `;
-    item.addEventListener('click', () => {
+
+    // Click to switch profile (but not if dragging)
+    item.addEventListener('click', (e) => {
+      if (profileDragState.isDragging) return;
       switchProfile(profile.id);
       hideProfileDropdown();
     });
+
+    // Drag handling on the drag handle
+    const dragHandle = item.querySelector('.profile-drag-handle');
+    dragHandle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      profileDragState.isDragging = true;
+      profileDragState.fromIndex = idx;
+      profileDragState.toIndex = idx;
+      profileDragState.draggedEl = item;
+      profileDragState.startY = e.clientY;
+
+      item.classList.add('dragging');
+      listSection.classList.add('has-drag');
+    });
+
     listSection.appendChild(item);
   });
+
+  // Profile drag mousemove and mouseup handlers
+  const handleProfileDragMove = (e) => {
+    if (!profileDragState.isDragging) return;
+
+    const items = listSection.querySelectorAll('.profile-item');
+    const draggedIdx = profileDragState.toIndex;
+
+    // Find which item we're hovering over
+    for (let i = 0; i < items.length; i++) {
+      if (i === draggedIdx) continue;
+
+      const rect = items[i].getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+
+      if (e.clientY < midY && i < draggedIdx) {
+        // Move dragged item up
+        profileDragState.toIndex = i;
+        listSection.insertBefore(profileDragState.draggedEl, items[i]);
+        break;
+      } else if (e.clientY > midY && i > draggedIdx) {
+        // Move dragged item down
+        profileDragState.toIndex = i;
+        listSection.insertBefore(profileDragState.draggedEl, items[i].nextSibling);
+        break;
+      }
+    }
+  };
+
+  const handleProfileDragEnd = () => {
+    if (!profileDragState.isDragging) return;
+
+    const { fromIndex, toIndex, draggedEl } = profileDragState;
+
+    draggedEl?.classList.remove('dragging');
+    listSection.classList.remove('has-drag');
+
+    // Commit the reorder if position changed
+    if (fromIndex !== toIndex) {
+      reorderProfiles(fromIndex, toIndex);
+      // Update shortcut hints after reorder
+      const items = listSection.querySelectorAll('.profile-item');
+      items.forEach((item, i) => {
+        const shortcut = item.querySelector('.profile-shortcut');
+        if (shortcut && i < 9) {
+          shortcut.textContent = i + 1;
+        }
+      });
+    }
+
+    // Reset drag state
+    profileDragState.isDragging = false;
+    profileDragState.fromIndex = null;
+    profileDragState.toIndex = null;
+    profileDragState.draggedEl = null;
+
+    document.removeEventListener('mousemove', handleProfileDragMove);
+    document.removeEventListener('mouseup', handleProfileDragEnd);
+  };
+
+  document.addEventListener('mousemove', handleProfileDragMove);
+  document.addEventListener('mouseup', handleProfileDragEnd);
 
   profileDropdown.appendChild(listSection);
 
@@ -3596,6 +3693,21 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+/**
+ * Reorder profiles - move from one index to another
+ */
+function reorderProfiles(fromIndex, toIndex) {
+  if (fromIndex === toIndex) return;
+  if (fromIndex < 0 || fromIndex >= profiles.length) return;
+  if (toIndex < 0 || toIndex >= profiles.length) return;
+
+  // Remove from old position and insert at new position
+  const [movedProfile] = profiles.splice(fromIndex, 1);
+  profiles.splice(toIndex, 0, movedProfile);
+
+  saveProfiles();
 }
 
 /**

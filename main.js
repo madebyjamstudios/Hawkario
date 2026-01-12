@@ -75,6 +75,7 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,  // Production Safety: Explicit sandbox mode
       preload: path.join(__dirname, 'preload.js')
     }
   });
@@ -124,6 +125,7 @@ function createOutputWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,  // Production Safety: Explicit sandbox mode
       preload: path.join(__dirname, 'preload.js')
     }
   });
