@@ -143,6 +143,10 @@ function applyStyle(style) {
   // Handle both broadcast format (textShadow) and state format (shadowSize)
   // Use shadow-based stroke instead of -webkit-text-stroke to avoid intersection artifacts
   timerEl.style.webkitTextStrokeWidth = '0px';
+
+  // Get font size for proportional stroke scaling
+  const fontSize = parseFloat(getComputedStyle(timerEl).fontSize) || 100;
+
   if (style.textShadow) {
     timerEl.style.textShadow = style.textShadow;
   } else {
@@ -150,7 +154,8 @@ function applyStyle(style) {
       style.strokeWidth ?? 0,
       style.strokeColor || '#000000',
       style.shadowSize ?? 0,
-      style.shadowColor
+      style.shadowColor,
+      fontSize
     );
   }
 
