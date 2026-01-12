@@ -68,7 +68,10 @@ export function computeDisplay(state, now = Date.now()) {
     }
   } else if (isRunning && startedAt !== null) {
     // Timer is running
-    const runningTime = now - startedAt + pausedAccMs;
+    // Add 1-second grace period at start - timer shows initial value for first second
+    const GRACE_PERIOD_MS = 1000;
+    const rawRunningTime = now - startedAt + pausedAccMs;
+    const runningTime = Math.max(0, rawRunningTime - GRACE_PERIOD_MS);
 
     if (isCountdown) {
       remainingMs = Math.max(0, durationMs - runningTime);
