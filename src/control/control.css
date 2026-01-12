@@ -1330,6 +1330,7 @@ footer small {
   align-items: center;
   justify-content: center;
   line-height: 1;
+  margin-top: -2px;
 }
 
 .duration-input {
@@ -1436,7 +1437,7 @@ h3 {
 }
 
 .section-content {
-  padding: 12px;
+  padding: 12px 0;
   background: #111;
 }
 
