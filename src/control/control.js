@@ -3483,7 +3483,7 @@ function showProfileDropdown() {
 
   // Profile list section
   const listSection = document.createElement('div');
-  listSection.className = 'profile-dropdown-section';
+  listSection.className = 'profile-dropdown-section profile-list-section';
 
   profiles.forEach((profile, idx) => {
     const item = document.createElement('div');
