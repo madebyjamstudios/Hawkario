@@ -705,8 +705,7 @@ button:disabled {
   left: 0;
   height: 100%;
   width: 0%;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 0;
+  background: rgba(59, 130, 246, 0.3);
 }
 
 /* Thin line indicator on progress bar */
