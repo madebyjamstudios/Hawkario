@@ -1340,6 +1340,10 @@ header {
   background: #333;
 }
 
+.header-settings-btn:focus {
+  outline: none;
+}
+
 /* Footer */
 footer {
   padding: 6px 14px;
