@@ -750,13 +750,21 @@ button:disabled {
 
 /* Profile drag handle */
 .profile-drag-handle {
-  width: 14px;
-  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   opacity: 0;
   cursor: grab;
   flex-shrink: 0;
   transition: opacity 0.15s ease;
-  margin-right: 4px;
+  color: #888;
+}
+
+.profile-drag-handle svg {
+  width: 16px;
+  height: 16px;
 }
 
 .profile-item:hover .profile-drag-handle {
@@ -776,6 +784,7 @@ button:disabled {
   background: #333;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   z-index: 10;
+  position: relative;
 }
 
 .profile-dropdown-section.has-drag {

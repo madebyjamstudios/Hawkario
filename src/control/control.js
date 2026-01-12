@@ -3488,11 +3488,7 @@ function showProfileDropdown() {
     const color = profile.color || PROFILE_COLORS[idx % PROFILE_COLORS.length];
     const shortcutHint = idx < 9 ? `<span class="profile-shortcut">${idx + 1}</span>` : '';
     item.innerHTML = `
-      <svg class="profile-drag-handle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="8" y1="6" x2="16" y2="6"/>
-        <line x1="8" y1="12" x2="16" y2="12"/>
-        <line x1="8" y1="18" x2="16" y2="18"/>
-      </svg>
+      <span class="profile-drag-handle">${ICONS.drag}</span>
       <span class="profile-color-dot" style="background: ${color}; box-shadow: 0 0 6px ${color};"></span>
       <span class="profile-item-name">${escapeHtml(profile.name)}</span>
       ${shortcutHint}
@@ -3685,9 +3681,11 @@ function showProfileDropdown() {
   document.body.appendChild(profileDropdown);
   els.profileBtn.classList.add('active');
 
-  // Close on click outside
+  // Close on click outside (but not while dragging)
   // Store and add close handler
   profileDropdownCloseHandler = (e) => {
+    // Don't close if we're dragging profiles
+    if (profileDragState.isDragging) return;
     if (!profileDropdown?.contains(e.target) && e.target !== els.profileBtn && !els.profileBtn?.contains(e.target)) {
       hideProfileDropdown();
     }
