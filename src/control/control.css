@@ -242,23 +242,19 @@ button:disabled {
 }
 
 .live-preview.with-message {
-  grid-template-rows: 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr;
   place-items: center center;
 }
 
 .live-preview.with-message .timer-preview {
-  grid-row: 1 !important;
-  grid-column: 1 !important;
-  align-self: end !important;
+  align-self: end;
   max-height: 45%;
   /* DEBUG */ background: rgba(255,0,0,0.2);
 }
 
 .live-preview.with-message .message-preview {
-  display: block !important;
-  grid-row: 2 !important;
-  grid-column: 1 !important;
-  align-self: start !important;
+  display: block;
+  align-self: start;
   /* DEBUG */ background: rgba(0,255,0,0.2);
 }
 
