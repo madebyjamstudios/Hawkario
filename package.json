@@ -1,6 +1,6 @@
 {
   "name": "ninja-timer",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Professional countdown timer with customizable display for broadcasts and presentations",
   "main": "main.js",
   "scripts": {
