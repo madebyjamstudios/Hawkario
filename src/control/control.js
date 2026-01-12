@@ -939,6 +939,19 @@ function showUpdateBadge(result) {
     settingsBtn.appendChild(badge);
   }
 
+  // Add badge to Updates section title in modal
+  const updatesSectionTitle = document.getElementById('updatesSectionTitle');
+  if (updatesSectionTitle && !updatesSectionTitle.querySelector('.update-badge')) {
+    updatesSectionTitle.style.position = 'relative';
+    updatesSectionTitle.style.display = 'inline-flex';
+    updatesSectionTitle.style.alignItems = 'center';
+    updatesSectionTitle.style.gap = '8px';
+
+    const badge = document.createElement('span');
+    badge.className = 'update-badge section-badge';
+    updatesSectionTitle.appendChild(badge);
+  }
+
   // Update the status text in the settings modal
   const statusEl = document.getElementById('updateStatus');
   if (statusEl && result) {

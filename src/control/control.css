@@ -1790,6 +1790,13 @@ h3 {
   }
 }
 
+/* Badge variant for section titles (inline, not absolute) */
+.update-badge.section-badge {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
 
 /* Download progress bar */
 .download-progress {
