@@ -1260,7 +1260,8 @@ function updateLivePreviewMessage(message) {
 }
 
 /**
- * Auto-fit live preview message text to fill its container
+ * Auto-fit live preview message text to fill its container aggressively
+ * Uses 95% width and 48% height to maximize visual impact (matching output)
  */
 function autoFitLivePreviewMessage() {
   if (!els.livePreviewMessage || els.livePreviewMessage.style.display === 'none') return;
@@ -1270,8 +1271,8 @@ function autoFitLivePreviewMessage() {
 
   const containerWidth = els.livePreview.clientWidth;
   const containerHeight = els.livePreview.clientHeight;
-  const targetWidth = containerWidth * 0.9;
-  const targetHeight = containerHeight * 0.45;
+  const targetWidth = containerWidth * 0.95;
+  const targetHeight = containerHeight * 0.48;
   const naturalWidth = els.livePreviewMessage.scrollWidth;
   const naturalHeight = els.livePreviewMessage.scrollHeight;
 

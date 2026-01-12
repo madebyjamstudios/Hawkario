@@ -26,6 +26,7 @@ html, body {
 .timer {
   font-variant-numeric: tabular-nums lining-nums;
   user-select: none;
+  -webkit-user-select: none;
   white-space: nowrap;
   max-width: 90vw;
   max-height: 90vh;
@@ -129,10 +130,12 @@ html, body {
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
   padding: 0.1em 0.15em;
   box-sizing: border-box;
-  max-width: 90vw;
-  max-height: 45vh;
+  max-width: 95vw;
+  max-height: 48vh;
   overflow: hidden;
   word-wrap: break-word;
   overflow-wrap: break-word;
