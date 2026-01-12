@@ -2,43 +2,64 @@
 
 Professional countdown timer with customizable display for broadcasts, presentations, and live events.
 
+![Ninja Timer Control Window](screenshots/control-window.png)
+
+## Screenshots
+
+| Control Panel | Output Display |
+|--------------|----------------|
+| ![Control](screenshots/control.png) | ![Output](screenshots/output.png) |
+
+| Timer Settings | Messages |
+|---------------|----------|
+| ![Settings](screenshots/settings.png) | ![Messages](screenshots/messages.png) |
+
 ## Features
 
 ### Timer Modes
 - **Countdown** - Count down from a set duration
 - **Count Up** - Count up from zero
-- **Time of Day** - Display current time
+- **Time of Day** - Display current time (with timezone selection)
 - **Countdown + ToD** - Show countdown alongside current time
 - **Count Up + ToD** - Show elapsed time alongside current time
 - **Hidden** - Hide the timer display (useful for transitions)
 
 ### Timer Management
 - **Multiple Timers** - Create and manage a list of timer presets
-- **Drag & Drop Reordering** - Easily reorganize your timer list
+- **Drag & Drop Reordering** - Easily reorganize your timer list with auto-scroll
 - **Linked Timers** - Chain timers together for automatic sequential playback
 - **Quick Title Edit** - Click timer title to rename inline
 - **Duplicate Timers** - Clone existing timers with one click
 - **Import/Export** - Save and load timer sets as JSON files
 - **Undo Support** - Revert changes with Cmd/Ctrl+Z
 
+### Messages
+- **Custom Messages** - Display text messages on the output
+- **Rich Formatting** - Bold, italic, uppercase styling
+- **Color Picker** - Set message text color
+- **Show/Hide Toggle** - Instantly show or hide messages
+- **Drag & Drop** - Reorder messages easily
+
 ### Display
 - **Dual-Window Design** - Separate control panel and fullscreen output window
 - **Live Preview** - See changes instantly in the control window
-- **Resizable Preview** - Drag to adjust the preview section height
-- **Progress Bar** - Visual progress with elapsed and remaining time display
+- **Resizable Preview** - Drag to adjust the preview section size
+- **Interactive Progress Bar** - Click to seek, hover for time tooltip
+- **Warning Zones** - Yellow and orange zones as timer nears end
 - **Timer Segments** - See linked timer segments visualized in the progress bar
 - **Overtime Mode** - Continues counting after timer ends (shows +M:SS in red)
-- **Auto-Fit Text** - Timer text automatically scales to fill the display
+- **Auto-Fit Text** - Timer and message text automatically scales to fill the display
 
 ### Appearance
 - **Text Color** - Full color picker for timer text
 - **Stroke** - Adjustable outline width and color
-- **Shadow** - Configurable drop shadow size
+- **Shadow** - Configurable drop shadow size and color
 - **Background Color** - Solid background color for output
 
 ### Controls
-- **Flash Effect** - Grab attention with a white glow animation
+- **Flash Effect** - Grab attention with a synchronized white glow animation
 - **Blackout Toggle** - Instantly black out the output display
+- **Visibility Toggle** - Show/hide timer without affecting running state
 - **Keyboard Shortcuts** - Control from any window
 
 ### Sound
@@ -48,9 +69,11 @@ Professional countdown timer with customizable display for broadcasts, presentat
 
 ### App Settings
 - **Time of Day Format** - Choose 12-hour or 24-hour display
+- **Timezone Selection** - 26 global timezones with GMT offsets
 - **Confirm Delete** - Toggle delete confirmation dialogs
 - **Window Behavior** - Keep output and/or control window always on top
-- **New Timer Defaults** - Configure default mode, duration, format, and sound for new timers
+- **New Timer Defaults** - Configure default mode, duration, format, and sound
+- **Auto Update Check** - Checks for updates on startup
 
 ## Getting Started
 
@@ -61,6 +84,10 @@ Professional countdown timer with customizable display for broadcasts, presentat
 ### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/madebyjamstudios/ninja-timer.git
+cd ninja-timer
+
 # Install dependencies
 npm install
 
@@ -71,12 +98,11 @@ npm start
 ### Building
 
 ```bash
-# Build for macOS
-npm run build:mac
-
 # Build DMG for macOS
 npm run build:dmg
 ```
+
+The DMG will be created in the `dist/` folder.
 
 ## Usage
 
@@ -88,12 +114,20 @@ npm run build:dmg
 6. Press **Escape** in the output window for fullscreen
 
 ### Timer List Controls
-- **Clock icon** - Select timer (load without starting)
-- **Rewind icon** - Reset active timer
-- **Play/Pause** - Start, pause, or resume timer
-- **Settings icon** - Edit timer configuration
-- **Three dots** - More options (duplicate, delete)
-- **Link icon** - Connect to next timer for auto-play
+| Icon | Action |
+|------|--------|
+| Clock | Select timer (load without starting) |
+| Rewind | Reset active timer |
+| Play/Pause | Start, pause, or resume timer |
+| Gear | Edit timer configuration |
+| Three dots | More options (duplicate, delete) |
+| Link | Connect to next timer for auto-play |
+
+### Progress Bar
+- **Click anywhere** to seek to that position
+- **Hover** to see time at cursor position
+- **Markers** show time remaining at 25%, 50%, 75%
+- **Warning zones** turn yellow then orange as time runs out
 
 ## Keyboard Shortcuts
 
@@ -114,7 +148,7 @@ npm run build:dmg
 ## Project Structure
 
 ```
-NinjaTimer/
+ninja-timer/
 ├── main.js              # Electron main process
 ├── preload.js           # Secure IPC bridge
 ├── src/
@@ -130,8 +164,11 @@ NinjaTimer/
 │       ├── base.css
 │       ├── constants.js
 │       ├── timer.js
-│       └── sounds.js
-├── icon.icns
+│       ├── timerState.js
+│       ├── renderTimer.js
+│       ├── renderMessage.js
+│       └── validation.js
+├── icon.icns            # App icon
 ├── package.json
 └── README.md
 ```
@@ -143,8 +180,10 @@ NinjaTimer/
 |--------|-------------|
 | **Title** | Name for the timer preset |
 | **Mode** | Countdown, Count Up, Time of Day, or combinations |
-| **Duration** | Timer length in HH:MM:SS format |
-| **Format** | Display format: H:MM:SS, MM:SS, or SS |
+| **Duration** | Timer length (MM:SS or HH:MM:SS) |
+| **Format** | Display format: HH:MM:SS or MM:SS |
+| **Warning Yellow** | When to turn timer yellow (default: 1:00) |
+| **Warning Orange** | When to turn timer orange (default: 0:15) |
 
 ### Appearance Settings
 | Option | Description |
@@ -153,14 +192,37 @@ NinjaTimer/
 | **Stroke Width** | Outline thickness (0-20px) |
 | **Stroke Color** | Outline color |
 | **Shadow Size** | Drop shadow blur (0-50px) |
+| **Shadow Color** | Shadow color |
 | **Background** | Output window background color |
 
 ### Sound Settings
 | Option | Description |
 |--------|-------------|
 | **End Sound** | Play sound when timer completes |
-| **Volume** | Sound volume level |
+| **Volume** | Sound volume level (0-100%) |
+
+## Version History
+
+### v2.0.0
+- Messages system with rich formatting
+- Interactive progress bar with seek
+- Timezone selection for Time of Day
+- Warning zones (yellow/orange) on progress bar
+- Auto-scroll during drag and drop
+- Visibility toggle for timer display
+- Improved flash animation sync
+
+### v1.0.0
+- Initial release
+- Countdown, count up, and time of day modes
+- Linked timers for sequential playback
+- Customizable appearance
+- Dual-window design
 
 ## License
 
 MIT
+
+## Credits
+
+Made with care by JAM Studios
