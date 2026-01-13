@@ -55,14 +55,14 @@ html, body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Message section - hidden by default */
 .message-section {
   display: none;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* When message visible: 34/66 split */
