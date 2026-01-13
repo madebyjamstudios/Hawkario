@@ -1460,6 +1460,34 @@ button:disabled {
   color: #fff;
 }
 
+/* Edit mode highlight */
+.preset-duration.editing,
+.preset-mode.editing {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Success flash after save */
+@keyframes save-flash {
+  0% { background: rgba(78, 175, 255, 0.4); }
+  100% { background: transparent; }
+}
+
+.save-success {
+  animation: save-flash 0.4s ease-out;
+}
+
+/* Mode indicator color coding */
+.preset-mode[data-mode="countdown"] { color: #4eafff; }
+.preset-mode[data-mode="countup"] { color: #22c55e; }
+.preset-mode[data-mode="tod"] { color: #f59e0b; }
+.preset-mode[data-mode="countdown-tod"] { color: #4eafff; }
+.preset-mode[data-mode="countup-tod"] { color: #22c55e; }
+.preset-mode[data-mode="hidden"] { color: #666; }
+
+.preset-mode:hover {
+  color: #fff !important;
+}
+
 /* Mode dropdown popup */
 .mode-dropdown-popup {
   position: fixed;
@@ -1500,6 +1528,7 @@ button:disabled {
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   z-index: 10000;
   padding: 8px;
+  animation: popup-in 0.15s ease-out;
 }
 
 .duration-edit-input {
@@ -1663,6 +1692,7 @@ button:disabled {
 
 .icon-btn:active {
   background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.92);
 }
 
 .icon-btn svg {

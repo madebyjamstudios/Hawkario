@@ -5005,15 +5005,19 @@ function renderPresetList() {
     duration.className = 'preset-duration';
     duration.textContent = secondsToHMS(preset.config?.durationSec || 0);
     duration.style.cursor = 'pointer';
+    duration.title = 'Click to edit duration';
     duration.onclick = (e) => {
       e.stopPropagation();
       showDurationEditPopup(idx, preset, duration);
     };
 
     // Mode indicator (clickable to change)
+    const mode = preset.config?.mode || 'countdown';
     const modeIndicator = document.createElement('span');
     modeIndicator.className = 'preset-mode';
-    modeIndicator.textContent = getModeLabel(preset.config?.mode || 'countdown') + ' ▾';
+    modeIndicator.dataset.mode = mode;
+    modeIndicator.textContent = getModeLabel(mode) + ' ▾';
+    modeIndicator.title = 'Click to change mode';
     modeIndicator.onclick = (e) => {
       e.stopPropagation();
       showModeDropdown(idx, preset, modeIndicator);
@@ -5315,6 +5319,9 @@ function showModeDropdown(idx, preset, anchorEl) {
   const existing = document.querySelector('.mode-dropdown-popup');
   if (existing) existing.remove();
 
+  // Add editing highlight
+  anchorEl.classList.add('editing');
+
   const popup = document.createElement('div');
   popup.className = 'mode-dropdown-popup';
 
@@ -5329,6 +5336,8 @@ function showModeDropdown(idx, preset, anchorEl) {
 
   const currentMode = preset.config?.mode || 'countdown';
 
+  const removeEditing = () => anchorEl.classList.remove('editing');
+
   modes.forEach(({ value, label }) => {
     const option = document.createElement('div');
     option.className = 'mode-option' + (value === currentMode ? ' selected' : '');
@@ -5338,7 +5347,16 @@ function showModeDropdown(idx, preset, anchorEl) {
       const presets = loadPresets();
       presets[idx].config.mode = value;
       savePresets(presets);
+      removeEditing();
       renderPresetList();
+      // Flash success on the new mode indicator
+      setTimeout(() => {
+        const newModeEl = document.querySelector(`.preset-item[data-index="${idx}"] .preset-mode`);
+        if (newModeEl) {
+          newModeEl.classList.add('save-success');
+          setTimeout(() => newModeEl.classList.remove('save-success'), 400);
+        }
+      }, 10);
       popup.remove();
     };
     popup.appendChild(option);
@@ -5361,6 +5379,7 @@ function showModeDropdown(idx, preset, anchorEl) {
   // Close on click outside
   const closePopup = (e) => {
     if (!popup.contains(e.target) && e.target !== anchorEl) {
+      removeEditing();
       popup.remove();
       document.removeEventListener('click', closePopup);
     }
@@ -5370,6 +5389,7 @@ function showModeDropdown(idx, preset, anchorEl) {
   // Close on Escape
   const handleKeydown = (e) => {
     if (e.key === 'Escape') {
+      removeEditing();
       popup.remove();
       document.removeEventListener('keydown', handleKeydown);
     }
@@ -5381,6 +5401,10 @@ function showDurationEditPopup(idx, preset, anchorEl) {
   // Remove any existing popup
   const existing = document.querySelector('.duration-edit-popup');
   if (existing) existing.remove();
+
+  // Add editing highlight
+  anchorEl.classList.add('editing');
+  const removeEditing = () => anchorEl.classList.remove('editing');
 
   const popup = document.createElement('div');
   popup.className = 'duration-edit-popup';
@@ -5418,12 +5442,21 @@ function showDurationEditPopup(idx, preset, anchorEl) {
   const saveDuration = () => {
     const { h, m, s } = parseTimeValue(input.value);
     const totalSec = h * 3600 + m * 60 + s;
+    removeEditing();
     if (totalSec > 0) {
       saveUndoState();
       const presets = loadPresets();
       presets[idx].config.durationSec = totalSec;
       savePresets(presets);
       renderPresetList();
+      // Flash success on the new duration
+      setTimeout(() => {
+        const newDurationEl = document.querySelector(`.preset-item[data-index="${idx}"] .preset-duration`);
+        if (newDurationEl) {
+          newDurationEl.classList.add('save-success');
+          setTimeout(() => newDurationEl.classList.remove('save-success'), 400);
+        }
+      }, 10);
     }
     popup.remove();
   };
@@ -5435,6 +5468,7 @@ function showDurationEditPopup(idx, preset, anchorEl) {
       saveDuration();
     }
     if (e.key === 'Escape') {
+      removeEditing();
       popup.remove();
     }
   });
@@ -5442,6 +5476,7 @@ function showDurationEditPopup(idx, preset, anchorEl) {
   // Close on click outside
   const closePopup = (e) => {
     if (!popup.contains(e.target) && e.target !== anchorEl) {
+      removeEditing();
       popup.remove();
       document.removeEventListener('click', closePopup);
     }
