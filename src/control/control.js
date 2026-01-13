@@ -2954,16 +2954,15 @@ function fitPreviewTimer() {
   // (shorter text gets larger font)
   const actualFontSize = baseFontSize * (refWidth100 / actualWidth100);
 
-  // Apply font size first
-  els.livePreviewTimer.style.fontSize = actualFontSize + 'px';
-  els.livePreviewTimer.style.transform = 'translate(-50%, -50%)';
-
-  // Measure reference at actual font size (padding doesn't scale, so must measure at final size)
+  // Measure reference at baseFontSize (this is the target width we want)
+  els.livePreviewTimer.style.fontSize = baseFontSize + 'px';
   els.livePreviewTimer.innerHTML = refHTML;
   const targetRefWidth = els.livePreviewTimer.scrollWidth;
 
-  // Measure actual at same font size
+  // Now apply actualFontSize and measure actual
+  els.livePreviewTimer.style.fontSize = actualFontSize + 'px';
   els.livePreviewTimer.innerHTML = actualContent;
+  els.livePreviewTimer.style.transform = 'translate(-50%, -50%)';
   const renderedWidth = els.livePreviewTimer.scrollWidth;
   const renderedHeight = els.livePreviewTimer.scrollHeight;
 
