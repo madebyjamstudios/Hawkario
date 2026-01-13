@@ -67,9 +67,10 @@ export function getDefaultStyle() {
 
 /**
  * Fixed style constants (not user-configurable)
+ * Using monospace font for consistent digit widths
  */
 export const FIXED_STYLE = {
-  fontFamily: 'Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+  fontFamily: '"SF Mono", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace',
   fontWeight: '700',
   opacity: 1,
   align: 'center',

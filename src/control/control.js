@@ -2893,41 +2893,31 @@ function updatePreviewScale() {
 
 /**
  * Fit preview timer text to reference canvas size
- * Uses reference "88:88:88" as width standard - all times match that width
+ * Simple sizing: fit actual text to available space
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer) return;
 
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
-  const currentContent = els.livePreviewTimer.innerHTML;
 
   // Check if message is visible to determine available height
   const hasMessage = els.livePreviewCanvas?.classList.contains('with-message');
 
-  // Target dimensions (reference fills 95% width, constrained by height)
+  // Target dimensions
   const targetWidth = REF_WIDTH * 0.95;
   const targetHeight = REF_HEIGHT * (hasMessage ? 0.45 : 0.90);
 
-  // Measure reference "88:88:88" at 100px
-  els.livePreviewTimer.style.fontSize = '100px';
-  els.livePreviewTimer.innerHTML = '88:88:88';
-  const refWidth = els.livePreviewTimer.scrollWidth;
-  const refHeight = els.livePreviewTimer.scrollHeight;
-
   // Measure actual content at 100px
-  els.livePreviewTimer.innerHTML = currentContent;
-  const actualWidth = els.livePreviewTimer.scrollWidth;
+  els.livePreviewTimer.style.fontSize = '100px';
+  const naturalWidth = els.livePreviewTimer.scrollWidth;
+  const naturalHeight = els.livePreviewTimer.scrollHeight;
 
-  if (refWidth > 0 && actualWidth > 0 && refHeight > 0) {
-    // Step 1: Calculate font size for REFERENCE to fit target (constrained by width & height)
-    const widthRatio = targetWidth / refWidth;
-    const heightRatio = targetHeight / refHeight;
-    const refFontSize = 100 * Math.min(widthRatio, heightRatio) * zoom;
-
-    // Step 2: Scale up so actual text has same WIDTH as reference would have
-    const widthScale = refWidth / actualWidth;
-    const newFontSize = Math.max(10, refFontSize * widthScale);
+  if (naturalWidth > 0 && naturalHeight > 0) {
+    // Size to fit within target, constrained by both width and height
+    const widthRatio = targetWidth / naturalWidth;
+    const heightRatio = targetHeight / naturalHeight;
+    const newFontSize = Math.max(10, 100 * Math.min(widthRatio, heightRatio) * zoom);
 
     els.livePreviewTimer.style.fontSize = newFontSize + 'px';
   }
