@@ -2932,46 +2932,27 @@ function updatePreviewScale() {
 
 /**
  * Fit preview timer text to timer-section container
- * PRIORITY: Fill target width. Only scale down if height exceeded.
+ * Simply fills the target width - no height constraints
  */
 function fitPreviewTimer() {
-  if (!els.livePreviewTimer || !els.livePreviewTimerSection) return;
+  if (!els.livePreviewTimer) return;
 
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
-  const hasMessage = els.livePreviewContentBox?.classList.contains('with-message');
 
-  // Content box is 90% x 64% of reference canvas
-  // Timer section is 100% of content box (or 34% when message visible)
-  const contentBoxWidth = REF_WIDTH * 0.90;
-  const contentBoxHeight = REF_HEIGHT * 0.64;
-  const sectionHeight = hasMessage ? contentBoxHeight * 0.34 : contentBoxHeight;
+  // Target width: 90% of canvas * 95% padding * zoom
+  const targetWidth = REF_WIDTH * 0.90 * 0.95 * zoom;
 
-  const targetWidth = contentBoxWidth * 0.95 * zoom;
-  const targetHeight = sectionHeight * 0.90;
-
-  // Step 1: Measure at base font size
+  // Measure at base font size
   els.livePreviewTimer.style.transform = 'none';
   els.livePreviewTimer.style.fontSize = '100px';
 
   const widthAt100 = els.livePreviewTimer.scrollWidth;
   if (widthAt100 <= 0) return;
 
-  // Step 2: Calculate font size to FILL target width
-  const fontSizeForWidth = 100 * (targetWidth / widthAt100);
-  els.livePreviewTimer.style.fontSize = fontSizeForWidth + 'px';
-
-  // Step 3: Check if height fits
-  const heightAtTargetWidth = els.livePreviewTimer.scrollHeight;
-
-  if (heightAtTargetWidth <= targetHeight) {
-    // Fits! Timer fills the width perfectly
-    return;
-  }
-
-  // Step 4: Too tall - scale down uniformly to fit height
-  const scale = targetHeight / heightAtTargetWidth;
-  els.livePreviewTimer.style.transform = `scale(${scale})`;
+  // Calculate and apply font size to fill width
+  const fontSize = 100 * (targetWidth / widthAt100);
+  els.livePreviewTimer.style.fontSize = fontSize + 'px';
 }
 
 /**
