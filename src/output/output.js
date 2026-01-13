@@ -462,9 +462,12 @@ function renderInternal() {
   // Apply display text (use innerHTML for ToD line breaks)
   timerEl.innerHTML = text;
 
-  // Only refit timer when text changes (not on every frame)
-  if (text !== lastTimerText) {
-    lastTimerText = text;
+  // Only refit timer when format or mode changes (not when digits change)
+  const currentFormat = canonicalState?.format || 'MM:SS';
+  const currentMode = canonicalState?.mode || 'countdown';
+  if (currentFormat !== lastTimerFormat || currentMode !== lastTimerMode) {
+    lastTimerFormat = currentFormat;
+    lastTimerMode = currentMode;
     fitTimerContent();
   }
 
