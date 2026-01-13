@@ -154,38 +154,39 @@ let cachedShadowKey = '';
 
 /**
  * Fit timer text to reference canvas size
- * Measures both reference and actual text directly for accurate ratio
- * All times scale to match reference "88:88:88" width
+ * Uses reference "88:88:88" as width standard - all times match that width
  */
 function fitTimerContent() {
   const zoom = timerZoom / 100;
   const currentContent = timerEl.innerHTML;
 
-  // Target width (95% of canvas)
-  const targetWidth = REF_WIDTH * 0.95 * zoom;
+  // Check if message is visible to determine available height
+  const hasMessage = virtualCanvasEl?.classList.contains('with-message');
 
-  // Set measurement conditions (preserve other styles like position)
+  // Target dimensions (reference fills 95% width, constrained by height)
+  const targetWidth = REF_WIDTH * 0.95;
+  const targetHeight = REF_HEIGHT * (hasMessage ? 0.45 : 0.90);
+
+  // Measure reference "88:88:88" at 100px
   timerEl.style.fontSize = '100px';
-  timerEl.style.padding = '0';
-
-  // Measure reference "88:88:88"
   timerEl.innerHTML = '88:88:88';
-  void timerEl.offsetWidth; // Force reflow
-  const refWidth = timerEl.getBoundingClientRect().width;
+  const refWidth = timerEl.scrollWidth;
+  const refHeight = timerEl.scrollHeight;
 
-  // Measure actual content
+  // Measure actual content at 100px
   timerEl.innerHTML = currentContent;
-  void timerEl.offsetWidth; // Force reflow
-  const actualWidth = timerEl.getBoundingClientRect().width;
+  const actualWidth = timerEl.scrollWidth;
 
-  // Restore padding (CSS default)
-  timerEl.style.padding = '';
+  if (refWidth > 0 && actualWidth > 0 && refHeight > 0) {
+    // Step 1: Calculate font size for REFERENCE to fit target (constrained by width & height)
+    const widthRatio = targetWidth / refWidth;
+    const heightRatio = targetHeight / refHeight;
+    const refFontSize = 100 * Math.min(widthRatio, heightRatio) * zoom;
 
-  if (refWidth > 0 && actualWidth > 0) {
-    // Font size for reference to fill target
-    const refFontSize = 100 * (targetWidth / refWidth);
-    // Scale up for actual to match reference width
-    const newFontSize = Math.max(10, refFontSize * (refWidth / actualWidth));
+    // Step 2: Scale up so actual text has same WIDTH as reference would have
+    const widthScale = refWidth / actualWidth;
+    const newFontSize = Math.max(10, refFontSize * widthScale);
+
     timerEl.style.fontSize = newFontSize + 'px';
   }
 }
