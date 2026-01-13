@@ -192,9 +192,11 @@ function fitTimerContent() {
   const refText = getMaxWidthTimerText(format, mode, todFormat);
   const currentContent = timerEl.innerHTML;
 
-  // Clear any width constraints for accurate measurement
+  // Clear constraints and padding for accurate measurement
+  // (padding in em units would scale differently at different font sizes)
   timerEl.style.width = '';
   timerEl.style.minWidth = '';
+  timerEl.style.padding = '0';
 
   // Step 1: Measure reference text at 100px
   if (refText.combined) {
@@ -209,6 +211,9 @@ function fitTimerContent() {
   timerEl.innerHTML = currentContent;
   timerEl.style.fontSize = '100px';
   const actualWidth = timerEl.scrollWidth;
+
+  // Restore padding (CSS will apply based on final font size)
+  timerEl.style.padding = '';
 
   // Step 3: Calculate font size so actual matches reference visual width
   const targetWidth = REF_WIDTH * 0.95 * zoom;

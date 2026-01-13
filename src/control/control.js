@@ -2934,9 +2934,11 @@ function fitPreviewTimer() {
   const refText = getMaxWidthTimerText(format, mode, todFormat);
   const currentContent = els.livePreviewTimer.innerHTML;
 
-  // Clear any width constraints for accurate measurement
+  // Clear constraints and padding for accurate measurement
+  // (padding in em units would scale differently at different font sizes)
   els.livePreviewTimer.style.width = '';
   els.livePreviewTimer.style.minWidth = '';
+  els.livePreviewTimer.style.padding = '0';
 
   // Step 1: Measure reference text at 100px
   if (refText.combined) {
@@ -2951,6 +2953,9 @@ function fitPreviewTimer() {
   els.livePreviewTimer.innerHTML = currentContent;
   els.livePreviewTimer.style.fontSize = '100px';
   const actualWidth = els.livePreviewTimer.scrollWidth;
+
+  // Restore padding (CSS will apply based on final font size)
+  els.livePreviewTimer.style.padding = '';
 
   // Step 3: Calculate font size so actual matches reference visual width
   const targetWidth = REF_WIDTH * 0.95 * zoom;
