@@ -2947,18 +2947,16 @@ function fitPreviewTimer() {
   els.livePreviewTimer.innerHTML = actualContent;
   const actualWidth100 = els.livePreviewTimer.scrollWidth;
 
-  // Calculate font size where reference would fit target
-  const widthRatio = targetWidth / refWidth100;
-  const heightRatio = targetHeight / refHeight100;
-  const baseFontSize = 100 * Math.min(widthRatio, heightRatio) * zoom;
+  // Calculate font size where reference would fit target width
+  const baseFontSize = 100 * (targetWidth / refWidth100) * zoom;
 
-  // Apply font size
-  els.livePreviewTimer.style.fontSize = baseFontSize + 'px';
+  // Calculate font size for actual to have same width as reference
+  // (shorter text gets larger font)
+  const actualFontSize = baseFontSize * (refWidth100 / actualWidth100);
 
-  // Scale uniformly so actual width matches reference width
-  // (shorter text like "1:00" gets scaled up, taller too)
-  const scale = refWidth100 / actualWidth100;
-  els.livePreviewTimer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  // Apply font size - no stretching, just bigger/smaller font
+  els.livePreviewTimer.style.fontSize = actualFontSize + 'px';
+  els.livePreviewTimer.style.transform = 'translate(-50%, -50%)';
 }
 
 /**
