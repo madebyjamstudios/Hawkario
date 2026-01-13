@@ -150,16 +150,12 @@ let lastTimerLength = 0;
 
 /**
  * Get maximum-width reference text for timer sizing
- * Uses '8' as it's typically the widest digit, ensuring consistent width
+ * Always uses the widest reference (HH:MM:SS) so ALL formats have same width
  */
 function getMaxWidthTimerText(format, mode, todFormat = '12h') {
-  let timerRef;
-  switch (format) {
-    case 'HH:MM:SS': timerRef = '88:88:88'; break;
-    case 'MM:SS': timerRef = '88:88'; break;
-    case 'SS': timerRef = '88'; break;
-    default: timerRef = '88:88'; break;
-  }
+  // Always use HH:MM:SS as reference so all formats align to same width
+  // This means "1:00" will have larger font than "22:10:00" but same visual width
+  const timerRef = '88:88:88';
 
   // ToD reference (12h is wider due to AM/PM)
   const todRef = todFormat === '24h' ? '88:88:88' : '88:88:88 AM';
