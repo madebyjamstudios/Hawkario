@@ -2963,7 +2963,9 @@ function fitPreviewTimer() {
   const renderedHeight = els.livePreviewTimer.scrollHeight;
 
   // Target width is what reference would be at baseFontSize
-  const targetRefWidth = (baseFontSize / 100) * refWidth100;
+  // Account for fixed padding (15px * 2 = 30px) that doesn't scale with font
+  const padding = 30;
+  const targetRefWidth = (baseFontSize / 100) * (refWidth100 - padding) + padding;
 
   // Fine-tune with scale for pixel-perfect precision
   const scaleX = targetRefWidth / renderedWidth;
