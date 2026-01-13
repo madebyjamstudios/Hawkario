@@ -3696,11 +3696,16 @@ function showProfileDropdown(forceRefresh = false) {
       e.preventDefault();
       e.stopPropagation();
 
+      // Get current index from DOM position (not stale closure variable)
+      const currentItems = Array.from(listSection.querySelectorAll('.profile-item'));
+      const currentIdx = currentItems.indexOf(item);
+      if (currentIdx === -1) return;
+
       // Just record start position - don't activate until mouse moves 5px
       profileDragState.isDragging = true;
       profileDragState.dragActivated = false;
-      profileDragState.fromIndex = idx;
-      profileDragState.currentSlot = idx;
+      profileDragState.fromIndex = currentIdx;
+      profileDragState.currentSlot = currentIdx;
       profileDragState.draggedEl = item;
       profileDragState.listSection = listSection;
       profileDragState.startX = e.clientX;
