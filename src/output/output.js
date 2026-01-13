@@ -175,10 +175,7 @@ function getRefText(format, durationMs) {
 
 /**
  * Fit timer text to timer-section container
- * Uses format-appropriate reference so:
- * - 10:00 and 9:59 stay same size (same timer, uses "88:88")
- * - 1:00 timer fills width bigger (uses "8:88")
- * Caps height to stay within content box
+ * Simply fills the width, caps height to content box
  */
 function fitTimerContent() {
   const zoom = timerZoom / 100;
@@ -188,29 +185,17 @@ function fitTimerContent() {
   const contentBoxHeight = REF_HEIGHT * 0.64;
 
   const targetWidth = contentBoxWidth * 0.95 * zoom;
-  const targetHeight = contentBoxHeight * 0.90; // 10% padding top/bottom
+  const targetHeight = contentBoxHeight * 0.90;
 
-  // Get format-appropriate reference from timer state
-  const format = canonicalState?.format || 'MM:SS';
-  const durationMs = canonicalState?.durationMs || 600000;
-  const refText = getRefText(format, durationMs);
-  const refHTML = refText.replace(/:/g, '<span class="colon">:</span>');
-
-  const actualContent = timerEl.innerHTML;
-
-  // Measure reference at base font size
+  // Measure actual content at base font size
   timerEl.style.transform = 'translate(-50%, -50%)';
   timerEl.style.fontSize = '100px';
-  timerEl.innerHTML = refHTML;
-  const refWidth = timerEl.scrollWidth;
 
-  // Restore actual content
-  timerEl.innerHTML = actualContent;
+  const actualWidth = timerEl.scrollWidth;
+  if (actualWidth <= 0) return;
 
-  if (refWidth <= 0) return;
-
-  // Calculate font size to fill width (based on reference)
-  const fontSize = 100 * (targetWidth / refWidth);
+  // Calculate font size to fill width
+  const fontSize = 100 * (targetWidth / actualWidth);
   timerEl.style.fontSize = fontSize + 'px';
 
   // Check height and scale down if needed

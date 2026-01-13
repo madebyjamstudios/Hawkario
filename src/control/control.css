@@ -585,8 +585,9 @@ button:disabled {
   background: #444;
   border-radius: 50%;
   border: 1px solid #666;
-  transition: all 0.5s ease;
+  transition: background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease;
   position: relative;
+  flex-shrink: 0;
 }
 
 .blackout-btn.active {
@@ -603,15 +604,12 @@ button:disabled {
 
 @keyframes indicator-pulse {
   0% {
-    transform: scale(1);
     box-shadow: 0 0 0 #E64A19;
   }
   50% {
-    transform: scale(1.5);
-    box-shadow: 0 0 12px #E64A19, 0 0 24px #E64A19, 0 0 36px #E64A19;
+    box-shadow: 0 0 16px #E64A19, 0 0 32px #E64A19, 0 0 48px #E64A19;
   }
   100% {
-    transform: scale(1);
     box-shadow: 0 0 8px #E64A19, 0 0 16px #E64A19, 0 0 24px #E64A19;
   }
 }

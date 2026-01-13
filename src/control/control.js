@@ -2931,10 +2931,7 @@ function updatePreviewScale() {
 
 /**
  * Fit preview timer text to timer-section container
- * Uses format-appropriate reference so:
- * - 10:00 and 9:59 stay same size (same timer, uses "88:88")
- * - 1:00 timer fills width bigger (uses "8:88")
- * Caps height to stay within content box
+ * Simply fills the width, caps height to content box
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer) return;
@@ -2947,29 +2944,17 @@ function fitPreviewTimer() {
   const contentBoxHeight = REF_HEIGHT * 0.64;
 
   const targetWidth = contentBoxWidth * 0.95 * zoom;
-  const targetHeight = contentBoxHeight * 0.90; // 10% padding top/bottom
+  const targetHeight = contentBoxHeight * 0.90;
 
-  // Get format-appropriate reference from active timer config
-  const format = activeTimerConfig?.format || 'MM:SS';
-  const durationSec = activeTimerConfig?.durationSec || 600;
-  const refText = getRefText(format, durationSec);
-  const refHTML = refText.replace(/:/g, '<span class="colon">:</span>');
-
-  const actualContent = els.livePreviewTimer.innerHTML;
-
-  // Measure reference at base font size
+  // Measure actual content at base font size
   els.livePreviewTimer.style.transform = 'translate(-50%, -50%)';
   els.livePreviewTimer.style.fontSize = '100px';
-  els.livePreviewTimer.innerHTML = refHTML;
-  const refWidth = els.livePreviewTimer.scrollWidth;
 
-  // Restore actual content
-  els.livePreviewTimer.innerHTML = actualContent;
+  const actualWidth = els.livePreviewTimer.scrollWidth;
+  if (actualWidth <= 0) return;
 
-  if (refWidth <= 0) return;
-
-  // Calculate font size to fill width (based on reference)
-  const fontSize = 100 * (targetWidth / refWidth);
+  // Calculate font size to fill width
+  const fontSize = 100 * (targetWidth / actualWidth);
   els.livePreviewTimer.style.fontSize = fontSize + 'px';
 
   // Check height and scale down if needed
