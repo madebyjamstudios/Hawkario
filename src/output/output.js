@@ -141,9 +141,37 @@ function toggleBlackout() {
 // Current message state
 let currentMessage = null;
 
-// Track last rendered text to only refit when content changes
+// Track last rendered text/format/mode to only refit when needed
 let lastTimerText = '';
 let lastMessageText = '';
+let lastTimerFormat = '';
+let lastTimerMode = '';
+
+/**
+ * Get maximum-width reference text for timer sizing
+ * Uses '8' as it's typically the widest digit, ensuring consistent width
+ */
+function getMaxWidthTimerText(format, mode, todFormat = '12h') {
+  let timerRef;
+  switch (format) {
+    case 'HH:MM:SS': timerRef = '88:88:88'; break;
+    case 'MM:SS': timerRef = '88:88'; break;
+    case 'SS': timerRef = '88'; break;
+    default: timerRef = '88:88'; break;
+  }
+
+  // ToD reference (12h is wider due to AM/PM)
+  const todRef = todFormat === '24h' ? '88:88:88' : '88:88:88 AM';
+
+  // For combined modes, include both timer and ToD
+  if (mode === 'countdown-tod' || mode === 'countup-tod') {
+    return { timer: timerRef, tod: todRef, combined: true };
+  }
+  if (mode === 'tod') {
+    return { timer: todRef, tod: null, combined: false };
+  }
+  return { timer: timerRef, tod: null, combined: false };
+}
 
 // Cache for shadow CSS to avoid recalculating every frame
 let cachedShadowCSS = '';
@@ -151,18 +179,39 @@ let cachedShadowKey = '';
 
 /**
  * Fit timer text to reference canvas size
- * Only called when timer content changes, NOT on resize
+ * Uses max-width reference text to ensure consistent sizing regardless of digits
  */
 function fitTimerContent() {
-  // Target: 90% of reference width, 85% height (or 45% when message visible)
-  const targetWidth = REF_WIDTH * 0.9;
-  const targetHeight = REF_HEIGHT * (currentMessage ? 0.45 : 0.85);
+  // Get current format and mode from canonical state
+  const format = canonicalState?.format || 'MM:SS';
+  const mode = canonicalState?.mode || 'countdown';
+  const todFormat = canonicalState?.todFormat || '12h';
+
+  // Target: 95% of reference width, 90% height (or 45% when message visible)
+  const targetWidth = REF_WIDTH * 0.95;
+  const targetHeight = REF_HEIGHT * (currentMessage ? 0.45 : 0.90);
+
+  // Get max-width reference text for consistent sizing
+  const refText = getMaxWidthTimerText(format, mode, todFormat);
+
+  // Store current content
+  const currentContent = timerEl.innerHTML;
+
+  // Set reference text for measurement (same structure as actual display)
+  if (refText.combined) {
+    timerEl.innerHTML = `${refText.timer}<span class="tod-line">${refText.tod}</span>`;
+  } else {
+    timerEl.innerHTML = refText.timer;
+  }
 
   // Reset to 100px base to measure natural size
   timerEl.style.fontSize = '100px';
 
   const naturalWidth = timerEl.scrollWidth;
   const naturalHeight = timerEl.scrollHeight;
+
+  // Restore actual content
+  timerEl.innerHTML = currentContent;
 
   if (naturalWidth > 0 && naturalHeight > 0) {
     const widthRatio = targetWidth / naturalWidth;

@@ -51,6 +51,8 @@ const els = {
   mode: document.getElementById('mode'),
   duration: document.getElementById('duration'),
   format: document.getElementById('format'),
+  allowOvertime: document.getElementById('allowOvertime'),
+  allowOvertimeRow: document.getElementById('allowOvertimeRow'),
 
   // Appearance (simplified)
   fontColor: document.getElementById('fontColor'),
@@ -134,6 +136,7 @@ const els = {
   defaultDuration: document.getElementById('defaultDuration'),
   defaultFormat: document.getElementById('defaultFormat'),
   defaultSound: document.getElementById('defaultSound'),
+  defaultAllowOvertime: document.getElementById('defaultAllowOvertime'),
   timerZoom: document.getElementById('timerZoom'),
   outputOnTop: document.getElementById('outputOnTop'),
   controlOnTop: document.getElementById('controlOnTop'),
@@ -256,6 +259,16 @@ function updateDurationControlsFormat() {
   if (controls) {
     controls.classList.toggle('format-mmss', format === 'MM:SS');
   }
+}
+
+/**
+ * Show/hide overtime setting based on mode (only for countdown modes)
+ */
+function updateOvertimeVisibility() {
+  if (!els.allowOvertimeRow) return;
+  const mode = els.mode?.value;
+  const showOvertime = mode === 'countdown' || mode === 'countdown-tod';
+  els.allowOvertimeRow.style.display = showOvertime ? '' : 'none';
 }
 
 function getDefaultDurationSeconds() {
@@ -969,7 +982,8 @@ const DEFAULT_APP_SETTINGS = {
     mode: 'countdown',
     durationSec: 600,
     format: 'MM:SS',
-    soundType: 'none'
+    soundType: 'none',
+    allowOvertime: true
   },
   // OSC Integration
   osc: {
@@ -1261,6 +1275,11 @@ function openAppSettings() {
     els.defaultSound.value = 'none';
   }
 
+  // Load allow overtime setting (default to true for backwards compatibility)
+  if (els.defaultAllowOvertime) {
+    els.defaultAllowOvertime.value = settings.defaults.allowOvertime !== false ? 'on' : 'off';
+  }
+
   // Load timer zoom setting
   if (els.timerZoom) {
     els.timerZoom.value = settings.timerZoom ?? 100;
@@ -1334,7 +1353,8 @@ function saveAppSettingsFromForm() {
       mode: els.defaultMode.value,
       durationSec: getDefaultDurationSeconds(),
       format: els.defaultFormat.value,
-      soundType: els.defaultSound.value || 'none'
+      soundType: els.defaultSound.value || 'none',
+      allowOvertime: els.defaultAllowOvertime?.value === 'on'
     },
     osc: oscSettings
   };
@@ -2222,6 +2242,7 @@ function getDefaultTimerConfig() {
     mode: d.mode,
     durationSec: d.durationSec,
     format: d.format,
+    allowOvertime: d.allowOvertime !== false,
     style: {
       color: '#ffffff',
       strokeWidth: 0,
@@ -2693,6 +2714,7 @@ function openModal(presetIndex = null) {
   els.presetName.select();
   updateDurationDigitDisplay();
   updateDurationControlsFormat();
+  updateOvertimeVisibility();
   updateModalPreview();
 }
 
@@ -2848,9 +2870,37 @@ let startWidth = 0;
 const REF_WIDTH = 1920;
 const REF_HEIGHT = 1080;
 
-// Track last rendered text to only refit when content changes
+// Track last rendered text/format/mode to only refit when needed
 let lastPreviewTimerText = '';
 let lastPreviewMessageText = '';
+let lastPreviewTimerFormat = '';
+let lastPreviewTimerMode = '';
+
+/**
+ * Get maximum-width reference text for timer sizing
+ * Uses '8' as it's typically the widest digit, ensuring consistent width
+ */
+function getMaxWidthTimerText(format, mode, todFormat = '12h') {
+  let timerRef;
+  switch (format) {
+    case 'HH:MM:SS': timerRef = '88:88:88'; break;
+    case 'MM:SS': timerRef = '88:88'; break;
+    case 'SS': timerRef = '88'; break;
+    default: timerRef = '88:88'; break;
+  }
+
+  // ToD reference (12h is wider due to AM/PM)
+  const todRef = todFormat === '24h' ? '88:88:88' : '88:88:88 AM';
+
+  // For combined modes, include both timer and ToD
+  if (mode === 'countdown-tod' || mode === 'countup-tod') {
+    return { timer: timerRef, tod: todRef, combined: true };
+  }
+  if (mode === 'tod') {
+    return { timer: todRef, tod: null, combined: false };
+  }
+  return { timer: timerRef, tod: null, combined: false };
+}
 
 /**
  * Update preview virtual canvas scale based on container size
@@ -2868,17 +2918,36 @@ function updatePreviewScale() {
 
 /**
  * Fit preview timer text to reference canvas size
- * Only called when timer content changes, NOT on resize
+ * Uses max-width reference text to ensure consistent sizing regardless of digits
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer) return;
 
+  // Get current format and mode
+  const format = activeTimerConfig?.format || 'MM:SS';
+  const mode = activeTimerConfig?.mode || 'countdown';
+  const appSettings = loadAppSettings();
+  const todFormat = appSettings.todFormat || '12h';
+
   // Check if message is visible to determine available height
   const hasMessage = els.livePreviewCanvas?.classList.contains('with-message');
 
-  // Target: 90% of reference width, 85% height (or 45% when message visible)
-  const targetWidth = REF_WIDTH * 0.9;
-  const targetHeight = REF_HEIGHT * (hasMessage ? 0.45 : 0.85);
+  // Target: 95% of reference width, 90% height (or 45% when message visible)
+  const targetWidth = REF_WIDTH * 0.95;
+  const targetHeight = REF_HEIGHT * (hasMessage ? 0.45 : 0.90);
+
+  // Get max-width reference text for consistent sizing
+  const refText = getMaxWidthTimerText(format, mode, todFormat);
+
+  // Store current content
+  const currentContent = els.livePreviewTimer.innerHTML;
+
+  // Set reference text for measurement (same structure as actual display)
+  if (refText.combined) {
+    els.livePreviewTimer.innerHTML = `${refText.timer}<span class="tod-line">${refText.tod}</span>`;
+  } else {
+    els.livePreviewTimer.innerHTML = refText.timer;
+  }
 
   // Reset to 100px base to measure natural size
   els.livePreviewTimer.style.fontSize = '100px';
@@ -2886,14 +2955,16 @@ function fitPreviewTimer() {
   const naturalWidth = els.livePreviewTimer.scrollWidth;
   const naturalHeight = els.livePreviewTimer.scrollHeight;
 
+  // Restore actual content
+  els.livePreviewTimer.innerHTML = currentContent;
+
   if (naturalWidth > 0 && naturalHeight > 0) {
     const widthRatio = targetWidth / naturalWidth;
     const heightRatio = targetHeight / naturalHeight;
     const ratio = Math.min(widthRatio, heightRatio);
 
     // Apply zoom from app settings
-    const settings = loadAppSettings();
-    const zoom = (settings.timerZoom ?? 100) / 100;
+    const zoom = (appSettings.timerZoom ?? 100) / 100;
 
     const newFontSize = Math.max(10, 100 * ratio * zoom);
     els.livePreviewTimer.style.fontSize = newFontSize + 'px';
@@ -3248,9 +3319,10 @@ function renderLivePreviewInternal() {
   if (mode === 'tod') {
     displayText = formatTimeOfDay(todFormat, timezone);
     els.livePreviewTimer.innerHTML = displayText;
-    // Only refit when text changes
-    if (displayText !== lastPreviewTimerText) {
-      lastPreviewTimerText = displayText;
+    // Only refit when format or mode changes (not when digits change)
+    if (format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode) {
+      lastPreviewTimerFormat = format;
+      lastPreviewTimerMode = mode;
       fitPreviewTimer();
     }
     // Skip color changes during flash animation
@@ -3384,9 +3456,15 @@ function renderLivePreviewInternal() {
             renderPresetList();
           }, 1000);
         } else {
-          // Start overtime mode - keep running but count up
-          timerState.overtime = true;
-          timerState.overtimeStartedAt = Date.now();
+          // Check if overtime is allowed for this timer
+          if (activeTimerConfig.allowOvertime !== false) {
+            // Start overtime mode - keep running but count up
+            timerState.overtime = true;
+            timerState.overtimeStartedAt = Date.now();
+          } else {
+            // Stop at 0:00 - pause the timer
+            isRunning = false;
+          }
           renderPresetList(); // Update button states
         }
       }
@@ -3419,9 +3497,10 @@ function renderLivePreviewInternal() {
 
   // Update display (use innerHTML for ToD line breaks)
   els.livePreviewTimer.innerHTML = displayText;
-  // Only refit when text changes (not on every frame)
-  if (displayText !== lastPreviewTimerText) {
-    lastPreviewTimerText = displayText;
+  // Only refit when format or mode changes (not when digits change)
+  if (format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode) {
+    lastPreviewTimerFormat = format;
+    lastPreviewTimerMode = mode;
     fitPreviewTimer();
   }
 
@@ -3513,6 +3592,7 @@ function getCurrentConfig() {
     mode: els.mode.value,
     durationSec: getDurationSeconds(),
     format: els.format.value,
+    allowOvertime: els.allowOvertime?.value !== 'off',
     style: {
       color: els.fontColor.value,
       strokeWidth: parseInt(els.strokeWidth.value, 10) || 0,
@@ -3566,6 +3646,11 @@ function applyConfig(config) {
   // Warning thresholds - set as MM:SS
   setMSInput(els.warnYellowSec, config.warnYellowSec ?? 60);
   setMSInput(els.warnOrangeSec, config.warnOrangeSec ?? 15);
+
+  // Overtime setting (default to true for backwards compatibility)
+  if (els.allowOvertime) {
+    els.allowOvertime.value = config.allowOvertime !== false ? 'on' : 'off';
+  }
 
   applyPreview();
 }
@@ -5418,6 +5503,9 @@ function setupEventListeners() {
 
   // Format change - show/hide hours group
   els.format.addEventListener('change', updateDurationControlsFormat);
+
+  // Mode change - show/hide overtime setting
+  els.mode.addEventListener('change', updateOvertimeVisibility);
 
   // Input change listeners (debounced) - update both live and modal preview
   const inputEls = [
