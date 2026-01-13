@@ -188,75 +188,36 @@ function fitTimerContent() {
   const format = canonicalState?.format || 'MM:SS';
   const durationMs = canonicalState?.durationMs || 600000;
   const refText = getRefText(format, durationMs);
+  const refHTML = refText.split(':').join('<span class="colon">:</span>');
 
   // Save actual content
   const actualContent = timerEl.innerHTML;
 
-  // Reset transform for accurate measurement
+  // Reset transform and set fixed measurement font size
   timerEl.style.transform = 'translate(-50%, -50%)';
+  timerEl.style.fontSize = '100px';
 
-  // Step 1: Find font size where REFERENCE fits target (constrained by width & height)
-  // Use innerHTML with same span structure as actual timer content
-  const refHTML = refText.split(':').join('<span class="colon">:</span>');
+  // Measure reference width at 100px
   timerEl.innerHTML = refHTML;
-  const minPx = 10;
-  const maxPx = 600;
-  let lo = minPx;
-  let hi = maxPx;
-  let bestRef = minPx;
+  const refWidth100 = timerEl.scrollWidth;
+  const refHeight100 = timerEl.scrollHeight;
 
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1;
-    timerEl.style.fontSize = mid + 'px';
-    const w = timerEl.scrollWidth;
-    const h = timerEl.scrollHeight;
-    if (w <= targetWidth && h <= targetHeight) {
-      bestRef = mid;
-      lo = mid + 1;
-    } else {
-      hi = mid - 1;
-    }
-  }
-
-  // Get reference width at that font size
-  timerEl.style.fontSize = bestRef + 'px';
-  const refWidth = timerEl.scrollWidth;
-
-  // Step 2: Restore actual content, find font size where actual WIDTH = refWidth
+  // Measure actual width at 100px
   timerEl.innerHTML = actualContent;
-  lo = minPx;
-  hi = maxPx;
-  let bestActual = minPx;
+  const actualWidth100 = timerEl.scrollWidth;
 
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1;
-    timerEl.style.fontSize = mid + 'px';
-    const w = timerEl.scrollWidth;
-    if (w <= refWidth) {
-      bestActual = mid;
-      lo = mid + 1;
-    } else {
-      hi = mid - 1;
-    }
-  }
+  // Calculate font size where reference would fit target
+  const widthRatio = targetWidth / refWidth100;
+  const heightRatio = targetHeight / refHeight100;
+  const baseFontSize = 100 * Math.min(widthRatio, heightRatio) * zoom;
 
-  // Apply font size with zoom
-  const finalSize = Math.max(minPx, bestActual * zoom);
-  timerEl.style.fontSize = finalSize + 'px';
+  // Apply font size
+  timerEl.style.fontSize = baseFontSize + 'px';
 
-  // Step 3: Check if height exceeds limit - if so, scale down uniformly
-  const actualHeight = timerEl.scrollHeight;
-  const actualWidth = timerEl.scrollWidth || 1;
-
-  if (actualHeight > targetHeight) {
-    // Scale down uniformly to fit height (maintains proportions)
-    const scale = targetHeight / actualHeight;
-    timerEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
-  } else {
-    // Fine-tune width with small scaleX (clamped to avoid distortion)
-    const scaleX = Math.min(1.08, Math.max(0.92, refWidth / actualWidth));
-    timerEl.style.transform = `translate(-50%, -50%) scaleX(${scaleX})`;
-  }
+  // Scale uniformly so actual width matches reference width
+  // (shorter text like "1:00" gets scaled up, taller too)
+  const scale = refWidth100 / actualWidth100;
+  timerEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
 /**
