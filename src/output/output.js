@@ -213,17 +213,16 @@ function fitTimerContent() {
   // (shorter text gets larger font)
   const actualFontSize = baseFontSize * (refWidth100 / actualWidth100);
 
-  // Measure reference at baseFontSize (this is the target width we want)
-  timerEl.style.fontSize = baseFontSize + 'px';
-  timerEl.innerHTML = refHTML;
-  const targetRefWidth = timerEl.scrollWidth;
-
-  // Now apply actualFontSize and measure actual
+  // Apply font size first
   timerEl.style.fontSize = actualFontSize + 'px';
-  timerEl.innerHTML = actualContent;
   timerEl.style.transform = 'translate(-50%, -50%)';
+
+  // Measure actual rendered dimensions
   const renderedWidth = timerEl.scrollWidth;
   const renderedHeight = timerEl.scrollHeight;
+
+  // Target width is what reference would be at baseFontSize
+  const targetRefWidth = (baseFontSize / 100) * refWidth100;
 
   // Fine-tune with scale for pixel-perfect precision
   const scaleX = targetRefWidth / renderedWidth;
