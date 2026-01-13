@@ -3751,9 +3751,9 @@ function showProfileDropdown(forceRefresh = false) {
     const adjustedBaseY = baseY - scrollDelta;
 
     // Calculate which slot the mouse is over
-    // Use 50% offset for symmetric behavior in both directions (trigger at center)
+    // No offset = immediate triggering as soon as cursor enters another slot
     const mouseY = e.clientY;
-    let newSlot = Math.floor((mouseY - adjustedBaseY + slotHeight * 0.5) / slotHeight);
+    let newSlot = Math.floor((mouseY - adjustedBaseY) / slotHeight);
     newSlot = Math.max(0, Math.min(items.length - 1, newSlot));
 
     if (newSlot !== profileDragState.currentSlot) {
@@ -4833,8 +4833,9 @@ function createDefaultMessage() {
 function handleExport() {
   const appSettings = loadAppSettings();
 
-  // Count total presets across all profiles
+  // Count totals across all profiles
   const totalPresets = profiles.reduce((sum, p) => sum + p.presets.length, 0);
+  const totalMessages = profiles.reduce((sum, p) => sum + (p.messages || []).length, 0);
 
   if (profiles.length === 0 || totalPresets === 0) {
     showToast('No data to export', 'error');
@@ -4860,7 +4861,9 @@ function handleExport() {
   a.click();
 
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-  showToast(`Exported ${profiles.length} profile(s) with ${totalPresets} timer(s)`);
+  const parts = [`${profiles.length} profile(s)`, `${totalPresets} timer(s)`];
+  if (totalMessages > 0) parts.push(`${totalMessages} message(s)`);
+  showToast(`Exported ${parts.join(', ')}`);
 }
 
 function handleImport(e) {
@@ -4897,26 +4900,34 @@ function handleImport(e) {
     let settingsImported = false;
 
     // Handle v3 format (profiles)
+    let messagesImported = 0;
     if (importData.version === 3 && importData.profiles) {
       // Merge imported profiles with existing
       importData.profiles.forEach(importedProfile => {
         // Check if profile with same name exists
         const existingIdx = profiles.findIndex(p => p.name === importedProfile.name);
         if (existingIdx >= 0) {
-          // Merge presets into existing profile
+          // Merge presets and messages into existing profile
           const existing = profiles[existingIdx];
           existing.presets = [...existing.presets, ...importedProfile.presets];
           presetsImported += importedProfile.presets.length;
+          // Merge messages if present
+          if (importedProfile.messages && importedProfile.messages.length > 0) {
+            existing.messages = [...(existing.messages || []), ...importedProfile.messages];
+            messagesImported += importedProfile.messages.length;
+          }
         } else {
           // Add as new profile with new ID to avoid conflicts
           const newProfile = {
             ...importedProfile,
             id: generateProfileId(),
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            messages: importedProfile.messages || []
           };
           profiles.push(newProfile);
           profilesImported++;
           presetsImported += importedProfile.presets.length;
+          messagesImported += (importedProfile.messages || []).length;
         }
       });
       saveProfiles();
@@ -4938,15 +4949,16 @@ function handleImport(e) {
       settingsImported = true;
     }
 
+    // Build import summary
+    const parts = [];
+    if (profilesImported > 0) parts.push(`${profilesImported} profile(s)`);
+    if (presetsImported > 0) parts.push(`${presetsImported} timer(s)`);
+    if (messagesImported > 0) parts.push(`${messagesImported} message(s)`);
+    if (settingsImported) parts.push('settings');
+
     // Show appropriate toast
-    if (profilesImported > 0) {
-      showToast(`Imported ${profilesImported} profile(s) with ${presetsImported} timer(s)`, 'success');
-    } else if (presetsImported > 0 && settingsImported) {
-      showToast(`Imported ${presetsImported} timer(s) + settings`, 'success');
-    } else if (presetsImported > 0) {
-      showToast(`Imported ${presetsImported} timer(s)`, 'success');
-    } else if (settingsImported) {
-      showToast('Imported settings', 'success');
+    if (parts.length > 0) {
+      showToast(`Imported ${parts.join(', ')}`, 'success');
     } else {
       showToast('Nothing to import', 'error');
       return;
@@ -4954,6 +4966,7 @@ function handleImport(e) {
 
     updateProfileButton();
     renderPresetList();
+    renderMessageList();
   };
 
   reader.onerror = () => {
