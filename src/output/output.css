@@ -42,7 +42,9 @@ html, body {
   left: 50%;
   transform: translate(-50%, -50%);
 
+  /* Tabular numbers: all digits same width */
   font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   user-select: none;
   -webkit-user-select: none;
   white-space: nowrap;

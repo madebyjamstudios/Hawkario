@@ -146,7 +146,9 @@ button:disabled {
 
 /* Timer preview */
 .timer-preview {
+  /* Tabular numbers: all digits same width */
   font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   user-select: none;
   transition: color 0.3s ease, text-shadow 0.3s ease, -webkit-text-stroke-color 0.3s ease;
   /* Draw stroke behind fill to prevent artifacts at intersections */
