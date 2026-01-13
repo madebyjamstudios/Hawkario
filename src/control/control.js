@@ -2919,56 +2919,51 @@ function updatePreviewScale() {
 
 /**
  * Fit preview timer text to reference canvas size
- * Fixed width based on reference text, font scales to fill that width
- * Shorter text (like "1:00") gets LARGER font to fill same width as "10:00"
+ * Scales font so actual text has same visual width as reference text
+ * Shorter text (like "1:00") gets LARGER font to match width of "10:00"
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer) return;
 
-  // Get current format and mode
   const format = activeTimerConfig?.format || 'MM:SS';
   const mode = activeTimerConfig?.mode || 'countdown';
   const appSettings = loadAppSettings();
   const todFormat = appSettings.todFormat || '12h';
   const zoom = (appSettings.timerZoom ?? 100) / 100;
 
-  // Get max-width reference text for consistent sizing
   const refText = getMaxWidthTimerText(format, mode, todFormat);
-
-  // Store current content
   const currentContent = els.livePreviewTimer.innerHTML;
 
-  // Step 1: Measure reference text to determine fixed width
+  // Clear any width constraints for accurate measurement
+  els.livePreviewTimer.style.width = '';
+  els.livePreviewTimer.style.minWidth = '';
+
+  // Step 1: Measure reference text at 100px
   if (refText.combined) {
     els.livePreviewTimer.innerHTML = `${refText.timer}<span class="tod-line">${refText.tod}</span>`;
   } else {
     els.livePreviewTimer.innerHTML = refText.timer;
   }
   els.livePreviewTimer.style.fontSize = '100px';
-  els.livePreviewTimer.style.minWidth = '';
-  els.livePreviewTimer.style.width = '';
+  const refWidth = els.livePreviewTimer.scrollWidth;
 
-  const refNaturalWidth = els.livePreviewTimer.scrollWidth;
-
-  // Calculate the fixed width (95% of canvas, scaled by zoom)
-  const targetWidth = REF_WIDTH * 0.95 * zoom;
-  const fixedWidth = targetWidth;
-
-  // Step 2: Measure actual content to calculate font size
+  // Step 2: Measure actual text at 100px
   els.livePreviewTimer.innerHTML = currentContent;
   els.livePreviewTimer.style.fontSize = '100px';
+  const actualWidth = els.livePreviewTimer.scrollWidth;
 
-  const actualNaturalWidth = els.livePreviewTimer.scrollWidth;
+  // Step 3: Calculate font size so actual matches reference visual width
+  const targetWidth = REF_WIDTH * 0.95 * zoom;
 
-  if (actualNaturalWidth > 0 && refNaturalWidth > 0) {
-    // Calculate font size to make actual text fill the fixed width
-    const newFontSize = Math.max(10, 100 * (fixedWidth / actualNaturalWidth));
+  if (refWidth > 0 && actualWidth > 0) {
+    // Font size that makes reference fill targetWidth
+    const refFontSize = 100 * (targetWidth / refWidth);
+    // Scale up for actual text to match reference width
+    const newFontSize = Math.max(10, refFontSize * (refWidth / actualWidth));
+
     els.livePreviewTimer.style.fontSize = newFontSize + 'px';
-
-    // Set fixed width based on reference text (ensures consistent width)
-    els.livePreviewTimer.style.width = fixedWidth + 'px';
-    els.livePreviewTimer.style.minWidth = fixedWidth + 'px';
   }
+  // NO width/minWidth - let text have natural width, centering via CSS transform
 }
 
 /**

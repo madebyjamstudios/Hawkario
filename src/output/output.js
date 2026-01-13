@@ -180,53 +180,48 @@ let cachedShadowKey = '';
 
 /**
  * Fit timer text to reference canvas size
- * Fixed width based on reference text, font scales to fill that width
- * Shorter text (like "1:00") gets LARGER font to fill same width as "10:00"
+ * Scales font so actual text has same visual width as reference text
+ * Shorter text (like "1:00") gets LARGER font to match width of "10:00"
  */
 function fitTimerContent() {
-  // Get current format and mode from canonical state
   const format = canonicalState?.format || 'MM:SS';
   const mode = canonicalState?.mode || 'countdown';
   const todFormat = canonicalState?.todFormat || '12h';
   const zoom = timerZoom / 100;
 
-  // Get max-width reference text for consistent sizing
   const refText = getMaxWidthTimerText(format, mode, todFormat);
-
-  // Store current content
   const currentContent = timerEl.innerHTML;
 
-  // Step 1: Measure reference text to determine fixed width
+  // Clear any width constraints for accurate measurement
+  timerEl.style.width = '';
+  timerEl.style.minWidth = '';
+
+  // Step 1: Measure reference text at 100px
   if (refText.combined) {
     timerEl.innerHTML = `${refText.timer}<span class="tod-line">${refText.tod}</span>`;
   } else {
     timerEl.innerHTML = refText.timer;
   }
   timerEl.style.fontSize = '100px';
-  timerEl.style.minWidth = '';
-  timerEl.style.width = '';
+  const refWidth = timerEl.scrollWidth;
 
-  const refNaturalWidth = timerEl.scrollWidth;
-
-  // Calculate the fixed width (95% of canvas, scaled by zoom)
-  const targetWidth = REF_WIDTH * 0.95 * zoom;
-  const fixedWidth = targetWidth;
-
-  // Step 2: Measure actual content to calculate font size
+  // Step 2: Measure actual text at 100px
   timerEl.innerHTML = currentContent;
   timerEl.style.fontSize = '100px';
+  const actualWidth = timerEl.scrollWidth;
 
-  const actualNaturalWidth = timerEl.scrollWidth;
+  // Step 3: Calculate font size so actual matches reference visual width
+  const targetWidth = REF_WIDTH * 0.95 * zoom;
 
-  if (actualNaturalWidth > 0 && refNaturalWidth > 0) {
-    // Calculate font size to make actual text fill the fixed width
-    const newFontSize = Math.max(10, 100 * (fixedWidth / actualNaturalWidth));
+  if (refWidth > 0 && actualWidth > 0) {
+    // Font size that makes reference fill targetWidth
+    const refFontSize = 100 * (targetWidth / refWidth);
+    // Scale up for actual text to match reference width
+    const newFontSize = Math.max(10, refFontSize * (refWidth / actualWidth));
+
     timerEl.style.fontSize = newFontSize + 'px';
-
-    // Set fixed width based on reference text (ensures consistent width)
-    timerEl.style.width = fixedWidth + 'px';
-    timerEl.style.minWidth = fixedWidth + 'px';
   }
+  // NO width/minWidth - let text have natural width, centering via CSS transform
 }
 
 /**

@@ -52,11 +52,6 @@ input[type="range"] {
   width: 120px;
 }
 
-/* Volume slider should fill available width like dropdowns */
-#volumeRow input[type="range"] {
-  width: 100%;
-}
-
 input[type="color"] {
   width: 32px;
   height: 32px;
