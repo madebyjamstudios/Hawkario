@@ -222,9 +222,7 @@ function fitTimerContent() {
   const renderedHeight = timerEl.scrollHeight;
 
   // Target width is what reference would be at baseFontSize
-  // Account for fixed padding (15px * 2 = 30px) that doesn't scale with font
-  const padding = 30;
-  const targetRefWidth = (baseFontSize / 100) * (refWidth100 - padding) + padding;
+  const targetRefWidth = (baseFontSize / 100) * refWidth100;
 
   // Fine-tune with scale for pixel-perfect precision
   const scaleX = targetRefWidth / renderedWidth;
