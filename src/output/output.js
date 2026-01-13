@@ -164,11 +164,11 @@ function fitTimerContent() {
   // Target width (95% of canvas)
   const targetWidth = REF_WIDTH * 0.95 * zoom;
 
-  // Use inline style to ensure consistent measurement conditions
-  const measureStyle = 'font-size:100px;padding:0;margin:0;border:0;display:inline-block;white-space:nowrap;';
+  // Set measurement conditions (preserve other styles like position)
+  timerEl.style.fontSize = '100px';
+  timerEl.style.padding = '0';
 
   // Measure reference "88:88:88"
-  timerEl.style.cssText = measureStyle;
   timerEl.innerHTML = '88:88:88';
   void timerEl.offsetWidth; // Force reflow
   const refWidth = timerEl.getBoundingClientRect().width;
@@ -178,8 +178,8 @@ function fitTimerContent() {
   void timerEl.offsetWidth; // Force reflow
   const actualWidth = timerEl.getBoundingClientRect().width;
 
-  // Clear inline styles (CSS will take over)
-  timerEl.style.cssText = '';
+  // Restore padding (CSS default)
+  timerEl.style.padding = '';
 
   if (refWidth > 0 && actualWidth > 0) {
     // Font size for reference to fill target
