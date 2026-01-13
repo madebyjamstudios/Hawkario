@@ -175,24 +175,44 @@ function getRefText(format, durationMs) {
 
 /**
  * Fit timer text to timer-section container
- * Simply fills the target width - no height constraints
+ * Uses reference width so all timers of same format have consistent size
+ * Caps height to stay within content box (64% of canvas)
  */
 function fitTimerContent() {
   const zoom = timerZoom / 100;
 
-  // Target width: 90% of canvas * 95% padding * zoom
-  const targetWidth = REF_WIDTH * 0.90 * 0.95 * zoom;
+  // Content box dimensions
+  const contentBoxWidth = REF_WIDTH * 0.90;
+  const contentBoxHeight = REF_HEIGHT * 0.64;
 
-  // Measure at base font size (keep centering transform)
+  const targetWidth = contentBoxWidth * 0.95 * zoom;
+  const targetHeight = contentBoxHeight * 0.90; // 10% padding top/bottom
+
+  // Reference for consistent sizing: widest possible timer "88:88:88"
+  const refHTML = '88<span class="colon">:</span>88<span class="colon">:</span>88';
+  const actualContent = timerEl.innerHTML;
+
+  // Measure reference at base font size
   timerEl.style.transform = 'translate(-50%, -50%)';
   timerEl.style.fontSize = '100px';
+  timerEl.innerHTML = refHTML;
+  const refWidth = timerEl.scrollWidth;
 
-  const widthAt100 = timerEl.scrollWidth;
-  if (widthAt100 <= 0) return;
+  // Restore actual content
+  timerEl.innerHTML = actualContent;
 
-  // Calculate and apply font size to fill width
-  const fontSize = 100 * (targetWidth / widthAt100);
+  if (refWidth <= 0) return;
+
+  // Calculate font size to fill width (based on reference)
+  const fontSize = 100 * (targetWidth / refWidth);
   timerEl.style.fontSize = fontSize + 'px';
+
+  // Check height and scale down if needed
+  const actualHeight = timerEl.scrollHeight;
+  if (actualHeight > targetHeight) {
+    const scale = targetHeight / actualHeight;
+    timerEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
 }
 
 /**
