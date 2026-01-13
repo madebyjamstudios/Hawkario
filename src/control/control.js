@@ -774,6 +774,7 @@ function undo() {
     updateProfileButton();
     activePresetIndex = previousState.activePresetIndex;
     renderPresetList();
+    renderMessageList();
     showToast('Profile restored', 'success');
     return true;
   }
