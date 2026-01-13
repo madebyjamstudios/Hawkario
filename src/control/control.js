@@ -138,6 +138,17 @@ const els = {
   outputOnTop: document.getElementById('outputOnTop'),
   controlOnTop: document.getElementById('controlOnTop'),
 
+  // OSC Settings
+  oscEnabled: document.getElementById('oscEnabled'),
+  oscListenPort: document.getElementById('oscListenPort'),
+  oscListenPortRow: document.getElementById('oscListenPortRow'),
+  oscFeedbackEnabled: document.getElementById('oscFeedbackEnabled'),
+  oscFeedbackHost: document.getElementById('oscFeedbackHost'),
+  oscFeedbackHostRow: document.getElementById('oscFeedbackHostRow'),
+  oscFeedbackPort: document.getElementById('oscFeedbackPort'),
+  oscFeedbackPortRow: document.getElementById('oscFeedbackPortRow'),
+  oscStatus: document.getElementById('oscStatus'),
+
   // Confirm Dialog
   confirmDialog: document.getElementById('confirmDialog'),
   confirmTitle: document.getElementById('confirmTitle'),
@@ -1259,6 +1270,15 @@ function openAppSettings() {
   els.outputOnTop.value = settings.outputOnTop ? 'on' : 'off';
   els.controlOnTop.value = settings.controlOnTop ? 'on' : 'off';
 
+  // Load OSC settings
+  const osc = settings.osc || {};
+  els.oscEnabled.value = osc.enabled ? 'on' : 'off';
+  els.oscListenPort.value = osc.listenPort || 8000;
+  els.oscFeedbackEnabled.value = osc.feedbackEnabled ? 'on' : 'off';
+  els.oscFeedbackHost.value = osc.feedbackHost || '127.0.0.1';
+  els.oscFeedbackPort.value = osc.feedbackPort || 9000;
+  updateOSCVisibility();
+
   els.appSettingsModal.classList.remove('hidden');
 
   // Reset progress bar state
@@ -1294,6 +1314,15 @@ function saveAppSettingsFromForm() {
   const outputOnTop = els.outputOnTop.value === 'on';
   const controlOnTop = els.controlOnTop.value === 'on';
 
+  // Build OSC settings from form
+  const oscSettings = {
+    enabled: els.oscEnabled.value === 'on',
+    listenPort: parseInt(els.oscListenPort.value, 10) || 8000,
+    feedbackEnabled: els.oscFeedbackEnabled.value === 'on',
+    feedbackHost: els.oscFeedbackHost.value || '127.0.0.1',
+    feedbackPort: parseInt(els.oscFeedbackPort.value, 10) || 9000
+  };
+
   const settings = {
     todFormat: els.todFormat.value,
     timezone: els.timezone?.value || 'auto',
@@ -1306,12 +1335,18 @@ function saveAppSettingsFromForm() {
       durationSec: getDefaultDurationSeconds(),
       format: els.defaultFormat.value,
       soundType: els.defaultSound.value || 'none'
-    }
+    },
+    osc: oscSettings
   };
 
   // Apply window stay on top settings to main process
   window.ninja.setAlwaysOnTop('output', outputOnTop);
   window.ninja.setAlwaysOnTop('control', controlOnTop);
+
+  // Apply OSC settings to main process
+  window.ninja.oscSetSettings(oscSettings).then(() => {
+    updateOSCStatus();
+  });
 
   saveAppSettings(settings);
 
@@ -1335,6 +1370,323 @@ function switchTab(tabName) {
 
 function getActiveTab() {
   return els.messagesTab.classList.contains('active') ? 'messages' : 'timers';
+}
+
+// ============ OSC Integration ============
+
+let oscFeedbackInterval = null;
+let oscEnabled = false;
+let oscFeedbackEnabled = false;
+
+/**
+ * Initialize OSC from saved settings
+ */
+async function initOSC() {
+  const settings = loadAppSettings();
+  const osc = settings.osc || {};
+
+  if (osc.enabled || osc.feedbackEnabled) {
+    await window.ninja.oscSetSettings(osc);
+    oscEnabled = osc.enabled;
+    oscFeedbackEnabled = osc.feedbackEnabled;
+
+    if (osc.feedbackEnabled) {
+      startOSCFeedback();
+    }
+  }
+}
+
+/**
+ * Update OSC visibility based on enabled state
+ */
+function updateOSCVisibility() {
+  const enabled = els.oscEnabled.value === 'on';
+  const feedbackEnabled = els.oscFeedbackEnabled.value === 'on';
+
+  // Show/hide port row based on enabled
+  if (els.oscListenPortRow) {
+    els.oscListenPortRow.style.display = enabled ? '' : 'none';
+  }
+
+  // Show/hide feedback settings
+  if (els.oscFeedbackHostRow) {
+    els.oscFeedbackHostRow.style.display = feedbackEnabled ? '' : 'none';
+  }
+  if (els.oscFeedbackPortRow) {
+    els.oscFeedbackPortRow.style.display = feedbackEnabled ? '' : 'none';
+  }
+}
+
+/**
+ * Update OSC status display
+ */
+function updateOSCStatus() {
+  if (!els.oscStatus) return;
+
+  const enabled = els.oscEnabled.value === 'on';
+  const feedbackEnabled = els.oscFeedbackEnabled.value === 'on';
+
+  if (!enabled && !feedbackEnabled) {
+    els.oscStatus.textContent = '';
+    return;
+  }
+
+  const parts = [];
+  if (enabled) {
+    parts.push(`Listening on port ${els.oscListenPort.value}`);
+  }
+  if (feedbackEnabled) {
+    parts.push(`Feedback to ${els.oscFeedbackHost.value}:${els.oscFeedbackPort.value}`);
+  }
+
+  els.oscStatus.textContent = parts.join(' • ');
+}
+
+/**
+ * Handle incoming OSC command
+ * All indices are 1-based for user-friendliness
+ */
+function handleOSCCommand(address, args) {
+  const presets = loadPresets();
+
+  switch (address) {
+    // Timer control
+    case '/ninja/timer/start':
+      sendCommand('start');
+      break;
+
+    case '/ninja/timer/pause':
+      sendCommand('pause');
+      break;
+
+    case '/ninja/timer/resume':
+      sendCommand('resume');
+      break;
+
+    case '/ninja/timer/toggle':
+      if (isRunning) {
+        sendCommand('pause');
+      } else if (timerState.startedAt !== null) {
+        sendCommand('resume');
+      } else {
+        sendCommand('start');
+      }
+      break;
+
+    case '/ninja/timer/reset':
+      sendCommand('reset');
+      break;
+
+    case '/ninja/timer/stop':
+      sendCommand('reset');
+      break;
+
+    case '/ninja/timer/select': {
+      // 1-based index from OSC, convert to 0-based
+      const index = (args[0] || 1) - 1;
+      if (index >= 0 && index < presets.length) {
+        activePresetIndex = index;
+        setActiveTimerConfig(presets[index].config);
+        applyConfig(presets[index].config);
+        renderPresetList();
+        broadcastTimerState();
+      }
+      break;
+    }
+
+    case '/ninja/timer/select/name': {
+      const name = args[0];
+      if (name) {
+        const index = presets.findIndex(p => p.name === name);
+        if (index >= 0) {
+          activePresetIndex = index;
+          setActiveTimerConfig(presets[index].config);
+          applyConfig(presets[index].config);
+          renderPresetList();
+          broadcastTimerState();
+        }
+      }
+      break;
+    }
+
+    case '/ninja/timer/next': {
+      if (presets.length > 0) {
+        const next = (activePresetIndex === null ? 0 : activePresetIndex + 1) % presets.length;
+        activePresetIndex = next;
+        setActiveTimerConfig(presets[next].config);
+        applyConfig(presets[next].config);
+        renderPresetList();
+        broadcastTimerState();
+      }
+      break;
+    }
+
+    case '/ninja/timer/previous': {
+      if (presets.length > 0) {
+        const prev = activePresetIndex === null ? 0 : (activePresetIndex - 1 + presets.length) % presets.length;
+        activePresetIndex = prev;
+        setActiveTimerConfig(presets[prev].config);
+        applyConfig(presets[prev].config);
+        renderPresetList();
+        broadcastTimerState();
+      }
+      break;
+    }
+
+    case '/ninja/timer/duration': {
+      const seconds = args[0];
+      if (typeof seconds === 'number' && seconds > 0) {
+        activeTimerConfig.durationSec = seconds;
+        broadcastTimerState();
+      }
+      break;
+    }
+
+    case '/ninja/timer/duration/add': {
+      const delta = args[0];
+      if (typeof delta === 'number') {
+        activeTimerConfig.durationSec = Math.max(1, activeTimerConfig.durationSec + delta);
+        broadcastTimerState();
+      }
+      break;
+    }
+
+    // Display control
+    case '/ninja/display/blackout': {
+      const state = args[0];
+      window.ninja.setBlackout(state === 1 || state === true);
+      break;
+    }
+
+    case '/ninja/display/blackout/toggle':
+      window.ninja.toggleBlackout();
+      break;
+
+    case '/ninja/display/flash':
+      // Trigger flash via the existing flash mechanism
+      flashAnimator?.trigger();
+      broadcastTimerState();
+      break;
+
+    case '/ninja/display/visibility': {
+      const visible = args[0];
+      // This would need the visibility toggle to be implemented
+      break;
+    }
+
+    // Message control
+    case '/ninja/message/show': {
+      // 1-based index from OSC
+      const index = (args[0] || 1) - 1;
+      const messages = loadMessages();
+      if (index >= 0 && index < messages.length) {
+        toggleMessageVisibility(messages[index].id, true);
+      }
+      break;
+    }
+
+    case '/ninja/message/show/text': {
+      const searchText = args[0];
+      if (searchText) {
+        const messages = loadMessages();
+        const msg = messages.find(m => m.text.includes(searchText));
+        if (msg) {
+          toggleMessageVisibility(msg.id, true);
+        }
+      }
+      break;
+    }
+
+    case '/ninja/message/hide': {
+      const messages = loadMessages();
+      const visibleMsg = messages.find(m => m.visible);
+      if (visibleMsg) {
+        toggleMessageVisibility(visibleMsg.id, false);
+      }
+      break;
+    }
+
+    // Profile control
+    case '/ninja/profile/select': {
+      // 1-based index from OSC
+      const index = (args[0] || 1) - 1;
+      if (index >= 0 && index < profiles.length) {
+        switchProfile(profiles[index].id);
+      }
+      break;
+    }
+
+    case '/ninja/profile/select/name': {
+      const name = args[0];
+      if (name) {
+        const profile = profiles.find(p => p.name === name);
+        if (profile) {
+          switchProfile(profile.id);
+        }
+      }
+      break;
+    }
+
+    default:
+      console.log('[OSC] Unknown command:', address, args);
+  }
+}
+
+/**
+ * Start OSC feedback interval (1 second updates)
+ */
+function startOSCFeedback() {
+  stopOSCFeedback();
+
+  oscFeedbackInterval = setInterval(() => {
+    sendOSCFeedback();
+  }, 1000);
+}
+
+/**
+ * Stop OSC feedback interval
+ */
+function stopOSCFeedback() {
+  if (oscFeedbackInterval) {
+    clearInterval(oscFeedbackInterval);
+    oscFeedbackInterval = null;
+  }
+}
+
+/**
+ * Send current state as OSC feedback
+ */
+function sendOSCFeedback() {
+  if (!oscFeedbackEnabled) return;
+
+  const presets = loadPresets();
+  const preset = activePresetIndex !== null ? presets[activePresetIndex] : null;
+  const profile = getActiveProfile();
+
+  // Calculate display values
+  const display = computeDisplay({
+    mode: activeTimerConfig.mode,
+    durationMs: activeTimerConfig.durationSec * 1000,
+    startedAt: timerState.startedAt,
+    pausedAccMs: timerState.pausedAcc,
+    isRunning,
+    ended: timerState.ended,
+    overtime: timerState.overtime
+  }, Date.now());
+
+  // Send all feedback messages
+  window.ninja.oscSendFeedback('/ninja/state/running', [isRunning ? 1 : 0]);
+  window.ninja.oscSendFeedback('/ninja/state/time', [display.text || '--:--']);
+  window.ninja.oscSendFeedback('/ninja/state/remaining', [Math.floor((display.remainingMs || 0) / 1000)]);
+  window.ninja.oscSendFeedback('/ninja/state/elapsed', [Math.floor((display.elapsedMs || 0) / 1000)]);
+  window.ninja.oscSendFeedback('/ninja/state/progress', [display.progress || 0]);
+  window.ninja.oscSendFeedback('/ninja/state/overtime', [display.overtime ? 1 : 0]);
+  window.ninja.oscSendFeedback('/ninja/state/ended', [timerState.ended ? 1 : 0]);
+  window.ninja.oscSendFeedback('/ninja/state/blackout', [blackoutActive ? 1 : 0]);
+  window.ninja.oscSendFeedback('/ninja/state/timer/name', [preset?.name || '']);
+  window.ninja.oscSendFeedback('/ninja/state/timer/index', [(activePresetIndex ?? -1) + 1]); // 1-based
+  window.ninja.oscSendFeedback('/ninja/state/profile/name', [profile?.name || '']);
+  window.ninja.oscSendFeedback('/ninja/state/profile/index', [profiles.indexOf(profile) + 1]); // 1-based
 }
 
 // ============ Message Management ============
@@ -5378,6 +5730,18 @@ function setupEventListeners() {
         break;
     }
   });
+
+  // ============ OSC Command Handler ============
+  window.ninja.onOSCCommand(({ address, args }) => {
+    handleOSCCommand(address, args);
+  });
+
+  // Initialize OSC on startup
+  initOSC();
+
+  // OSC settings change listeners
+  els.oscEnabled.addEventListener('change', updateOSCVisibility);
+  els.oscFeedbackEnabled.addEventListener('change', updateOSCVisibility);
 
   // Output window ready notification
   window.ninja.onOutputWindowReady(() => {
