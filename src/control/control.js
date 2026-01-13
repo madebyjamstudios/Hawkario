@@ -3660,12 +3660,14 @@ function showProfileDropdown(forceRefresh = false) {
     item.dataset.index = idx;
     item.dataset.profileId = profile.id;
     const color = profile.color || PROFILE_COLORS[idx % PROFILE_COLORS.length];
-    const shortcutHint = idx < 9 ? `<span class="profile-shortcut">${idx + 1}</span>` : '';
+    const shortcutNum = idx < 9 ? (idx + 1) : '';
     item.innerHTML = `
-      <span class="profile-drag-handle">${ICONS.drag}</span>
+      <div class="profile-drag-handle">
+        <span class="profile-number">${shortcutNum}</span>
+        <span class="profile-drag-icon">${ICONS.drag}</span>
+      </div>
       <span class="profile-color-dot" style="background: ${color}; box-shadow: 0 0 6px ${color};"></span>
       <span class="profile-item-name">${escapeHtml(profile.name)}</span>
-      ${shortcutHint}
       <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
@@ -3861,19 +3863,10 @@ function showProfileDropdown(forceRefresh = false) {
           const item = profileItems.find(el => el.dataset.profileId === profile.id);
           if (item) {
             section.appendChild(item); // Move to end in correct order
-            // Update shortcut number
-            const shortcut = item.querySelector('.profile-shortcut');
-            if (shortcut) {
-              shortcut.textContent = newIdx < 9 ? (newIdx + 1) : '';
-            } else if (newIdx < 9) {
-              // Add shortcut if now in first 9
-              const nameEl = item.querySelector('.profile-name');
-              if (nameEl) {
-                const span = document.createElement('span');
-                span.className = 'profile-shortcut';
-                span.textContent = newIdx + 1;
-                nameEl.parentNode.insertBefore(span, nameEl.nextSibling);
-              }
+            // Update shortcut number in drag handle
+            const numberEl = item.querySelector('.profile-number');
+            if (numberEl) {
+              numberEl.textContent = newIdx < 9 ? (newIdx + 1) : '';
             }
           }
         });

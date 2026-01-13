@@ -875,43 +875,49 @@ button:disabled {
   background: #388bfd;
 }
 
-.profile-shortcut {
-  font-size: 11px;
-  color: #666;
-  font-weight: 500;
-  min-width: 16px;
-  text-align: center;
-}
-
-/* Profile drag handle */
+/* Profile drag handle - combined number and drag icon */
 .profile-drag-handle {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  opacity: 0;
+  width: 24px;
+  height: 24px;
   cursor: grab;
+  position: relative;
   flex-shrink: 0;
-  transition: opacity 0.15s ease;
-  color: #888;
-}
-
-.profile-drag-handle svg {
-  width: 16px;
-  height: 16px;
-}
-
-.profile-item:hover .profile-drag-handle {
-  opacity: 0.5;
-}
-
-.profile-drag-handle:hover {
-  opacity: 1 !important;
+  user-select: none;
 }
 
 .profile-drag-handle:active {
   cursor: grabbing;
+}
+
+.profile-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  transition: opacity 0.3s ease;
+}
+
+.profile-drag-icon {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: #888;
+}
+
+.profile-drag-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Hover: show drag icon, hide number */
+.profile-item:hover .profile-number {
+  opacity: 0;
+}
+
+.profile-item:hover .profile-drag-icon {
+  opacity: 1;
 }
 
 /* Profile dragging state */
