@@ -2875,6 +2875,7 @@ let lastPreviewTimerText = '';
 let lastPreviewMessageText = '';
 let lastPreviewTimerFormat = '';
 let lastPreviewTimerMode = '';
+let lastPreviewTimerLength = 0;
 
 /**
  * Get maximum-width reference text for timer sizing
@@ -2918,8 +2919,8 @@ function updatePreviewScale() {
 
 /**
  * Fit preview timer text to reference canvas size
- * Uses max-width reference text to ensure consistent WIDTH regardless of digits
- * Width is fixed, height/size adjusts to fill that width
+ * Fixed width based on reference text, font scales to fill that width
+ * Shorter text (like "1:00") gets LARGER font to fill same width as "10:00"
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer) return;
@@ -2929,9 +2930,7 @@ function fitPreviewTimer() {
   const mode = activeTimerConfig?.mode || 'countdown';
   const appSettings = loadAppSettings();
   const todFormat = appSettings.todFormat || '12h';
-
-  // Target: 95% of reference width (width-only constraint for consistent sizing)
-  const targetWidth = REF_WIDTH * 0.95;
+  const zoom = (appSettings.timerZoom ?? 100) / 100;
 
   // Get max-width reference text for consistent sizing
   const refText = getMaxWidthTimerText(format, mode, todFormat);
@@ -2939,34 +2938,35 @@ function fitPreviewTimer() {
   // Store current content
   const currentContent = els.livePreviewTimer.innerHTML;
 
-  // Set reference text for measurement (same structure as actual display)
+  // Step 1: Measure reference text to determine fixed width
   if (refText.combined) {
     els.livePreviewTimer.innerHTML = `${refText.timer}<span class="tod-line">${refText.tod}</span>`;
   } else {
     els.livePreviewTimer.innerHTML = refText.timer;
   }
-
-  // Reset to 100px base to measure natural size
   els.livePreviewTimer.style.fontSize = '100px';
   els.livePreviewTimer.style.minWidth = '';
+  els.livePreviewTimer.style.width = '';
 
-  const naturalWidth = els.livePreviewTimer.scrollWidth;
+  const refNaturalWidth = els.livePreviewTimer.scrollWidth;
 
-  // Restore actual content
+  // Calculate the fixed width (95% of canvas, scaled by zoom)
+  const targetWidth = REF_WIDTH * 0.95 * zoom;
+  const fixedWidth = targetWidth;
+
+  // Step 2: Measure actual content to calculate font size
   els.livePreviewTimer.innerHTML = currentContent;
+  els.livePreviewTimer.style.fontSize = '100px';
 
-  if (naturalWidth > 0) {
-    // Only use width ratio - height adjusts naturally
-    const widthRatio = targetWidth / naturalWidth;
+  const actualNaturalWidth = els.livePreviewTimer.scrollWidth;
 
-    // Apply zoom from app settings
-    const zoom = (appSettings.timerZoom ?? 100) / 100;
-
-    const newFontSize = Math.max(10, 100 * widthRatio * zoom);
+  if (actualNaturalWidth > 0 && refNaturalWidth > 0) {
+    // Calculate font size to make actual text fill the fixed width
+    const newFontSize = Math.max(10, 100 * (fixedWidth / actualNaturalWidth));
     els.livePreviewTimer.style.fontSize = newFontSize + 'px';
 
-    // Set fixed width to ensure consistent width regardless of digit count
-    const fixedWidth = naturalWidth * (newFontSize / 100);
+    // Set fixed width based on reference text (ensures consistent width)
+    els.livePreviewTimer.style.width = fixedWidth + 'px';
     els.livePreviewTimer.style.minWidth = fixedWidth + 'px';
   }
 }
@@ -3319,10 +3319,12 @@ function renderLivePreviewInternal() {
   if (mode === 'tod') {
     displayText = formatTimeOfDay(todFormat, timezone);
     els.livePreviewTimer.innerHTML = displayText;
-    // Only refit when format or mode changes (not when digits change)
-    if (format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode) {
+    // Refit when format, mode, or text length changes (font scales to fill width)
+    const textLength = displayText.replace(/<[^>]*>/g, '').length;
+    if (format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode || textLength !== lastPreviewTimerLength) {
       lastPreviewTimerFormat = format;
       lastPreviewTimerMode = mode;
+      lastPreviewTimerLength = textLength;
       fitPreviewTimer();
     }
     // Skip color changes during flash animation
