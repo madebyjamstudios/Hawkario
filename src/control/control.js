@@ -2930,25 +2930,38 @@ function updatePreviewScale() {
 }
 
 /**
- * Fit preview timer text to fill content box width
- * No height constraints - just fill the width
+ * Fit preview timer to fill content box as much as possible
+ * Must stay WITHIN the box (both width and height)
  */
 function fitPreviewTimer() {
-  if (!els.livePreviewTimer) return;
+  if (!els.livePreviewTimer || !els.livePreviewContentBox) return;
 
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
-  const targetWidth = REF_WIDTH * 0.90 * 0.95 * zoom;
+
+  // Get actual content box dimensions
+  const boxRect = els.livePreviewContentBox.getBoundingClientRect();
+  const boxWidth = boxRect.width;
+  const boxHeight = boxRect.height;
+
+  // Target area with small padding
+  const targetWidth = boxWidth * 0.95 * zoom;
+  const targetHeight = boxHeight * 0.90;
 
   // Measure at base font size
   els.livePreviewTimer.style.transform = 'translate(-50%, -50%)';
   els.livePreviewTimer.style.fontSize = '100px';
 
-  const actualWidth = els.livePreviewTimer.scrollWidth;
-  if (actualWidth <= 0) return;
+  const naturalWidth = els.livePreviewTimer.scrollWidth;
+  const naturalHeight = els.livePreviewTimer.scrollHeight;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Fill the width - that's it
-  const fontSize = 100 * (targetWidth / actualWidth);
+  // Scale to fit WITHIN box (use smaller scale to fit both dimensions)
+  const scaleW = targetWidth / naturalWidth;
+  const scaleH = targetHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
+
+  const fontSize = 100 * scale;
   els.livePreviewTimer.style.fontSize = fontSize + 'px';
 }
 

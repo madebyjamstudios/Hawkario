@@ -38,10 +38,10 @@ html, body {
 }
 
 /* ============ Content Box System ============ */
-/* The big box - NEVER changes size */
+/* The big box - positioned relative to STAGE (full window), not virtual canvas */
 .content-box {
-  position: absolute;
-  width: 95%;
+  position: fixed;
+  width: 90%;
   height: 64%;
   top: 50%;
   left: 50%;

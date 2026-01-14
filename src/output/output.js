@@ -83,6 +83,7 @@ function updateCanvasScale() {
 window.addEventListener('resize', () => {
   updateResolution();
   updateCanvasScale();
+  fitTimerContent();
 });
 updateResolution();
 updateCanvasScale();
@@ -180,9 +181,9 @@ function getRefText(format, durationMs) {
 function fitTimerContent() {
   const zoom = timerZoom / 100;
 
-  // Content box is 95% width, 64% height of virtual canvas
-  const boxWidth = REF_WIDTH * 0.95;
-  const boxHeight = REF_HEIGHT * 0.64;
+  // Content box is 90% width, 64% height of WINDOW (position: fixed)
+  const boxWidth = window.innerWidth * 0.90;
+  const boxHeight = window.innerHeight * 0.64;
 
   // Target area with small padding
   const targetWidth = boxWidth * 0.95 * zoom;

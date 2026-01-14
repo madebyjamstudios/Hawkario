@@ -230,10 +230,10 @@ button:disabled {
 }
 
 /* ============ Content Box System ============ */
-/* The big box - NEVER changes size */
+/* The big box - positioned relative to preview container, not virtual canvas */
 .live-preview .content-box {
   position: absolute;
-  width: 95%;
+  width: 90%;
   height: 64%;
   top: 50%;
   left: 50%;
