@@ -5298,9 +5298,15 @@ function showQuickEditPopup(idx, preset, anchorEl) {
 }
 
 function showModeDropdown(idx, preset, anchorEl) {
-  // Remove any existing popup
+  // Toggle: if already open for this element, close it
   const existing = document.querySelector('.mode-dropdown-popup');
-  if (existing) existing.remove();
+  if (existing) {
+    existing.remove();
+    if (anchorEl.classList.contains('editing')) {
+      anchorEl.classList.remove('editing');
+      return; // Was already open, just close
+    }
+  }
 
   // Add editing highlight
   anchorEl.classList.add('editing');
@@ -5391,9 +5397,15 @@ function showModeDropdown(idx, preset, anchorEl) {
 }
 
 function showDurationEditPopup(idx, preset, anchorEl) {
-  // Remove any existing popup
+  // Toggle: if already open for this element, close it
   const existing = document.querySelector('.duration-edit-popup');
-  if (existing) existing.remove();
+  if (existing) {
+    existing.remove();
+    if (anchorEl.classList.contains('editing')) {
+      anchorEl.classList.remove('editing');
+      return; // Was already open, just close
+    }
+  }
 
   // Add editing highlight
   anchorEl.classList.add('editing');
