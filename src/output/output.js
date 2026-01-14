@@ -174,36 +174,23 @@ function getRefText(format, durationMs) {
 }
 
 /**
- * Fit timer text to timer-section container
- * Simply fills the width, caps height to content box
+ * Fit timer text to fill content box width
+ * No height constraints - just fill the width
  */
 function fitTimerContent() {
   const zoom = timerZoom / 100;
+  const targetWidth = REF_WIDTH * 0.90 * 0.95 * zoom;
 
-  // Content box dimensions
-  const contentBoxWidth = REF_WIDTH * 0.90;
-  const contentBoxHeight = REF_HEIGHT * 0.64;
-
-  const targetWidth = contentBoxWidth * 0.95 * zoom;
-  const targetHeight = contentBoxHeight * 0.90;
-
-  // Measure actual content at base font size
+  // Measure at base font size
   timerEl.style.transform = 'translate(-50%, -50%)';
   timerEl.style.fontSize = '100px';
 
   const actualWidth = timerEl.scrollWidth;
   if (actualWidth <= 0) return;
 
-  // Calculate font size to fill width
+  // Fill the width - that's it
   const fontSize = 100 * (targetWidth / actualWidth);
   timerEl.style.fontSize = fontSize + 'px';
-
-  // Check height and scale down if needed
-  const actualHeight = timerEl.scrollHeight;
-  if (actualHeight > targetHeight) {
-    const scale = targetHeight / actualHeight;
-    timerEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
-  }
 }
 
 /**
