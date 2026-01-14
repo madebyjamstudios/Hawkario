@@ -48,7 +48,8 @@ html, body {
   flex: 1;
   width: 100%;
   display: flex;
-  align-items: center;  /* Vertical center only */
+  align-items: center;
+  justify-content: center;
   overflow: visible;
 }
 
@@ -73,10 +74,9 @@ html, body {
 
 /* ============ Timer Element ============ */
 .timer {
-  /* Width 100% for fitty to measure parent, text centered */
-  width: 100%;
+  /* Inline-block to measure natural text width */
+  display: inline-block;
   white-space: nowrap;
-  text-align: center;
 
   /* Tabular numbers: all digits same width */
   font-variant-numeric: tabular-nums lining-nums;

@@ -240,7 +240,8 @@ button:disabled {
   flex: 1;
   width: 100%;
   display: flex;
-  align-items: center;  /* Vertical center only */
+  align-items: center;
+  justify-content: center;
   overflow: visible;
 }
 
@@ -265,10 +266,9 @@ button:disabled {
 
 /* Timer preview element */
 .live-preview .timer-preview {
-  /* Width 100% for fitty to measure parent */
-  width: 100%;
+  /* Inline-block to measure natural text width */
+  display: inline-block;
   white-space: nowrap;
-  text-align: center;
   overflow: visible;
   user-select: none;
   -webkit-user-select: none;
