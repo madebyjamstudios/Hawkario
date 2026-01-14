@@ -184,7 +184,10 @@ function fitTimerContent() {
   const targetWidth = boxWidth * zoom;
 
   // Reset to base size for measurement
+  // Use width:auto to get intrinsic text width (not container width)
   timerEl.style.fontSize = '100px';
+  timerEl.style.width = 'auto';
+  timerEl.style.display = 'inline-block';
 
   // Force reflow to get accurate measurements
   void timerEl.offsetWidth;
@@ -192,6 +195,11 @@ function fitTimerContent() {
   // Get natural dimensions at 100px base
   const naturalWidth = timerEl.scrollWidth;
   const naturalHeight = timerEl.scrollHeight;
+
+  // Restore block display
+  timerEl.style.width = '100%';
+  timerEl.style.display = 'block';
+
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
   // Width-priority: fill width, only constrain by height if it would overflow
@@ -227,7 +235,10 @@ function fitToDContent() {
   const maxHeight = boxHeight * 0.90; // 90% height for padding
 
   // Reset to base size for measurement
+  // Use width:auto to get intrinsic text width (not container width)
   todEl.style.fontSize = '100px';
+  todEl.style.width = 'auto';
+  todEl.style.display = 'inline-block';
 
   // Force reflow
   void todEl.offsetWidth;
@@ -235,6 +246,11 @@ function fitToDContent() {
   // Get natural dimensions at 100px base
   const naturalWidth = todEl.scrollWidth;
   const naturalHeight = todEl.scrollHeight;
+
+  // Restore block display
+  todEl.style.width = '100%';
+  todEl.style.display = 'block';
+
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
   // Width-priority: fill width, only constrain by height if it would overflow

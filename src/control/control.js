@@ -2926,7 +2926,10 @@ function fitPreviewTimer() {
   const targetWidth = boxWidth * zoom;
 
   // Reset to base size for measurement
+  // Use width:auto to get intrinsic text width (not container width)
   els.livePreviewTimer.style.fontSize = '100px';
+  els.livePreviewTimer.style.width = 'auto';
+  els.livePreviewTimer.style.display = 'inline-block';
 
   // Force reflow to get accurate measurements
   void els.livePreviewTimer.offsetWidth;
@@ -2934,6 +2937,11 @@ function fitPreviewTimer() {
   // Get natural dimensions at 100px base
   const naturalWidth = els.livePreviewTimer.scrollWidth;
   const naturalHeight = els.livePreviewTimer.scrollHeight;
+
+  // Restore block display
+  els.livePreviewTimer.style.width = '100%';
+  els.livePreviewTimer.style.display = 'block';
+
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
   // Width-priority: fill width, only constrain by height if it would overflow
@@ -2972,7 +2980,10 @@ function fitPreviewToD() {
   const maxHeight = boxHeight * 0.90; // 90% height for padding
 
   // Reset to base size for measurement
+  // Use width:auto to get intrinsic text width (not container width)
   els.livePreviewToD.style.fontSize = '100px';
+  els.livePreviewToD.style.width = 'auto';
+  els.livePreviewToD.style.display = 'inline-block';
 
   // Force reflow
   void els.livePreviewToD.offsetWidth;
@@ -2980,6 +2991,11 @@ function fitPreviewToD() {
   // Get natural dimensions at 100px base
   const naturalWidth = els.livePreviewToD.scrollWidth;
   const naturalHeight = els.livePreviewToD.scrollHeight;
+
+  // Restore block display
+  els.livePreviewToD.style.width = '100%';
+  els.livePreviewToD.style.display = 'block';
+
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
   // Width-priority: fill width, only constrain by height if it would overflow
