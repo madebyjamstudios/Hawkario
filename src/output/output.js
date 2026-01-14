@@ -194,6 +194,7 @@ function fitTimerContent() {
 
 /**
  * Fit ToD to fill its container (tod-box, 25% of timer-section)
+ * Constrained by both width and height to stay within box
  */
 function fitToDContent() {
   // Only fit if ToD is visible
@@ -205,6 +206,7 @@ function fitToDContent() {
 
   const zoom = timerZoom / 100;
   const targetWidth = boxWidth * zoom;
+  const targetHeight = boxHeight * 0.90; // 90% height for padding
 
   // Reset font size to measure natural dimensions
   todEl.style.fontSize = '100px';
@@ -214,8 +216,10 @@ function fitToDContent() {
   const naturalHeight = todEl.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Scale to fill width
-  const scale = targetWidth / naturalWidth;
+  // Scale to fit within both width and height
+  const scaleW = targetWidth / naturalWidth;
+  const scaleH = targetHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
 
   // Keep base font size, apply scale via transform
   todEl.style.fontSize = '100px';

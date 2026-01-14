@@ -2936,6 +2936,7 @@ function fitPreviewTimer() {
 
 /**
  * Fit preview ToD to fill its container (tod-box, 25% of timer-section)
+ * Constrained by both width and height to stay within box
  */
 function fitPreviewToD() {
   if (!els.livePreviewToD || !els.livePreviewToDBox) return;
@@ -2950,6 +2951,7 @@ function fitPreviewToD() {
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
   const targetWidth = boxWidth * zoom;
+  const targetHeight = boxHeight * 0.90; // 90% height for padding
 
   // Reset font size to measure natural dimensions
   els.livePreviewToD.style.fontSize = '100px';
@@ -2959,8 +2961,10 @@ function fitPreviewToD() {
   const naturalHeight = els.livePreviewToD.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Scale to fill width
-  const scale = targetWidth / naturalWidth;
+  // Scale to fit within both width and height
+  const scaleW = targetWidth / naturalWidth;
+  const scaleH = targetHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
 
   // Keep base font size, apply scale via transform
   els.livePreviewToD.style.fontSize = '100px';
