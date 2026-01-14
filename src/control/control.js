@@ -2902,7 +2902,7 @@ function getRefText(format, durationSec) {
 }
 
 /**
- * Fit preview timer to fill its container (timer-box)
+ * Fit preview timer to fill its container (timer-box) - fitty style
  * Timer-only: timer-box is 100% of timer-section
  * Timer+ToD: timer-box is 75% of timer-section
  * Constrained by both width and height to stay within box
@@ -2920,26 +2920,30 @@ function fitPreviewTimer() {
   const targetWidth = boxWidth * zoom;
   const targetHeight = boxHeight * 0.95; // 95% height for padding
 
-  // Reset font size to measure natural dimensions
+  // Reset to base size for measurement
   els.livePreviewTimer.style.fontSize = '100px';
+  els.livePreviewTimer.style.transform = 'translate(-50%, -50%)';
 
-  // Get natural dimensions at 100px
+  // Force reflow to get accurate measurements
+  void els.livePreviewTimer.offsetWidth;
+
+  // Get natural dimensions at 100px base
   const naturalWidth = els.livePreviewTimer.scrollWidth;
   const naturalHeight = els.livePreviewTimer.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Scale to fit within both width and height
+  // Calculate scale to fit within both width and height
   const scaleW = targetWidth / naturalWidth;
   const scaleH = targetHeight / naturalHeight;
   const scale = Math.min(scaleW, scaleH);
 
-  // Keep base font size, apply scale via transform (keeps bounding box small)
-  els.livePreviewTimer.style.fontSize = '100px';
-  els.livePreviewTimer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  // Apply scaled font size directly (like fitty)
+  const fontSize = Math.floor(100 * scale);
+  els.livePreviewTimer.style.fontSize = fontSize + 'px';
 }
 
 /**
- * Fit preview ToD to fill its container (tod-box, 25% of timer-section)
+ * Fit preview ToD to fill its container (tod-box, 25% of timer-section) - fitty style
  * Constrained by both width and height to stay within box
  */
 function fitPreviewToD() {
@@ -2957,22 +2961,26 @@ function fitPreviewToD() {
   const targetWidth = boxWidth * zoom;
   const targetHeight = boxHeight * 0.90; // 90% height for padding
 
-  // Reset font size to measure natural dimensions
+  // Reset to base size for measurement
   els.livePreviewToD.style.fontSize = '100px';
+  els.livePreviewToD.style.transform = 'translate(-50%, -50%)';
 
-  // Get natural dimensions at 100px
+  // Force reflow
+  void els.livePreviewToD.offsetWidth;
+
+  // Get natural dimensions at 100px base
   const naturalWidth = els.livePreviewToD.scrollWidth;
   const naturalHeight = els.livePreviewToD.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Scale to fit within both width and height
+  // Calculate scale to fit within both width and height
   const scaleW = targetWidth / naturalWidth;
   const scaleH = targetHeight / naturalHeight;
   const scale = Math.min(scaleW, scaleH);
 
-  // Keep base font size, apply scale via transform
-  els.livePreviewToD.style.fontSize = '100px';
-  els.livePreviewToD.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  // Apply scaled font size directly (like fitty)
+  const fontSize = Math.floor(100 * scale);
+  els.livePreviewToD.style.fontSize = fontSize + 'px';
 }
 
 /**

@@ -60,6 +60,8 @@ html, body {
   flex: 1;
   width: 100%;
   position: relative;
+  /* DEBUG */
+  outline: 2px dashed cyan;
 }
 
 /* ToD box - hidden by default */
