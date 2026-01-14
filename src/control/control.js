@@ -2902,114 +2902,71 @@ function getRefText(format, durationSec) {
 }
 
 /**
- * Fit preview timer to fill width - StageTimer/fitty style
- * Timer-only: fills content-box width, height constrained by content-box
- * Timer+ToD: fills timer-box width (75% of content-box height)
+ * Fit preview timer to fill its container - scale until box touches edge
+ * Timer-box wraps timer exactly, centered in timer-section
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer || !els.livePreviewTimerBox || !els.livePreviewContentBox) return;
 
   const hasToD = els.livePreviewTimerSection?.classList.contains('with-tod');
 
-  // Width comes from timer-box (which is 100% of content-box width)
-  const boxWidth = els.livePreviewTimerBox.offsetWidth;
-  if (boxWidth <= 0) return;
-
-  // Height constraint: content-box for timer-only, timer-box for with-tod
-  const maxHeight = hasToD
-    ? els.livePreviewTimerBox.offsetHeight * 0.95
-    : els.livePreviewContentBox.offsetHeight * 0.95;
-  if (maxHeight <= 0) return;
+  // Container = content-box for timer-only, timer-section for with-tod
+  const containerWidth = hasToD ? els.livePreviewTimerSection.offsetWidth : els.livePreviewContentBox.offsetWidth;
+  const containerHeight = hasToD ? els.livePreviewTimerBox.offsetHeight : els.livePreviewContentBox.offsetHeight;
+  if (containerWidth <= 0 || containerHeight <= 0) return;
 
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
-  const targetWidth = boxWidth * zoom;
+  const maxWidth = containerWidth * zoom;
+  const maxHeight = containerHeight * 0.95;
 
-  // Reset to base size for measurement
-  // Use width:auto to get intrinsic text width (not container width)
+  // Measure timer at base font size
   els.livePreviewTimer.style.fontSize = '100px';
-  els.livePreviewTimer.style.width = 'auto';
-  els.livePreviewTimer.style.display = 'inline-block';
-
-  // Force reflow to get accurate measurements
   void els.livePreviewTimer.offsetWidth;
 
-  // Get natural dimensions at 100px base
-  const naturalWidth = els.livePreviewTimer.scrollWidth;
-  const naturalHeight = els.livePreviewTimer.scrollHeight;
-
-  // Restore block display
-  els.livePreviewTimer.style.width = '100%';
-  els.livePreviewTimer.style.display = 'block';
-
+  const naturalWidth = els.livePreviewTimer.offsetWidth;
+  const naturalHeight = els.livePreviewTimer.offsetHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Width-priority: fill width, only constrain by height if it would overflow
-  const scaleW = targetWidth / naturalWidth;
-  const scaledHeight = naturalHeight * scaleW;
+  // Scale to fill, cap at edges
+  const scaleW = maxWidth / naturalWidth;
+  const scaleH = maxHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
 
-  let scale;
-  if (scaledHeight <= maxHeight) {
-    scale = scaleW; // Fits! Use width scale
-  } else {
-    scale = maxHeight / naturalHeight; // Would overflow, constrain by height
-  }
-
-  // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
   els.livePreviewTimer.style.fontSize = fontSize + 'px';
 }
 
 /**
- * Fit preview ToD to fill its container (tod-box, 25% of content-box) - fitty style
- * Width-priority with height constraint
+ * Fit preview ToD to fill its container (tod-box, 25% of content-box)
+ * Scale until tod-box touches edge
  */
 function fitPreviewToD() {
   if (!els.livePreviewToD || !els.livePreviewToDBox) return;
-
-  // Only fit if ToD is visible
   if (!els.livePreviewTimerSection?.classList.contains('with-tod')) return;
 
-  const boxWidth = els.livePreviewToDBox.offsetWidth;
-  const boxHeight = els.livePreviewToDBox.offsetHeight;
-  if (boxWidth <= 0 || boxHeight <= 0) return;
+  const containerWidth = els.livePreviewToDBox.offsetWidth;
+  const containerHeight = els.livePreviewToDBox.offsetHeight;
+  if (containerWidth <= 0 || containerHeight <= 0) return;
 
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
-  const targetWidth = boxWidth * zoom;
-  const maxHeight = boxHeight * 0.90; // 90% height for padding
+  const maxWidth = containerWidth * zoom;
+  const maxHeight = containerHeight * 0.90;
 
-  // Reset to base size for measurement
-  // Use width:auto to get intrinsic text width (not container width)
+  // Measure ToD at base font size
   els.livePreviewToD.style.fontSize = '100px';
-  els.livePreviewToD.style.width = 'auto';
-  els.livePreviewToD.style.display = 'inline-block';
-
-  // Force reflow
   void els.livePreviewToD.offsetWidth;
 
-  // Get natural dimensions at 100px base
-  const naturalWidth = els.livePreviewToD.scrollWidth;
-  const naturalHeight = els.livePreviewToD.scrollHeight;
-
-  // Restore block display
-  els.livePreviewToD.style.width = '100%';
-  els.livePreviewToD.style.display = 'block';
-
+  const naturalWidth = els.livePreviewToD.offsetWidth;
+  const naturalHeight = els.livePreviewToD.offsetHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Width-priority: fill width, only constrain by height if it would overflow
-  const scaleW = targetWidth / naturalWidth;
-  const scaledHeight = naturalHeight * scaleW;
+  // Scale to fill, cap at edges
+  const scaleW = maxWidth / naturalWidth;
+  const scaleH = maxHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
 
-  let scale;
-  if (scaledHeight <= maxHeight) {
-    scale = scaleW; // Fits! Use width scale
-  } else {
-    scale = maxHeight / naturalHeight; // Would overflow, constrain by height
-  }
-
-  // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
   els.livePreviewToD.style.fontSize = fontSize + 'px';
 }

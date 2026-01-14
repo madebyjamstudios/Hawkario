@@ -163,108 +163,67 @@ function getRefText(format, durationMs) {
 }
 
 /**
- * Fit timer to fill width - StageTimer/fitty style
- * Timer-only: fills content-box width, height constrained by content-box
- * Timer+ToD: fills timer-box width (75% of content-box height)
+ * Fit timer to fill its container - scale until box touches edge
+ * Timer-box wraps timer exactly, centered in timer-section
+ * Scale until timer-box width = container width OR height = container height
  */
 function fitTimerContent() {
   const hasToD = timerSectionEl.classList.contains('with-tod');
 
-  // Width comes from timer-box (which is 100% of content-box width)
-  const boxWidth = timerBoxEl.offsetWidth;
-  if (boxWidth <= 0) return;
-
-  // Height constraint: content-box for timer-only, timer-box for with-tod
-  const maxHeight = hasToD
-    ? timerBoxEl.offsetHeight * 0.95
-    : contentBoxEl.offsetHeight * 0.95;
-  if (maxHeight <= 0) return;
+  // Container = content-box for timer-only, timer-section for with-tod (75% of content-box)
+  const containerWidth = hasToD ? timerSectionEl.offsetWidth : contentBoxEl.offsetWidth;
+  const containerHeight = hasToD ? timerBoxEl.offsetHeight : contentBoxEl.offsetHeight;
+  if (containerWidth <= 0 || containerHeight <= 0) return;
 
   const zoom = timerZoom / 100;
-  const targetWidth = boxWidth * zoom;
+  const maxWidth = containerWidth * zoom;
+  const maxHeight = containerHeight * 0.95;
 
-  // Reset to base size for measurement
-  // Use width:auto to get intrinsic text width (not container width)
+  // Measure timer at base font size
   timerEl.style.fontSize = '100px';
-  timerEl.style.width = 'auto';
-  timerEl.style.display = 'inline-block';
-
-  // Force reflow to get accurate measurements
   void timerEl.offsetWidth;
 
-  // Get natural dimensions at 100px base
-  const naturalWidth = timerEl.scrollWidth;
-  const naturalHeight = timerEl.scrollHeight;
-
-  // Restore block display
-  timerEl.style.width = '100%';
-  timerEl.style.display = 'block';
-
+  const naturalWidth = timerEl.offsetWidth;
+  const naturalHeight = timerEl.offsetHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Width-priority: fill width, only constrain by height if it would overflow
-  const scaleW = targetWidth / naturalWidth;
-  const scaledHeight = naturalHeight * scaleW;
+  // Scale to fill width, but cap at height
+  const scaleW = maxWidth / naturalWidth;
+  const scaleH = maxHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
 
-  let scale;
-  if (scaledHeight <= maxHeight) {
-    scale = scaleW; // Fits! Use width scale
-  } else {
-    scale = maxHeight / naturalHeight; // Would overflow, constrain by height
-  }
-
-  // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
   timerEl.style.fontSize = fontSize + 'px';
 }
 
 /**
- * Fit ToD to fill its container (tod-box, 25% of content-box) - fitty style
- * Width-priority with height constraint
+ * Fit ToD to fill its container (tod-box, 25% of content-box)
+ * Scale until tod-box touches edge
  */
 function fitToDContent() {
-  // Only fit if ToD is visible
   if (!timerSectionEl.classList.contains('with-tod')) return;
 
-  const boxWidth = todBoxEl.offsetWidth;
-  const boxHeight = todBoxEl.offsetHeight;
-  if (boxWidth <= 0 || boxHeight <= 0) return;
+  const containerWidth = todBoxEl.offsetWidth;
+  const containerHeight = todBoxEl.offsetHeight;
+  if (containerWidth <= 0 || containerHeight <= 0) return;
 
   const zoom = timerZoom / 100;
-  const targetWidth = boxWidth * zoom;
-  const maxHeight = boxHeight * 0.90; // 90% height for padding
+  const maxWidth = containerWidth * zoom;
+  const maxHeight = containerHeight * 0.90;
 
-  // Reset to base size for measurement
-  // Use width:auto to get intrinsic text width (not container width)
+  // Measure ToD at base font size
   todEl.style.fontSize = '100px';
-  todEl.style.width = 'auto';
-  todEl.style.display = 'inline-block';
-
-  // Force reflow
   void todEl.offsetWidth;
 
-  // Get natural dimensions at 100px base
-  const naturalWidth = todEl.scrollWidth;
-  const naturalHeight = todEl.scrollHeight;
-
-  // Restore block display
-  todEl.style.width = '100%';
-  todEl.style.display = 'block';
-
+  const naturalWidth = todEl.offsetWidth;
+  const naturalHeight = todEl.offsetHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Width-priority: fill width, only constrain by height if it would overflow
-  const scaleW = targetWidth / naturalWidth;
-  const scaledHeight = naturalHeight * scaleW;
+  // Scale to fill, cap at edges
+  const scaleW = maxWidth / naturalWidth;
+  const scaleH = maxHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
 
-  let scale;
-  if (scaledHeight <= maxHeight) {
-    scale = scaleW; // Fits! Use width scale
-  } else {
-    scale = maxHeight / naturalHeight; // Would overflow, constrain by height
-  }
-
-  // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
   todEl.style.fontSize = fontSize + 'px';
 }

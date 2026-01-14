@@ -43,23 +43,21 @@ html, body {
   outline: 3px solid red;
 }
 
-/* Timer section - centered in content-box, height = auto (wraps content) */
+/* Timer section - fills content-box, centers timer-box */
 .timer-section {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  /* NO height - auto, determined by content */
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: visible;
   /* DEBUG */
   outline: 2px solid lime;
 }
 
-/* Timer box - contains the timer, height = auto */
+/* Timer box - wraps timer text exactly (inline-block) */
 .timer-box {
-  width: 100%;
-  position: relative;
+  display: inline-block;
   /* DEBUG */
   outline: 2px dashed cyan;
 }
@@ -135,10 +133,8 @@ html, body {
 
 /* ============ Timer Element ============ */
 .timer {
-  /* Block element - gives parent natural height */
-  display: block;
-  width: 100%;
-  text-align: center;
+  /* Inline-block so parent wraps it exactly */
+  display: inline-block;
   white-space: nowrap;
 
   /* Tabular numbers: all digits same width */
@@ -157,11 +153,9 @@ html, body {
   transform: translateY(-0.08em);
 }
 
-/* ToD element - block, gives parent natural height */
+/* ToD element - inline-block so parent wraps it exactly */
 .tod {
-  display: block;
-  width: 100%;
-  text-align: center;
+  display: inline-block;
   white-space: nowrap;
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
