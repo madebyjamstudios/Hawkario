@@ -273,6 +273,8 @@ button:disabled {
   overflow: visible;
   user-select: none;
   -webkit-user-select: none;
+  /* DEBUG */
+  outline: 2px solid lime;
 }
 
 /* Message preview element */
@@ -314,6 +316,8 @@ button:disabled {
   margin-top: -0.55em;
   /* Inherits color from parent timer to flash in sync */
   text-align: center;
+  /* DEBUG */
+  outline: 2px solid yellow;
 }
 
 .live-preview::before {

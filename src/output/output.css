@@ -87,6 +87,8 @@ html, body {
   overflow: visible;
   /* Draw stroke behind fill to prevent artifacts at intersections */
   paint-order: stroke fill;
+  /* DEBUG */
+  outline: 2px solid lime;
 }
 
 /* Vertically centered colon for time display */
@@ -103,6 +105,8 @@ html, body {
   margin-top: -0.55em;
   /* Inherits color from parent timer to flash in sync */
   text-align: center;
+  /* DEBUG */
+  outline: 2px solid yellow;
 }
 
 /* Overtime state - red color when timer has passed */
