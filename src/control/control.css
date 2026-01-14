@@ -328,6 +328,7 @@ button:disabled {
   /* Inline-block so parent wraps it exactly */
   display: inline-block;
   white-space: nowrap;
+  line-height: 1;
   overflow: visible;
   user-select: none;
   -webkit-user-select: none;
@@ -368,6 +369,7 @@ button:disabled {
 .live-preview .tod-preview {
   display: inline-block;
   white-space: nowrap;
+  line-height: 1;
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
