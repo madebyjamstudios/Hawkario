@@ -2899,29 +2899,42 @@ function getRefText(format, durationSec) {
 }
 
 /**
- * Fit preview timer to fill content box WIDTH
- * Directly measures content box and scales font to fill it
+ * Fit preview timer to fill content box (width-priority, but constrained by height)
+ * For timer-only: fills width
+ * For timer+ToD: fits within both width and height
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer || !els.livePreviewContentBox) return;
 
-  // Get actual content box width
+  // Get content box dimensions
   const boxWidth = els.livePreviewContentBox.offsetWidth;
-  if (boxWidth <= 0) return;
+  const boxHeight = els.livePreviewContentBox.offsetHeight;
+  if (boxWidth <= 0 || boxHeight <= 0) return;
+
+  // When message is visible, timer-section is only 34% of content box
+  const hasMessage = els.livePreviewContentBox.classList.contains('with-message');
+  const targetHeight = hasMessage ? boxHeight * 0.34 : boxHeight;
 
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
   const targetWidth = boxWidth * zoom;
 
-  // Reset font size to measure natural width
+  // Reset font size to measure natural dimensions
   els.livePreviewTimer.style.fontSize = '100px';
 
-  // Get natural width at 100px
+  // Get natural dimensions at 100px
   const naturalWidth = els.livePreviewTimer.scrollWidth;
-  if (naturalWidth <= 0) return;
+  const naturalHeight = els.livePreviewTimer.scrollHeight;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Scale font to fill target width
-  const fontSize = 100 * (targetWidth / naturalWidth);
+  // Calculate scale for both dimensions
+  const scaleW = targetWidth / naturalWidth;
+  const scaleH = (targetHeight * 0.95) / naturalHeight;  // 95% height to add padding
+
+  // Use minimum scale to fit within both (fitty-style)
+  const scale = Math.min(scaleW, scaleH);
+
+  const fontSize = 100 * scale;
   els.livePreviewTimer.style.fontSize = fontSize + 'px';
 }
 
