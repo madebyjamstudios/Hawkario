@@ -163,24 +163,28 @@ function getRefText(format, durationMs) {
 }
 
 /**
- * Fit timer to fill its container (timer-box) - fitty style
- * Timer-only: timer-box is 100% of timer-section
- * Timer+ToD: timer-box is 75% of timer-section
- * Constrained by both width and height to stay within box
+ * Fit timer to fill width - StageTimer/fitty style
+ * Timer-only: fills content-box width, height constrained by content-box
+ * Timer+ToD: fills timer-box width (75% of content-box height)
  */
 function fitTimerContent() {
-  // Use timer-box dimensions (it adjusts based on with-tod class)
+  const hasToD = timerSectionEl.classList.contains('with-tod');
+
+  // Width comes from timer-box (which is 100% of content-box width)
   const boxWidth = timerBoxEl.offsetWidth;
-  const boxHeight = timerBoxEl.offsetHeight;
-  if (boxWidth <= 0 || boxHeight <= 0) return;
+  if (boxWidth <= 0) return;
+
+  // Height constraint: content-box for timer-only, timer-box for with-tod
+  const maxHeight = hasToD
+    ? timerBoxEl.offsetHeight * 0.95
+    : contentBoxEl.offsetHeight * 0.95;
+  if (maxHeight <= 0) return;
 
   const zoom = timerZoom / 100;
   const targetWidth = boxWidth * zoom;
-  const targetHeight = boxHeight * 0.95; // 95% height for padding
 
   // Reset to base size for measurement
   timerEl.style.fontSize = '100px';
-  timerEl.style.transform = 'translate(-50%, -50%)';
 
   // Force reflow to get accurate measurements
   void timerEl.offsetWidth;
@@ -192,11 +196,14 @@ function fitTimerContent() {
 
   // Width-priority: fill width, only constrain by height if it would overflow
   const scaleW = targetWidth / naturalWidth;
-  const scaleH = targetHeight / naturalHeight;
-
-  // Check if width-scale would overflow height
   const scaledHeight = naturalHeight * scaleW;
-  const scale = (scaledHeight <= targetHeight) ? scaleW : scaleH;
+
+  let scale;
+  if (scaledHeight <= maxHeight) {
+    scale = scaleW; // Fits! Use width scale
+  } else {
+    scale = maxHeight / naturalHeight; // Would overflow, constrain by height
+  }
 
   // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
@@ -204,8 +211,8 @@ function fitTimerContent() {
 }
 
 /**
- * Fit ToD to fill its container (tod-box, 25% of timer-section) - fitty style
- * Constrained by both width and height to stay within box
+ * Fit ToD to fill its container (tod-box, 25% of content-box) - fitty style
+ * Width-priority with height constraint
  */
 function fitToDContent() {
   // Only fit if ToD is visible
@@ -217,11 +224,10 @@ function fitToDContent() {
 
   const zoom = timerZoom / 100;
   const targetWidth = boxWidth * zoom;
-  const targetHeight = boxHeight * 0.90; // 90% height for padding
+  const maxHeight = boxHeight * 0.90; // 90% height for padding
 
   // Reset to base size for measurement
   todEl.style.fontSize = '100px';
-  todEl.style.transform = 'translate(-50%, -50%)';
 
   // Force reflow
   void todEl.offsetWidth;
@@ -233,11 +239,14 @@ function fitToDContent() {
 
   // Width-priority: fill width, only constrain by height if it would overflow
   const scaleW = targetWidth / naturalWidth;
-  const scaleH = targetHeight / naturalHeight;
-
-  // Check if width-scale would overflow height
   const scaledHeight = naturalHeight * scaleW;
-  const scale = (scaledHeight <= targetHeight) ? scaleW : scaleH;
+
+  let scale;
+  if (scaledHeight <= maxHeight) {
+    scale = scaleW; // Fits! Use width scale
+  } else {
+    scale = maxHeight / naturalHeight; // Would overflow, constrain by height
+  }
 
   // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
