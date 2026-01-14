@@ -486,19 +486,17 @@ function renderInternal() {
   }
 
   // Handle ToD mode toggle (75/25 split)
-  if (showToD !== lastShowToD) {
+  const todModeChanged = showToD !== lastShowToD;
+  if (todModeChanged) {
     lastShowToD = showToD;
     if (showToD) {
       timerSectionEl.classList.add('with-tod');
     } else {
       timerSectionEl.classList.remove('with-tod');
     }
-    // Refit both when mode changes
-    fitTimerContent();
-    fitToDContent();
   }
 
-  // Apply timer text
+  // Apply timer text FIRST (before measuring for fit)
   timerEl.innerHTML = text;
 
   // Apply ToD text (separate element, uses innerHTML for colon spans)
@@ -511,10 +509,11 @@ function renderInternal() {
   }
 
   // Refit when format, mode, or text length changes (font scales to fill fixed width)
+  // MUST be called AFTER innerHTML is set so we measure the new content
   const currentFormat = canonicalState?.format || 'MM:SS';
   const currentMode = canonicalState?.mode || 'countdown';
   const textLength = text.length;
-  if (currentFormat !== lastTimerFormat || currentMode !== lastTimerMode || textLength !== lastTimerLength) {
+  if (todModeChanged || currentFormat !== lastTimerFormat || currentMode !== lastTimerMode || textLength !== lastTimerLength) {
     lastTimerFormat = currentFormat;
     lastTimerMode = currentMode;
     lastTimerLength = textLength;

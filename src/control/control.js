@@ -3510,18 +3510,16 @@ function renderLivePreviewInternal() {
 
   // Handle ToD mode toggle (75/25 split)
   const hadToD = els.livePreviewTimerSection?.classList.contains('with-tod');
-  if (showToD !== hadToD) {
+  const todModeChanged = showToD !== hadToD;
+  if (todModeChanged) {
     if (showToD) {
       els.livePreviewTimerSection?.classList.add('with-tod');
     } else {
       els.livePreviewTimerSection?.classList.remove('with-tod');
     }
-    // Refit both when mode changes
-    fitPreviewTimer();
-    fitPreviewToD();
   }
 
-  // Update timer display
+  // Update timer display FIRST (before measuring for fit)
   els.livePreviewTimer.innerHTML = displayText;
 
   // Update ToD display (separate element, uses innerHTML for colon spans)
@@ -3534,8 +3532,9 @@ function renderLivePreviewInternal() {
   }
 
   // Refit when format, mode, or text length changes (font scales to fill fixed width)
+  // MUST be called AFTER innerHTML is set so we measure the new content
   const textLength = displayText.length;
-  if (format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode || textLength !== lastPreviewTimerLength) {
+  if (todModeChanged || format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode || textLength !== lastPreviewTimerLength) {
     lastPreviewTimerFormat = format;
     lastPreviewTimerMode = mode;
     lastPreviewTimerLength = textLength;
