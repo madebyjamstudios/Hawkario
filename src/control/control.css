@@ -225,13 +225,15 @@ button:disabled {
   position: relative;
   transform-origin: center center;
   /* Scale applied via JS */
+  /* DEBUG */
+  outline: 3px solid blue;
 }
 
 /* ============ Content Box System ============ */
 /* The big box - NEVER changes size */
 .live-preview .content-box {
   position: absolute;
-  width: 90%;
+  width: 95%;
   height: 64%;
   top: 50%;
   left: 50%;

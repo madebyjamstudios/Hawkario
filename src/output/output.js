@@ -174,22 +174,34 @@ function getRefText(format, durationMs) {
 }
 
 /**
- * Fit timer text to fill content box width
- * No height constraints - just fill the width
+ * Fit timer to fill content box as much as possible
+ * Must stay WITHIN the box (both width and height)
  */
 function fitTimerContent() {
   const zoom = timerZoom / 100;
-  const targetWidth = REF_WIDTH * 0.90 * 0.95 * zoom;
+
+  // Content box is 95% width, 64% height of virtual canvas
+  const boxWidth = REF_WIDTH * 0.95;
+  const boxHeight = REF_HEIGHT * 0.64;
+
+  // Target area with small padding
+  const targetWidth = boxWidth * 0.95 * zoom;
+  const targetHeight = boxHeight * 0.90;
 
   // Measure at base font size
   timerEl.style.transform = 'translate(-50%, -50%)';
   timerEl.style.fontSize = '100px';
 
-  const actualWidth = timerEl.scrollWidth;
-  if (actualWidth <= 0) return;
+  const naturalWidth = timerEl.scrollWidth;
+  const naturalHeight = timerEl.scrollHeight;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Fill the width - that's it
-  const fontSize = 100 * (targetWidth / actualWidth);
+  // Scale to fit WITHIN box (use smaller scale to fit both dimensions)
+  const scaleW = targetWidth / naturalWidth;
+  const scaleH = targetHeight / naturalHeight;
+  const scale = Math.min(scaleW, scaleH);
+
+  const fontSize = 100 * scale;
   timerEl.style.fontSize = fontSize + 'px';
 }
 
