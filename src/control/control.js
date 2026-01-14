@@ -2932,10 +2932,13 @@ function fitPreviewTimer() {
   const naturalHeight = els.livePreviewTimer.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Calculate scale to fit within both width and height
+  // Width-priority: fill width, only constrain by height if it would overflow
   const scaleW = targetWidth / naturalWidth;
   const scaleH = targetHeight / naturalHeight;
-  const scale = Math.min(scaleW, scaleH);
+
+  // Check if width-scale would overflow height
+  const scaledHeight = naturalHeight * scaleW;
+  const scale = (scaledHeight <= targetHeight) ? scaleW : scaleH;
 
   // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
@@ -2973,10 +2976,13 @@ function fitPreviewToD() {
   const naturalHeight = els.livePreviewToD.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Calculate scale to fit within both width and height
+  // Width-priority: fill width, only constrain by height if it would overflow
   const scaleW = targetWidth / naturalWidth;
   const scaleH = targetHeight / naturalHeight;
-  const scale = Math.min(scaleW, scaleH);
+
+  // Check if width-scale would overflow height
+  const scaledHeight = naturalHeight * scaleW;
+  const scale = (scaledHeight <= targetHeight) ? scaleW : scaleH;
 
   // Apply scaled font size directly (like fitty)
   const fontSize = Math.floor(100 * scale);
