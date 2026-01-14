@@ -135,14 +135,14 @@ function computeDisplayInternal(state, now) {
     }
   }
 
-  // Append time of day if needed (on new line)
-  if (showToD) {
-    displayText += '<br><span class="tod-line">' + formatTimeOfDay(todFormat, timezone) + '</span>';
-  }
+  // Return ToD text separately (not appended to timer)
+  const todText = showToD ? formatTimeOfDay(todFormat, timezone) : null;
 
   return {
     visible: true,
     text: displayText,
+    todText,
+    showToD,
     elapsedMs,
     remainingMs,
     overtime

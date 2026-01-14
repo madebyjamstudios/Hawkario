@@ -39,9 +39,12 @@ function createSafeFallback(tagName = 'div') {
 
 // DOM Elements with safe fallbacks
 const timerEl = document.getElementById('timer') || createSafeFallback('div');
+const todEl = document.getElementById('tod') || createSafeFallback('div');
 const stageEl = document.querySelector('.stage') || createSafeFallback('div');
 const contentBoxEl = document.getElementById('contentBox') || createSafeFallback('div');
 const timerSectionEl = document.querySelector('.timer-section') || createSafeFallback('div');
+const timerBoxEl = document.querySelector('.timer-box') || createSafeFallback('div');
+const todBoxEl = document.querySelector('.tod-box') || createSafeFallback('div');
 const messageSectionEl = document.querySelector('.message-section') || createSafeFallback('div');
 const fsHintEl = document.getElementById('fsHint') || createSafeFallback('div');
 const messageOverlayEl = document.getElementById('messageOverlay') || createSafeFallback('div');
@@ -68,6 +71,7 @@ function updateResolution() {
 window.addEventListener('resize', () => {
   updateResolution();
   fitTimerContent();
+  fitToDContent();
   fitMessageContent();
 });
 updateResolution();
@@ -159,19 +163,15 @@ function getRefText(format, durationMs) {
 }
 
 /**
- * Fit timer to fill content box (width-priority, but constrained by height)
- * For timer-only: fills width
- * For timer+ToD: fits within both width and height
+ * Fit timer to fill its container (timer-box)
+ * Timer-only: timer-box is 100% of timer-section
+ * Timer+ToD: timer-box is 75% of timer-section
  */
 function fitTimerContent() {
-  // Get content box dimensions
-  const boxWidth = contentBoxEl.offsetWidth;
-  const boxHeight = contentBoxEl.offsetHeight;
+  // Use timer-box dimensions (it adjusts based on with-tod class)
+  const boxWidth = timerBoxEl.offsetWidth;
+  const boxHeight = timerBoxEl.offsetHeight;
   if (boxWidth <= 0 || boxHeight <= 0) return;
-
-  // When message is visible, timer-section is only 34% of content box
-  const hasMessage = contentBoxEl.classList.contains('with-message');
-  const targetHeight = hasMessage ? boxHeight * 0.34 : boxHeight;
 
   const zoom = timerZoom / 100;
   const targetWidth = boxWidth * zoom;
@@ -184,17 +184,42 @@ function fitTimerContent() {
   const naturalHeight = timerEl.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Calculate scale for both dimensions
-  const scaleW = targetWidth / naturalWidth;
-  const scaleH = (targetHeight * 0.95) / naturalHeight;  // 95% height to add padding
-
-  // Timer-only: fill width; Timer+ToD: fit within both
-  const hasToD = timerEl.querySelector('.tod-line') !== null;
-  const scale = hasToD ? Math.min(scaleW, scaleH) : scaleW;
+  // Scale to fill width
+  const scale = targetWidth / naturalWidth;
 
   // Keep base font size, apply scale via transform (keeps bounding box small)
   timerEl.style.fontSize = '100px';
   timerEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+/**
+ * Fit ToD to fill its container (tod-box, 25% of timer-section)
+ */
+function fitToDContent() {
+  // Only fit if ToD is visible
+  if (!timerSectionEl.classList.contains('with-tod')) return;
+
+  const boxWidth = todBoxEl.offsetWidth;
+  const boxHeight = todBoxEl.offsetHeight;
+  if (boxWidth <= 0 || boxHeight <= 0) return;
+
+  const zoom = timerZoom / 100;
+  const targetWidth = boxWidth * zoom;
+
+  // Reset font size to measure natural dimensions
+  todEl.style.fontSize = '100px';
+
+  // Get natural dimensions at 100px
+  const naturalWidth = todEl.scrollWidth;
+  const naturalHeight = todEl.scrollHeight;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return;
+
+  // Scale to fill width
+  const scale = targetWidth / naturalWidth;
+
+  // Keep base font size, apply scale via transform
+  todEl.style.fontSize = '100px';
+  todEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
 /**
@@ -399,9 +424,14 @@ function render() {
   }
 }
 
+// Track previous ToD state for refit
+let lastShowToD = false;
+
 function renderInternal() {
   let visible = true;
   let text = '00:00';
+  let todText = null;
+  let showToD = false;
   let color = '#ffffff';
   let overtime = false;
 
@@ -410,6 +440,8 @@ function renderInternal() {
     const display = computeDisplay(canonicalState, Date.now());
     visible = display.visible;
     text = display.text;
+    todText = display.todText;
+    showToD = display.showToD;
     overtime = display.overtime || canonicalState.overtime;
 
     // Calculate warning color based on remaining time
@@ -439,23 +471,47 @@ function renderInternal() {
   // Handle visibility
   if (!visible) {
     timerEl.style.visibility = 'hidden';
+    todEl.style.visibility = 'hidden';
     return; // Next frame scheduled by wrapper
   } else {
     timerEl.style.visibility = 'visible';
   }
 
-  // Apply display text (use innerHTML for ToD line breaks)
+  // Handle ToD mode toggle (75/25 split)
+  if (showToD !== lastShowToD) {
+    lastShowToD = showToD;
+    if (showToD) {
+      timerSectionEl.classList.add('with-tod');
+    } else {
+      timerSectionEl.classList.remove('with-tod');
+    }
+    // Refit both when mode changes
+    fitTimerContent();
+    fitToDContent();
+  }
+
+  // Apply timer text
   timerEl.innerHTML = text;
+
+  // Apply ToD text (separate element)
+  if (showToD && todText) {
+    todEl.textContent = todText;
+    todEl.style.visibility = 'visible';
+    todEl.style.color = color;
+  } else {
+    todEl.style.visibility = 'hidden';
+  }
 
   // Refit when format, mode, or text length changes (font scales to fill fixed width)
   const currentFormat = canonicalState?.format || 'MM:SS';
   const currentMode = canonicalState?.mode || 'countdown';
-  const textLength = text.replace(/<[^>]*>/g, '').length;
+  const textLength = text.length;
   if (currentFormat !== lastTimerFormat || currentMode !== lastTimerMode || textLength !== lastTimerLength) {
     lastTimerFormat = currentFormat;
     lastTimerMode = currentMode;
     lastTimerLength = textLength;
     fitTimerContent();
+    if (showToD) fitToDContent();
   }
 
   // Apply color and stroke (skip during flash animation)

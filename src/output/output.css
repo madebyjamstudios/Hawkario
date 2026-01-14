@@ -53,6 +53,40 @@ html, body {
   outline: 2px solid lime;
 }
 
+/* Timer box - fills timer-section by default */
+.timer-box {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* ToD box - hidden by default */
+.tod-box {
+  display: none;
+  width: 100%;
+  position: relative;
+}
+
+/* When ToD enabled: 75/25 split */
+.timer-section.with-tod {
+  display: flex;
+  flex-direction: column;
+}
+
+.timer-section.with-tod .timer-box {
+  flex: 0 0 75%;
+  height: auto;
+  /* DEBUG */
+  outline: 2px dashed cyan;
+}
+
+.timer-section.with-tod .tod-box {
+  display: block;
+  flex: 0 0 25%;
+  /* DEBUG */
+  outline: 2px dashed yellow;
+}
+
 /* Message section - hidden by default */
 .message-section {
   display: none;
@@ -97,16 +131,19 @@ html, body {
   transform: translateY(-0.08em);
 }
 
-/* ToD line (smaller, below main timer) */
-.tod-line {
-  font-size: 0.3em;
+/* ToD element - separate from timer, fitty-scaled independently */
+.tod {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* transform set by JS: translate(-50%, -50%) scale(X) */
+  white-space: nowrap;
   font-weight: 600;
-  display: block;
-  margin-top: -0.55em;
-  /* Inherits color from parent timer to flash in sync */
-  text-align: center;
-  /* DEBUG */
-  outline: 2px solid yellow;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: visible;
 }
 
 /* Overtime state - red color when timer has passed */

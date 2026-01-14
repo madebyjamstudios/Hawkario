@@ -82,8 +82,11 @@ const els = {
   livePreview: document.getElementById('livePreview'),
   livePreviewContentBox: document.getElementById('livePreviewContentBox'),
   livePreviewTimerSection: document.querySelector('.live-preview .timer-section'),
+  livePreviewTimerBox: document.querySelector('.live-preview .timer-box'),
+  livePreviewToDBox: document.querySelector('.live-preview .tod-box'),
   livePreviewMessageSection: document.querySelector('.live-preview .message-section'),
   livePreviewTimer: document.getElementById('livePreviewTimer'),
+  livePreviewToD: document.getElementById('livePreviewToD'),
   livePreviewMessage: document.getElementById('livePreviewMessage'),
 
   // Modal Preview
@@ -2899,21 +2902,17 @@ function getRefText(format, durationSec) {
 }
 
 /**
- * Fit preview timer to fill content box (width-priority, but constrained by height)
- * For timer-only: fills width
- * For timer+ToD: fits within both width and height
+ * Fit preview timer to fill its container (timer-box)
+ * Timer-only: timer-box is 100% of timer-section
+ * Timer+ToD: timer-box is 75% of timer-section
  */
 function fitPreviewTimer() {
-  if (!els.livePreviewTimer || !els.livePreviewContentBox) return;
+  if (!els.livePreviewTimer || !els.livePreviewTimerBox) return;
 
-  // Get content box dimensions
-  const boxWidth = els.livePreviewContentBox.offsetWidth;
-  const boxHeight = els.livePreviewContentBox.offsetHeight;
+  // Use timer-box dimensions (it adjusts based on with-tod class)
+  const boxWidth = els.livePreviewTimerBox.offsetWidth;
+  const boxHeight = els.livePreviewTimerBox.offsetHeight;
   if (boxWidth <= 0 || boxHeight <= 0) return;
-
-  // When message is visible, timer-section is only 34% of content box
-  const hasMessage = els.livePreviewContentBox.classList.contains('with-message');
-  const targetHeight = hasMessage ? boxHeight * 0.34 : boxHeight;
 
   const appSettings = loadAppSettings();
   const zoom = (appSettings.timerZoom ?? 100) / 100;
@@ -2927,17 +2926,45 @@ function fitPreviewTimer() {
   const naturalHeight = els.livePreviewTimer.scrollHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Calculate scale for both dimensions
-  const scaleW = targetWidth / naturalWidth;
-  const scaleH = (targetHeight * 0.95) / naturalHeight;  // 95% height to add padding
-
-  // Timer-only: fill width; Timer+ToD: fit within both
-  const hasToD = els.livePreviewTimer.querySelector('.tod-line') !== null;
-  const scale = hasToD ? Math.min(scaleW, scaleH) : scaleW;
+  // Scale to fill width
+  const scale = targetWidth / naturalWidth;
 
   // Keep base font size, apply scale via transform (keeps bounding box small)
   els.livePreviewTimer.style.fontSize = '100px';
   els.livePreviewTimer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+/**
+ * Fit preview ToD to fill its container (tod-box, 25% of timer-section)
+ */
+function fitPreviewToD() {
+  if (!els.livePreviewToD || !els.livePreviewToDBox) return;
+
+  // Only fit if ToD is visible
+  if (!els.livePreviewTimerSection?.classList.contains('with-tod')) return;
+
+  const boxWidth = els.livePreviewToDBox.offsetWidth;
+  const boxHeight = els.livePreviewToDBox.offsetHeight;
+  if (boxWidth <= 0 || boxHeight <= 0) return;
+
+  const appSettings = loadAppSettings();
+  const zoom = (appSettings.timerZoom ?? 100) / 100;
+  const targetWidth = boxWidth * zoom;
+
+  // Reset font size to measure natural dimensions
+  els.livePreviewToD.style.fontSize = '100px';
+
+  // Get natural dimensions at 100px
+  const naturalWidth = els.livePreviewToD.scrollWidth;
+  const naturalHeight = els.livePreviewToD.scrollHeight;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return;
+
+  // Scale to fill width
+  const scale = targetWidth / naturalWidth;
+
+  // Keep base font size, apply scale via transform
+  els.livePreviewToD.style.fontSize = '100px';
+  els.livePreviewToD.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
 /**
@@ -3473,19 +3500,39 @@ function renderLivePreviewInternal() {
     els.livePreviewTimer.classList.remove('overtime');
   }
 
-  if (showToD) {
-    displayText += '<br><span class="tod-line">' + formatTimeOfDay(todFormat, timezone) + '</span>';
+  // Handle ToD mode toggle (75/25 split)
+  const hadToD = els.livePreviewTimerSection?.classList.contains('with-tod');
+  if (showToD !== hadToD) {
+    if (showToD) {
+      els.livePreviewTimerSection?.classList.add('with-tod');
+    } else {
+      els.livePreviewTimerSection?.classList.remove('with-tod');
+    }
+    // Refit both when mode changes
+    fitPreviewTimer();
+    fitPreviewToD();
   }
 
-  // Update display (use innerHTML for ToD line breaks)
+  // Update timer display
   els.livePreviewTimer.innerHTML = displayText;
+
+  // Update ToD display (separate element)
+  if (showToD) {
+    const todText = formatTimeOfDay(todFormat, timezone);
+    els.livePreviewToD.textContent = todText;
+    els.livePreviewToD.style.visibility = 'visible';
+  } else {
+    els.livePreviewToD.style.visibility = 'hidden';
+  }
+
   // Refit when format, mode, or text length changes (font scales to fill fixed width)
-  const textLength = displayText.replace(/<[^>]*>/g, '').length;
+  const textLength = displayText.length;
   if (format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode || textLength !== lastPreviewTimerLength) {
     lastPreviewTimerFormat = format;
     lastPreviewTimerMode = mode;
     lastPreviewTimerLength = textLength;
     fitPreviewTimer();
+    if (showToD) fitPreviewToD();
   }
 
   // Update progress bar
@@ -3537,6 +3584,10 @@ function renderLivePreviewInternal() {
     els.livePreviewTimer.style.color = timerColor;
     els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
     els.livePreview.classList.toggle('overtime', timerState.overtime);
+    // Apply same color to ToD
+    if (showToD && els.livePreviewToD) {
+      els.livePreviewToD.style.color = timerColor;
+    }
   }
 
   // Blackout state
