@@ -283,38 +283,28 @@ function fitMessageContent() {
   const targetWidth = containerWidth * 0.95;
   const targetHeight = containerHeight * 0.95;
 
-  // Try different maxWidth values to find optimal word-wrap
-  let bestFontSize = 0;
-  let bestMaxWidth = targetWidth;
+  // Use fixed maxWidth at base size - this controls wrapping behavior
+  // Text will wrap at ~800px wide when measured at 100px font
+  const baseMaxWidth = 800;
 
-  // Width ratios from wide to narrow
-  const widthSteps = [1.0, 0.75, 0.5, 0.4, 0.33, 0.25];
+  // Measure at 100px base font with fixed maxWidth
+  messageOverlayEl.style.fontSize = '100px';
+  messageOverlayEl.style.maxWidth = baseMaxWidth + 'px';
+  void messageOverlayEl.offsetWidth;
 
-  for (const ratio of widthSteps) {
-    const testWidth = targetWidth * ratio;
+  const textWidth = messageOverlayEl.scrollWidth;
+  const textHeight = messageOverlayEl.scrollHeight;
+  if (textWidth <= 0 || textHeight <= 0) return;
 
-    // Measure at 100px base with this maxWidth
-    messageOverlayEl.style.fontSize = '100px';
-    messageOverlayEl.style.maxWidth = testWidth + 'px';
-    void messageOverlayEl.offsetWidth;
+  // Scale to fit container (both width and height)
+  const scaleW = targetWidth / textWidth;
+  const scaleH = targetHeight / textHeight;
+  const scale = Math.min(scaleW, scaleH);
 
-    const textW = messageOverlayEl.scrollWidth;
-    const textH = messageOverlayEl.scrollHeight;
-    if (textW <= 0 || textH <= 0) continue;
-
-    // Calculate scale to fit container
-    const scale = Math.min(targetWidth / textW, targetHeight / textH);
-    const fontSize = 100 * scale;
-
-    if (fontSize > bestFontSize) {
-      bestFontSize = fontSize;
-      bestMaxWidth = testWidth;
-    }
-  }
-
-  // Apply best result
-  messageOverlayEl.style.maxWidth = bestMaxWidth + 'px';
-  messageOverlayEl.style.fontSize = Math.max(8, Math.floor(bestFontSize)) + 'px';
+  // Apply scaled font size and scaled maxWidth
+  const fontSize = Math.max(8, Math.floor(100 * scale));
+  messageOverlayEl.style.fontSize = fontSize + 'px';
+  messageOverlayEl.style.maxWidth = (baseMaxWidth * scale) + 'px';
 }
 
 /**
