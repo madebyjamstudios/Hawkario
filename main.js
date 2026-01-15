@@ -9,14 +9,19 @@ const fs = require('fs');
 const { Server: OSCServer, Client: OSCClient } = require('node-osc');
 
 // Enable hot reload in development (soft reload for src/ files only)
+// Store watcher reference for cleanup
+let electronReloadWatcher = null;
 try {
-  require('electron-reload')(path.join(__dirname, 'src'), {
-    electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
-    awaitWriteFinish: {
-      stabilityThreshold: 1000,
-      pollInterval: 100
-    }
-  });
+  // Only enable in development (when running via npm start)
+  if (process.env.NODE_ENV !== 'production' && !app.isPackaged) {
+    electronReloadWatcher = require('electron-reload')(path.join(__dirname, 'src'), {
+      electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
+      awaitWriteFinish: {
+        stabilityThreshold: 1000,
+        pollInterval: 100
+      }
+    });
+  }
 } catch (err) {
   // electron-reload not available in production
 }
@@ -1310,8 +1315,14 @@ app.on('before-quit', () => {
 });
 
 // Final cleanup when app is about to quit
-app.on('will-quit', () => {
-  console.log('[App] will-quit - final cleanup complete');
+app.on('will-quit', (event) => {
+  console.log('[App] will-quit - final cleanup');
+  // Force exit to avoid fsevents cleanup race condition in development
+  // This prevents the "abort() called" crash from electron-reload's chokidar/fsevents
+  if (!app.isPackaged) {
+    event.preventDefault();
+    process.exit(0);
+  }
 });
 
 app.on('window-all-closed', () => {
