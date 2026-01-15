@@ -132,7 +132,7 @@ html, body {
   /* Inline-block so parent wraps it exactly */
   display: inline-block;
   white-space: nowrap;
-  line-height: 1;
+  line-height: 0.75;
 
   /* Tabular numbers: all digits same width */
   font-variant-numeric: tabular-nums lining-nums;
@@ -156,7 +156,7 @@ html, body {
 .tod {
   display: inline-block;
   white-space: nowrap;
-  line-height: 1;
+  line-height: 0.75;
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
