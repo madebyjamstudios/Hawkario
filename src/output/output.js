@@ -192,21 +192,28 @@ function fitTimerContent() {
   const hasToD = timerSectionEl.classList.contains('with-tod');
   const hasMessage = contentBoxEl.classList.contains('with-message');
 
-  // Container width is always timer-section width
-  const containerWidth = timerSectionEl.offsetWidth;
+  // Calculate container dimensions from window size (more reliable during drag)
+  // Content-box is 90% width × 64% height of window
+  const contentBoxWidth = window.innerWidth * 0.9;
+  const contentBoxHeight = window.innerHeight * 0.64;
+
+  // Container width is always content-box width (timer-section fills it)
+  const containerWidth = contentBoxWidth;
 
   // Container height depends on mode:
-  // - Timer only (no message): content-box height
-  // - Timer only (with message): timer-section height (34%)
-  // - Timer+ToD (no message): timer-box height (75%)
-  // - Timer+ToD (with message): timer-box height (75% of 34%)
+  // - Timer only (no message): content-box height (64% of window)
+  // - Timer only (with message): timer-section height (34% of content-box)
+  // - Timer+ToD (no message): timer-box height (75% of content-box)
+  // - Timer+ToD (with message): timer-box height (75% of 34% of content-box)
   let containerHeight;
-  if (hasToD) {
-    containerHeight = timerBoxEl.offsetHeight;
+  if (hasToD && hasMessage) {
+    containerHeight = contentBoxHeight * 0.34 * 0.75;
+  } else if (hasToD) {
+    containerHeight = contentBoxHeight * 0.75;
   } else if (hasMessage) {
-    containerHeight = timerSectionEl.offsetHeight;
+    containerHeight = contentBoxHeight * 0.34;
   } else {
-    containerHeight = contentBoxEl.offsetHeight;
+    containerHeight = contentBoxHeight;
   }
 
   // If layout not ready, retry after short delay
@@ -243,8 +250,18 @@ function fitTimerContent() {
 function fitToDContent() {
   if (!timerSectionEl.classList.contains('with-tod')) return;
 
-  const containerWidth = todBoxEl.offsetWidth;
-  const containerHeight = todBoxEl.offsetHeight;
+  const hasMessage = contentBoxEl.classList.contains('with-message');
+
+  // Calculate container dimensions from window size (more reliable during drag)
+  // Content-box is 90% width × 64% height of window
+  // ToD-box is 25% of content-box height (or 25% of 34% if message is visible)
+  const contentBoxWidth = window.innerWidth * 0.9;
+  const contentBoxHeight = window.innerHeight * 0.64;
+
+  const containerWidth = contentBoxWidth;
+  const containerHeight = hasMessage
+    ? contentBoxHeight * 0.34 * 0.25
+    : contentBoxHeight * 0.25;
 
   // If layout not ready, retry after short delay
   if (containerWidth <= 0 || containerHeight <= 0) {
