@@ -4057,16 +4057,10 @@ function renderLivePreviewInternal() {
     els.livePreviewToD.style.visibility = 'hidden';
   }
 
-  // Refit when format, mode, or text length changes (font scales to fill fixed width)
+  // Always refit on every frame to handle window resizes (matches output behavior)
   // MUST be called AFTER innerHTML is set so we measure the new content
-  const textLength = displayText.length;
-  if (todModeChanged || format !== lastPreviewTimerFormat || mode !== lastPreviewTimerMode || textLength !== lastPreviewTimerLength) {
-    lastPreviewTimerFormat = format;
-    lastPreviewTimerMode = mode;
-    lastPreviewTimerLength = textLength;
-    fitPreviewTimer();
-    if (showToD) fitPreviewToD();
-  }
+  fitPreviewTimer();
+  if (showToD) fitPreviewToD();
 
   // Update progress bar
   if (isCountdown) {
