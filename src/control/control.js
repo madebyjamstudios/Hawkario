@@ -718,6 +718,14 @@ function initTimeInput(input) {
 // State
 let isRunning = false;
 let outputWindowReady = false;
+
+/**
+ * Set running state and report to main process (for quit confirmation)
+ */
+function setRunning(running) {
+  isRunning = running;
+  window.ninja.reportTimerRunning(running);
+}
 let editingPresetIndex = null; // Track which preset is being edited
 let activePresetIndex = null; // Track which preset is currently playing
 
@@ -3872,7 +3880,7 @@ function renderLivePreviewInternal() {
 
         if (currentPreset?.linkedToNext && activePresetIndex < presets.length - 1) {
           // Auto-play next linked timer
-          isRunning = false;
+          setRunning(false);
           const nextIdx = activePresetIndex + 1;
           const nextPreset = presets[nextIdx];
           activePresetIndex = nextIdx;
@@ -3960,7 +3968,7 @@ function renderLivePreviewInternal() {
 
         if (currentPreset?.linkedToNext && activePresetIndex < presets.length - 1) {
           // Auto-play next linked timer after short delay
-          isRunning = false;
+          setRunning(false);
           const nextIdx = activePresetIndex + 1;
           const nextPreset = presets[nextIdx];
           activePresetIndex = nextIdx;
@@ -3979,7 +3987,7 @@ function renderLivePreviewInternal() {
             timerState.overtimeStartedAt = Date.now();
           } else {
             // Stop at 0:00 - set pausedAcc to full duration so display shows 0:00
-            isRunning = false;
+            setRunning(false);
             timerState.pausedAcc = activeTimerConfig.durationSec * 1000;
             timerState.startedAt = null; // Clear startedAt so play button starts fresh
           }
@@ -4238,7 +4246,7 @@ function sendCommand(command) {
   // Update local timer state for live preview
   switch (command) {
     case 'start':
-      isRunning = true;
+      setRunning(true);
       timerState.startedAt = Date.now();
       timerState.pausedAcc = 0;
       timerState.ended = false;
@@ -4252,14 +4260,14 @@ function sendCommand(command) {
 
     case 'pause':
       if (isRunning) {
-        isRunning = false;
+        setRunning(false);
         timerState.pausedAcc += Date.now() - timerState.startedAt;
       }
       break;
 
     case 'resume':
       // Resume from paused state without resetting
-      isRunning = true;
+      setRunning(true);
       timerState.startedAt = Date.now();
       // Keep pausedAcc as is - it contains the elapsed time (including seeked position)
       // Pulse the progress indicator
@@ -4269,7 +4277,7 @@ function sendCommand(command) {
       break;
 
     case 'reset':
-      isRunning = false;
+      setRunning(false);
       timerState.startedAt = null;
       timerState.pausedAcc = 0;
       timerState.ended = false;
@@ -5045,7 +5053,7 @@ function switchProfile(id) {
 
   // Stop any running timer
   if (isRunning) {
-    isRunning = false;
+    setRunning(false);
     timerState.startedAt = null;
     timerState.pausedAcc = 0;
     timerState.ended = false;
@@ -5325,7 +5333,7 @@ async function deleteProfile(id) {
     activeProfileId = profiles[newIdx].id;
 
     // Reset timer state
-    isRunning = false;
+    setRunning(false);
     timerState.startedAt = null;
     timerState.pausedAcc = 0;
     timerState.ended = false;
@@ -7238,7 +7246,7 @@ function restoreFromCrashRecovery(state) {
         // Add the elapsed time since crash to pausedAcc
         timerState.pausedAcc += elapsedSinceCrash;
         timerState.startedAt = null;
-        isRunning = false;  // Start paused, let user resume
+        setRunning(false);  // Start paused, let user resume
 
         console.log(`[CrashRecovery] Restored timer (paused, ${Math.round(elapsedSinceCrash / 1000)}s since crash)`);
       }
@@ -7400,18 +7408,19 @@ if (document.readyState === 'loading') {
 
 // Cleanup on window close (Production Safety)
 window.addEventListener('beforeunload', () => {
+  // FIRST: Clear crash recovery state synchronously on normal shutdown
+  // This MUST happen first before any async cleanup that could fail
+  // (only crashes will retain the state for recovery)
+  clearCrashRecoveryState();
+
+  // Stop crash recovery saving
+  stopCrashRecoverySaving();
+
   // Stop the render loop
   renderLoopActive = false;
 
   // Stop watchdog monitoring
   stopWatchdog();
-
-  // Stop crash recovery saving
-  stopCrashRecoverySaving();
-
-  // Clear crash recovery state on normal shutdown
-  // (only crashes will retain the state for recovery)
-  clearCrashRecoveryState();
 
   // Clear all tracked timers (setTimeout/setInterval)
   clearAllTimers();

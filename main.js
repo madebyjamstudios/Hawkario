@@ -197,6 +197,36 @@ function createMainWindow() {
 
   mainWindow.loadFile('src/control/index.html');
 
+  // Handle close with confirmation if timer is running
+  mainWindow.on('close', async (event) => {
+    // Skip confirmation if force quitting or timer not running
+    if (isForceQuitting || !timerIsRunning) {
+      return; // Allow close
+    }
+
+    // Prevent close until user confirms
+    event.preventDefault();
+
+    const iconPath = path.join(__dirname, 'icon.png');
+    const icon = nativeImage.createFromPath(iconPath);
+
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: 'none',
+      buttons: ['Cancel', 'Quit'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'Timer Running',
+      message: 'Timer is running. Quit anyway?',
+      icon: icon
+    });
+
+    if (result.response === 1) {
+      // User confirmed quit
+      isForceQuitting = true;
+      mainWindow.close();
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
     try {
@@ -1247,6 +1277,17 @@ const menuTemplate = [
 
 // ============ App Lifecycle ============
 
+// Track if we're force quitting (bypass confirmation)
+let isForceQuitting = false;
+
+// Track timer running status (updated via IPC)
+let timerIsRunning = false;
+
+// IPC handler to update timer running status
+ipcMain.on('timer:running-status', (_event, isRunning) => {
+  timerIsRunning = isRunning;
+});
+
 app.whenReady().then(() => {
   const menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
@@ -1258,6 +1299,19 @@ app.whenReady().then(() => {
       createMainWindow();
     }
   });
+});
+
+// Cleanup before app quits
+app.on('before-quit', () => {
+  console.log('[App] before-quit - cleaning up...');
+  isForceQuitting = true;
+  stopOSCServer();
+  stopOSCClient();
+});
+
+// Final cleanup when app is about to quit
+app.on('will-quit', () => {
+  console.log('[App] will-quit - final cleanup complete');
 });
 
 app.on('window-all-closed', () => {

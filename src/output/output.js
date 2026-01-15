@@ -796,6 +796,13 @@ window.addEventListener('beforeunload', () => {
   // Stop watchdog monitoring
   stopWatchdog();
 
+  // Disconnect ResizeObserver
+  try {
+    resizeObserver.disconnect();
+  } catch (err) {
+    // Ignore cleanup errors
+  }
+
   // Clear all tracked timers
   clearAllTimers();
 

@@ -119,6 +119,11 @@ contextBridge.exposeInMainWorld('ninja', {
   downloadUpdates: (url) => ipcRenderer.invoke('app:download-updates', url),
   restartApp: () => ipcRenderer.send('app:restart'),
 
+  // Report timer running status to main process (for quit confirmation)
+  reportTimerRunning: (isRunning) => {
+    ipcRenderer.send('timer:running-status', isRunning);
+  },
+
   // Show confirm dialog with app icon
   showConfirm: (options) => ipcRenderer.invoke('dialog:confirm', options),
 
