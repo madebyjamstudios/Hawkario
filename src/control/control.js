@@ -2540,9 +2540,16 @@ function updateLivePreviewMessage(message) {
   const wasVisible = els.livePreviewContentBox.classList.contains('with-message');
 
   if (!message || !message.visible) {
+    // Shrink timer before layout change to prevent flash
+    if (wasVisible) {
+      els.livePreviewTimer.style.fontSize = '10px';
+      els.livePreviewToD.style.fontSize = '10px';
+    }
     els.livePreviewContentBox.classList.remove('with-message');
     els.livePreviewMessage.classList.remove('visible', 'bold', 'italic', 'uppercase');
     lastPreviewMessageText = '';
+    // Force layout recalculation
+    void els.livePreviewContentBox.offsetHeight;
 
     // Refit timer and ToD since they now have full height
     if (wasVisible) {
@@ -2555,7 +2562,16 @@ function updateLivePreviewMessage(message) {
   // Use shared module for styling (identical to output)
   applyMessageStyle(els.livePreviewMessage, message);
   els.livePreviewMessage.classList.add('visible');
+
+  // Shrink timer before layout change to prevent "big then small" flash
+  if (!wasVisible) {
+    els.livePreviewTimer.style.fontSize = '10px';
+    els.livePreviewToD.style.fontSize = '10px';
+  }
+
   els.livePreviewContentBox.classList.add('with-message');
+  // Force layout recalculation
+  void els.livePreviewContentBox.offsetHeight;
 
   // Wait for layout to update, then fit content
   requestAnimationFrame(() => {
@@ -4038,11 +4054,16 @@ function renderLivePreviewInternal() {
   const hadToD = els.livePreviewTimerSection?.classList.contains('with-tod');
   const todModeChanged = showToD !== hadToD;
   if (todModeChanged) {
+    // Shrink timer before layout change to prevent "big then small" flash
+    els.livePreviewTimer.style.fontSize = '10px';
+    els.livePreviewToD.style.fontSize = '10px';
     if (showToD) {
       els.livePreviewTimerSection?.classList.add('with-tod');
     } else {
       els.livePreviewTimerSection?.classList.remove('with-tod');
     }
+    // Force layout recalculation
+    void els.livePreviewTimerSection?.offsetHeight;
   }
 
   // Update timer display FIRST (before measuring for fit)

@@ -326,7 +326,15 @@ function handleMessageUpdate(message) {
     currentMessage = null;
     lastMessageText = '';
     messageOverlayEl.classList.remove('visible', 'bold', 'italic', 'uppercase');
+
+    // Shrink timer before layout change to prevent flash
+    if (wasVisible) {
+      timerEl.style.fontSize = '10px';
+      todEl.style.fontSize = '10px';
+    }
     contentBoxEl.classList.remove('with-message');
+    // Force layout recalculation
+    void contentBoxEl.offsetHeight;
 
     // Refit timer and ToD since they now have full height
     if (wasVisible) {
@@ -343,8 +351,16 @@ function handleMessageUpdate(message) {
   applyMessageStyle(messageOverlayEl, message);
   messageOverlayEl.classList.add('visible');
 
+  // Shrink timer before layout change to prevent "big then small" flash
+  if (!wasVisible) {
+    timerEl.style.fontSize = '10px';
+    todEl.style.fontSize = '10px';
+  }
+
   // Enable split layout on content box
   contentBoxEl.classList.add('with-message');
+  // Force layout recalculation
+  void contentBoxEl.offsetHeight;
 
   // Wait for layout to update, then fit content (matches preview behavior)
   requestAnimationFrame(() => {
@@ -538,11 +554,16 @@ function renderInternal() {
   const todModeChanged = showToD !== lastShowToD;
   if (todModeChanged) {
     lastShowToD = showToD;
+    // Shrink timer before layout change to prevent "big then small" flash
+    timerEl.style.fontSize = '10px';
+    todEl.style.fontSize = '10px';
     if (showToD) {
       timerSectionEl.classList.add('with-tod');
     } else {
       timerSectionEl.classList.remove('with-tod');
     }
+    // Force layout recalculation
+    void timerSectionEl.offsetHeight;
   }
 
   // Apply timer text FIRST (before measuring for fit)
