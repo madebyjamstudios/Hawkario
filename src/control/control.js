@@ -3483,7 +3483,7 @@ function fitPreviewToD() {
 
 /**
  * Fit preview message text to message-section container
- * Simple scale-to-fit (same approach as timer/ToD)
+ * Tries different word-wrap widths to find optimal layout that maximizes text size
  */
 function fitPreviewMessage() {
   if (!els.livePreviewMessage || !els.livePreviewMessageSection) return;
@@ -3497,28 +3497,42 @@ function fitPreviewMessage() {
     return;
   }
 
-  // Target 95% of container (small padding)
+  // Target 95% of container
   const targetWidth = containerWidth * 0.95;
   const targetHeight = containerHeight * 0.95;
 
-  // Measure at 100px base font
-  els.livePreviewMessage.style.fontSize = '100px';
-  els.livePreviewMessage.style.maxWidth = targetWidth + 'px';
-  els.livePreviewMessage.style.transform = 'none';
+  // Try different maxWidth values to find optimal word-wrap
+  let bestFontSize = 0;
+  let bestMaxWidth = targetWidth;
 
-  void els.livePreviewMessage.offsetWidth;
-  const textWidth = els.livePreviewMessage.scrollWidth;
-  const textHeight = els.livePreviewMessage.scrollHeight;
+  // Width ratios from wide to narrow
+  const widthSteps = [1.0, 0.75, 0.5, 0.4, 0.33, 0.25];
 
-  if (textWidth <= 0 || textHeight <= 0) return;
+  for (const ratio of widthSteps) {
+    const testWidth = targetWidth * ratio;
 
-  // Scale to fit (constrained by smaller ratio)
-  const scaleW = targetWidth / textWidth;
-  const scaleH = targetHeight / textHeight;
-  const scale = Math.min(scaleW, scaleH);
+    // Measure at 100px base with this maxWidth
+    els.livePreviewMessage.style.fontSize = '100px';
+    els.livePreviewMessage.style.maxWidth = testWidth + 'px';
+    void els.livePreviewMessage.offsetWidth;
 
-  const fontSize = Math.max(8, Math.floor(100 * scale));
-  els.livePreviewMessage.style.fontSize = fontSize + 'px';
+    const textW = els.livePreviewMessage.scrollWidth;
+    const textH = els.livePreviewMessage.scrollHeight;
+    if (textW <= 0 || textH <= 0) continue;
+
+    // Calculate scale to fit container
+    const scale = Math.min(targetWidth / textW, targetHeight / textH);
+    const fontSize = 100 * scale;
+
+    if (fontSize > bestFontSize) {
+      bestFontSize = fontSize;
+      bestMaxWidth = testWidth;
+    }
+  }
+
+  // Apply best result
+  els.livePreviewMessage.style.maxWidth = bestMaxWidth + 'px';
+  els.livePreviewMessage.style.fontSize = Math.max(8, Math.floor(bestFontSize)) + 'px';
 }
 
 function setupPreviewResize() {

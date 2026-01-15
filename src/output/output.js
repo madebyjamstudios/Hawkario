@@ -265,7 +265,7 @@ function fitToDContent() {
 
 /**
  * Fit message text to message-section container
- * Simple scale-to-fit (same approach as timer/ToD)
+ * Tries different word-wrap widths to find optimal layout that maximizes text size
  */
 function fitMessageContent() {
   if (!currentMessage || !currentMessage.visible) return;
@@ -279,28 +279,42 @@ function fitMessageContent() {
     return;
   }
 
-  // Target 95% of container (small padding)
+  // Target 95% of container
   const targetWidth = containerWidth * 0.95;
   const targetHeight = containerHeight * 0.95;
 
-  // Measure at 100px base font
-  messageOverlayEl.style.fontSize = '100px';
-  messageOverlayEl.style.maxWidth = targetWidth + 'px';
-  messageOverlayEl.style.transform = 'none';
+  // Try different maxWidth values to find optimal word-wrap
+  let bestFontSize = 0;
+  let bestMaxWidth = targetWidth;
 
-  void messageOverlayEl.offsetWidth;
-  const textWidth = messageOverlayEl.scrollWidth;
-  const textHeight = messageOverlayEl.scrollHeight;
+  // Width ratios from wide to narrow
+  const widthSteps = [1.0, 0.75, 0.5, 0.4, 0.33, 0.25];
 
-  if (textWidth <= 0 || textHeight <= 0) return;
+  for (const ratio of widthSteps) {
+    const testWidth = targetWidth * ratio;
 
-  // Scale to fit (constrained by smaller ratio)
-  const scaleW = targetWidth / textWidth;
-  const scaleH = targetHeight / textHeight;
-  const scale = Math.min(scaleW, scaleH);
+    // Measure at 100px base with this maxWidth
+    messageOverlayEl.style.fontSize = '100px';
+    messageOverlayEl.style.maxWidth = testWidth + 'px';
+    void messageOverlayEl.offsetWidth;
 
-  const fontSize = Math.max(8, Math.floor(100 * scale));
-  messageOverlayEl.style.fontSize = fontSize + 'px';
+    const textW = messageOverlayEl.scrollWidth;
+    const textH = messageOverlayEl.scrollHeight;
+    if (textW <= 0 || textH <= 0) continue;
+
+    // Calculate scale to fit container
+    const scale = Math.min(targetWidth / textW, targetHeight / textH);
+    const fontSize = 100 * scale;
+
+    if (fontSize > bestFontSize) {
+      bestFontSize = fontSize;
+      bestMaxWidth = testWidth;
+    }
+  }
+
+  // Apply best result
+  messageOverlayEl.style.maxWidth = bestMaxWidth + 'px';
+  messageOverlayEl.style.fontSize = Math.max(8, Math.floor(bestFontSize)) + 'px';
 }
 
 /**
