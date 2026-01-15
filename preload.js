@@ -184,6 +184,23 @@ contextBridge.exposeInMainWorld('ninja', {
   // Open file dialog to select font
   fontsSelectFile: () => ipcRenderer.invoke('fonts:select-file'),
 
+  // ============ Custom Sounds ============
+
+  // List all custom sounds
+  soundsList: () => ipcRenderer.invoke('sounds:list'),
+
+  // Upload a custom sound
+  soundsUpload: (data) => ipcRenderer.invoke('sounds:upload', data),
+
+  // Delete a custom sound
+  soundsDelete: (soundId) => ipcRenderer.invoke('sounds:delete', soundId),
+
+  // Get sound file data (for playback)
+  soundsGetData: (soundId) => ipcRenderer.invoke('sounds:get-data', soundId),
+
+  // Open file dialog to select sound
+  soundsSelectFile: () => ipcRenderer.invoke('sounds:select-file'),
+
   // Cleanup listeners (call when window closes)
   removeAllListeners: () => {
     ipcRenderer.removeAllListeners('timer:state');

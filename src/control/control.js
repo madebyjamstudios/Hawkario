@@ -14,6 +14,7 @@ import { computeDisplay, getShadowCSS, getCombinedShadowCSS, FlashAnimator } fro
 import { autoFitMessage, applyMessageStyle } from '../shared/renderMessage.js';
 import { playSound } from '../shared/sounds.js';
 import { BUILT_IN_FONTS, WEIGHT_LABELS, getAvailableWeights, isBuiltInFont, getFontFormat } from '../shared/fontManager.js';
+import { BUILT_IN_SOUNDS, isBuiltInSound, isCustomSound, getCustomSoundId, createCustomSoundType, getAudioFormat, getAudioMimeType } from '../shared/soundManager.js';
 import {
   safeTimeout,
   safeInterval,
@@ -151,10 +152,8 @@ const els = {
   defaultFontWeight: document.getElementById('defaultFontWeight'),
   defaultColor: document.getElementById('defaultColor'),
   defaultStrokeWidth: document.getElementById('defaultStrokeWidth'),
-  defaultStrokeWidthValue: document.getElementById('defaultStrokeWidthValue'),
   defaultStrokeColor: document.getElementById('defaultStrokeColor'),
   defaultShadowSize: document.getElementById('defaultShadowSize'),
-  defaultShadowSizeValue: document.getElementById('defaultShadowSizeValue'),
   defaultShadowColor: document.getElementById('defaultShadowColor'),
   defaultBgColor: document.getElementById('defaultBgColor'),
   // Warning defaults
@@ -195,7 +194,11 @@ const els = {
 
   // Custom Fonts
   customFontsList: document.getElementById('customFontsList'),
-  addCustomFont: document.getElementById('addCustomFont')
+  addCustomFont: document.getElementById('addCustomFont'),
+
+  // Custom Sounds
+  customSoundsList: document.getElementById('customSoundsList'),
+  addCustomSound: document.getElementById('addCustomSound')
 };
 
 // ============================================================================
@@ -1344,18 +1347,12 @@ function openAppSettings() {
   }
   if (els.defaultStrokeWidth) {
     els.defaultStrokeWidth.value = settings.defaults.strokeWidth ?? 0;
-    if (els.defaultStrokeWidthValue) {
-      els.defaultStrokeWidthValue.textContent = els.defaultStrokeWidth.value + 'px';
-    }
   }
   if (els.defaultStrokeColor) {
     els.defaultStrokeColor.value = settings.defaults.strokeColor || '#000000';
   }
   if (els.defaultShadowSize) {
     els.defaultShadowSize.value = settings.defaults.shadowSize ?? 0;
-    if (els.defaultShadowSizeValue) {
-      els.defaultShadowSizeValue.textContent = els.defaultShadowSize.value + 'px';
-    }
   }
   if (els.defaultShadowColor) {
     els.defaultShadowColor.value = settings.defaults.shadowColor || '#000000';
@@ -1372,8 +1369,9 @@ function openAppSettings() {
     els.defaultFontWeight.value = settings.defaults.fontWeight ?? 700;
   }
 
-  // Load custom fonts list
+  // Load custom fonts and sounds lists
   loadCustomFontsList();
+  loadCustomSoundsList();
 
   // Load warning defaults (convert seconds to MM:SS)
   if (els.defaultWarnYellow) {
@@ -1682,6 +1680,187 @@ function updateFontWeightOptions(fontFamily) {
       Math.abs(curr - currentWeight) < Math.abs(prev - currentWeight) ? curr : prev
     );
     els.fontWeight.value = closest;
+  }
+}
+
+// ============ Custom Sounds Management ============
+
+// Cache for custom sounds list
+let customSounds = [];
+
+// Audio element for previewing custom sounds
+let previewAudio = null;
+
+/**
+ * Load and display custom sounds list in App Settings
+ */
+async function loadCustomSoundsList() {
+  try {
+    customSounds = await window.ninja.soundsList();
+    renderCustomSoundsList();
+    updateSoundDropdowns();
+  } catch (e) {
+    console.error('Failed to load custom sounds:', e);
+  }
+}
+
+/**
+ * Render the custom sounds list UI
+ */
+function renderCustomSoundsList() {
+  if (!els.customSoundsList) return;
+
+  els.customSoundsList.innerHTML = '';
+
+  customSounds.forEach(sound => {
+    const item = document.createElement('div');
+    item.className = 'custom-sound-item';
+    item.innerHTML = `
+      <div class="custom-sound-info">
+        <span class="custom-sound-name">${sound.name}</span>
+        <span class="custom-sound-meta">${sound.fileName}</span>
+      </div>
+      <div class="custom-sound-actions">
+        <button class="custom-sound-preview" data-sound-id="${sound.id}" title="Preview sound">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </button>
+        <button class="custom-sound-delete" data-sound-id="${sound.id}" title="Delete sound">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+    els.customSoundsList.appendChild(item);
+  });
+
+  // Add click handlers for preview and delete buttons
+  els.customSoundsList.querySelectorAll('.custom-sound-preview').forEach(btn => {
+    btn.addEventListener('click', () => previewCustomSound(btn.dataset.soundId));
+  });
+  els.customSoundsList.querySelectorAll('.custom-sound-delete').forEach(btn => {
+    btn.addEventListener('click', () => deleteCustomSound(btn.dataset.soundId));
+  });
+}
+
+/**
+ * Update all sound dropdowns with custom sounds
+ */
+function updateSoundDropdowns() {
+  const dropdowns = [els.soundEnd, els.defaultSound];
+
+  dropdowns.forEach(dropdown => {
+    if (!dropdown) return;
+
+    // Get current value to restore after updating
+    const currentValue = dropdown.value;
+
+    // Remove existing custom sound options (keep built-in)
+    const builtInValues = BUILT_IN_SOUNDS.map(s => s.value);
+    Array.from(dropdown.options).forEach(opt => {
+      if (!builtInValues.includes(opt.value)) {
+        opt.remove();
+      }
+    });
+
+    // Add custom sounds
+    customSounds.forEach(sound => {
+      const option = document.createElement('option');
+      option.value = createCustomSoundType(sound.id);
+      option.textContent = sound.name;
+      dropdown.appendChild(option);
+    });
+
+    // Restore value if still valid
+    if (Array.from(dropdown.options).some(opt => opt.value === currentValue)) {
+      dropdown.value = currentValue;
+    }
+  });
+}
+
+/**
+ * Handle adding a new custom sound
+ */
+async function handleAddCustomSound() {
+  try {
+    const result = await window.ninja.soundsSelectFile();
+    if (!result) return; // User cancelled
+
+    const { fileName, fileData } = result;
+
+    // Extract name from filename
+    const soundName = fileName.replace(/\.[^/.]+$/, '')
+      .replace(/[-_]/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+
+    // Upload the sound
+    const sound = await window.ninja.soundsUpload({ fileName, fileData, soundName });
+    if (!sound) {
+      console.error('Failed to upload sound');
+      return;
+    }
+
+    // Reload the sounds list
+    await loadCustomSoundsList();
+  } catch (e) {
+    console.error('Failed to add custom sound:', e);
+  }
+}
+
+/**
+ * Handle deleting a custom sound
+ */
+async function deleteCustomSound(soundId) {
+  try {
+    const success = await window.ninja.soundsDelete(soundId);
+    if (success) {
+      await loadCustomSoundsList();
+    }
+  } catch (e) {
+    console.error('Failed to delete custom sound:', e);
+  }
+}
+
+/**
+ * Preview a custom sound
+ */
+async function previewCustomSound(soundId) {
+  try {
+    // Stop any currently playing preview
+    if (previewAudio) {
+      previewAudio.pause();
+      previewAudio = null;
+    }
+
+    const soundData = await window.ninja.soundsGetData(soundId);
+    if (!soundData) return;
+
+    const mimeType = getAudioMimeType(soundData.format);
+    const dataUrl = `data:${mimeType};base64,${soundData.data}`;
+
+    previewAudio = new Audio(dataUrl);
+    previewAudio.volume = 0.7;
+    previewAudio.play();
+  } catch (e) {
+    console.error('Failed to preview custom sound:', e);
+  }
+}
+
+/**
+ * Load all custom sounds on startup
+ */
+async function loadAllCustomSounds() {
+  try {
+    customSounds = await window.ninja.soundsList();
+    updateSoundDropdowns();
+  } catch (e) {
+    console.error('Failed to load custom sounds:', e);
   }
 }
 
@@ -6059,22 +6238,6 @@ function setupEventListeners() {
     els.shadowSize.addEventListener('input', updateRangeDisplays);
   }
 
-  // Default range slider value display updates (App Settings)
-  if (els.defaultStrokeWidth) {
-    els.defaultStrokeWidth.addEventListener('input', () => {
-      if (els.defaultStrokeWidthValue) {
-        els.defaultStrokeWidthValue.textContent = els.defaultStrokeWidth.value + 'px';
-      }
-    });
-  }
-  if (els.defaultShadowSize) {
-    els.defaultShadowSize.addEventListener('input', () => {
-      if (els.defaultShadowSizeValue) {
-        els.defaultShadowSizeValue.textContent = els.defaultShadowSize.value + 'px';
-      }
-    });
-  }
-
   // Font family change - update available weights
   if (els.fontFamily) {
     els.fontFamily.addEventListener('change', () => {
@@ -6175,6 +6338,11 @@ function setupEventListeners() {
   // Custom Fonts
   if (els.addCustomFont) {
     els.addCustomFont.addEventListener('click', handleAddCustomFont);
+  }
+
+  // Custom Sounds
+  if (els.addCustomSound) {
+    els.addCustomSound.addEventListener('click', handleAddCustomSound);
   }
 
   // Refresh updates button
@@ -7183,8 +7351,9 @@ function init() {
   window.ninja.setAlwaysOnTop('output', appSettings.outputOnTop);
   window.ninja.setAlwaysOnTop('control', appSettings.controlOnTop);
 
-  // Load custom fonts
+  // Load custom fonts and sounds
   loadAllCustomFonts();
+  loadAllCustomSounds();
 
   // Create default preset on first launch
   createDefaultPreset();

@@ -244,12 +244,91 @@ export const SOUND_PLAYERS = {
   tick: playTickSound
 };
 
+// Cache for custom sound data
+const customSoundCache = new Map();
+
+/**
+ * Check if a sound type is a custom sound
+ */
+function isCustomSound(type) {
+  return type && type.startsWith('custom:');
+}
+
+/**
+ * Extract custom sound ID from type
+ */
+function getCustomSoundId(type) {
+  return type ? type.replace('custom:', '') : null;
+}
+
+/**
+ * Get MIME type for audio format
+ */
+function getAudioMimeType(format) {
+  switch (format) {
+    case 'mp3': return 'audio/mpeg';
+    case 'wav': return 'audio/wav';
+    case 'ogg': return 'audio/ogg';
+    case 'webm': return 'audio/webm';
+    case 'm4a': return 'audio/mp4';
+    default: return 'audio/mpeg';
+  }
+}
+
+/**
+ * Play a custom sound
+ */
+async function playCustomSound(soundId, volume = 0.5) {
+  try {
+    // Check cache first
+    let soundData = customSoundCache.get(soundId);
+
+    if (!soundData) {
+      // Fetch from main process
+      soundData = await window.ninja.soundsGetData(soundId);
+      if (!soundData) {
+        console.warn('Custom sound not found:', soundId);
+        return;
+      }
+      customSoundCache.set(soundId, soundData);
+    }
+
+    const mimeType = getAudioMimeType(soundData.format);
+    const dataUrl = `data:${mimeType};base64,${soundData.data}`;
+
+    const audio = new Audio(dataUrl);
+    audio.volume = volume;
+    audio.play().catch(e => console.error('Failed to play custom sound:', e));
+  } catch (e) {
+    console.error('Failed to play custom sound:', e);
+  }
+}
+
+/**
+ * Clear custom sound cache (call when sounds are deleted)
+ */
+export function clearCustomSoundCache(soundId = null) {
+  if (soundId) {
+    customSoundCache.delete(soundId);
+  } else {
+    customSoundCache.clear();
+  }
+}
+
 /**
  * Play a sound by type
- * @param {string} type - Sound type: 'chime', 'bell', 'alert', 'gong', 'soft', etc.
+ * @param {string} type - Sound type: 'chime', 'bell', 'alert', 'gong', 'soft', or 'custom:sound-id'
  * @param {number} volume - Volume from 0 to 1
  */
 export function playSound(type, volume = 0.5) {
+  // Handle custom sounds
+  if (isCustomSound(type)) {
+    const soundId = getCustomSoundId(type);
+    playCustomSound(soundId, volume);
+    return;
+  }
+
+  // Handle built-in sounds
   const player = SOUND_PLAYERS[type];
   if (player) {
     player(volume);

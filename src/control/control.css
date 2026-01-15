@@ -2387,6 +2387,75 @@ h3 {
   color: #ef4444;
 }
 
+/* Custom sounds list */
+.custom-sounds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.custom-sounds-list:empty::before {
+  content: 'No custom sounds installed';
+  color: #666;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.custom-sound-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+.custom-sound-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.custom-sound-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.custom-sound-meta {
+  font-size: 11px;
+  color: #666;
+}
+
+.custom-sound-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.custom-sound-preview,
+.custom-sound-delete {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.custom-sound-preview:hover {
+  background: #1a2a1a;
+  color: #22c55e;
+}
+
+.custom-sound-delete:hover {
+  background: #3a1a1a;
+  color: #ef4444;
+}
+
 /* Timezone dropdown - auto-size with minimum width */
 #timezone {
   width: fit-content;

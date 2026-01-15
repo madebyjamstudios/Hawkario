@@ -975,6 +975,147 @@ ipcMain.handle('fonts:select-file', async () => {
   };
 });
 
+// ============ Custom Sounds ============
+
+const soundsDir = path.join(app.getPath('userData'), 'sounds');
+const soundsMetaPath = path.join(soundsDir, 'sounds.json');
+
+// Ensure sounds directory exists
+function ensureSoundsDir() {
+  if (!fs.existsSync(soundsDir)) {
+    fs.mkdirSync(soundsDir, { recursive: true });
+  }
+}
+
+// Load sounds metadata
+function loadSoundsMeta() {
+  ensureSoundsDir();
+  if (!fs.existsSync(soundsMetaPath)) {
+    return [];
+  }
+  try {
+    const data = fs.readFileSync(soundsMetaPath, 'utf8');
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('Failed to load sounds meta:', e);
+    return [];
+  }
+}
+
+// Save sounds metadata
+function saveSoundsMeta(sounds) {
+  ensureSoundsDir();
+  fs.writeFileSync(soundsMetaPath, JSON.stringify(sounds, null, 2));
+}
+
+// List all custom sounds
+ipcMain.handle('sounds:list', () => {
+  return loadSoundsMeta();
+});
+
+// Upload a custom sound
+ipcMain.handle('sounds:upload', async (_event, { fileName, fileData, soundName }) => {
+  ensureSoundsDir();
+
+  const sounds = loadSoundsMeta();
+
+  // Generate unique ID
+  const id = `sound-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  // Determine format from extension
+  const ext = fileName.toLowerCase().split('.').pop();
+  const format = ['mp3', 'wav', 'ogg', 'webm', 'm4a'].includes(ext) ? ext : 'mp3';
+
+  // Create sound metadata
+  const sound = {
+    id,
+    name: soundName || fileName.replace(/\.[^/.]+$/, ''),
+    fileName: `${id}.${format}`,
+    format,
+    addedAt: Date.now()
+  };
+
+  // Save sound file
+  const buffer = Buffer.from(fileData, 'base64');
+  const soundPath = path.join(soundsDir, sound.fileName);
+  fs.writeFileSync(soundPath, buffer);
+
+  // Update metadata
+  sounds.push(sound);
+  saveSoundsMeta(sounds);
+
+  return sound;
+});
+
+// Delete a custom sound
+ipcMain.handle('sounds:delete', (_event, soundId) => {
+  const sounds = loadSoundsMeta();
+  const soundIndex = sounds.findIndex(s => s.id === soundId);
+
+  if (soundIndex === -1) {
+    return false;
+  }
+
+  const sound = sounds[soundIndex];
+  const soundPath = path.join(soundsDir, sound.fileName);
+
+  // Delete file
+  if (fs.existsSync(soundPath)) {
+    fs.unlinkSync(soundPath);
+  }
+
+  // Update metadata
+  sounds.splice(soundIndex, 1);
+  saveSoundsMeta(sounds);
+
+  return true;
+});
+
+// Get sound file data (base64)
+ipcMain.handle('sounds:get-data', (_event, soundId) => {
+  const sounds = loadSoundsMeta();
+  const sound = sounds.find(s => s.id === soundId);
+
+  if (!sound) {
+    return null;
+  }
+
+  const soundPath = path.join(soundsDir, sound.fileName);
+  if (!fs.existsSync(soundPath)) {
+    return null;
+  }
+
+  const fileData = fs.readFileSync(soundPath);
+  return {
+    ...sound,
+    data: fileData.toString('base64')
+  };
+});
+
+// Open file dialog to select sound
+ipcMain.handle('sounds:select-file', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select Sound File',
+    filters: [
+      { name: 'Audio Files', extensions: ['mp3', 'wav', 'ogg', 'webm', 'm4a'] }
+    ],
+    properties: ['openFile']
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+
+  const filePath = result.filePaths[0];
+  const fileName = path.basename(filePath);
+  const fileData = fs.readFileSync(filePath);
+
+  return {
+    fileName,
+    fileData: fileData.toString('base64')
+  };
+});
+
 // ============ Application Menu ============
 
 const menuTemplate = [

@@ -500,23 +500,21 @@
             <label for="defaultColor">Text Color</label>
             <input id="defaultColor" type="color" value="#ffffff" />
           </div>
-          <div class="kv">
-            <label for="defaultStrokeWidth">Stroke Width</label>
-            <input id="defaultStrokeWidth" type="range" min="0" max="20" value="0" />
-            <span id="defaultStrokeWidthValue" class="range-value">0px</span>
+          <div class="kv kv-inline">
+            <label>Stroke</label>
+            <div class="inline-controls">
+              <input id="defaultStrokeWidth" type="number" min="0" max="20" step="1" value="0" class="number-stepper" />
+              <span class="unit-label">px</span>
+              <input id="defaultStrokeColor" type="color" value="#000000" />
+            </div>
           </div>
-          <div class="kv">
-            <label for="defaultStrokeColor">Stroke Color</label>
-            <input id="defaultStrokeColor" type="color" value="#000000" />
-          </div>
-          <div class="kv">
-            <label for="defaultShadowSize">Shadow Size</label>
-            <input id="defaultShadowSize" type="range" min="0" max="50" value="0" />
-            <span id="defaultShadowSizeValue" class="range-value">0px</span>
-          </div>
-          <div class="kv">
-            <label for="defaultShadowColor">Shadow Color</label>
-            <input id="defaultShadowColor" type="color" value="#000000" />
+          <div class="kv kv-inline">
+            <label>Shadow</label>
+            <div class="inline-controls">
+              <input id="defaultShadowSize" type="number" min="0" max="50" step="1" value="0" class="number-stepper" />
+              <span class="unit-label">px</span>
+              <input id="defaultShadowColor" type="color" value="#000000" />
+            </div>
           </div>
           <div class="kv">
             <label for="defaultBgColor">Background</label>
@@ -555,6 +553,16 @@
             <!-- Custom fonts will be populated here -->
           </div>
           <button id="addCustomFont" class="secondary">Add Font...</button>
+        </div>
+
+        <!-- Custom Sounds Section -->
+        <div class="settings-section">
+          <h3 class="settings-section-title">Custom Sounds</h3>
+          <p class="settings-hint">Upload custom sounds for timer alerts</p>
+          <div id="customSoundsList" class="custom-sounds-list">
+            <!-- Custom sounds will be populated here -->
+          </div>
+          <button id="addCustomSound" class="secondary">Add Sound...</button>
         </div>
 
         <!-- OSC Integration Section -->

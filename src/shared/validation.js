@@ -103,22 +103,35 @@ export function validateStyle(style) {
 }
 
 /**
- * Valid sound types
+ * Valid built-in sound types
  */
 const VALID_SOUND_TYPES = ['none', 'chime', 'bell', 'alert', 'gong', 'soft'];
 
 /**
+ * Check if a sound type is valid (built-in or custom)
+ */
+function isValidSoundType(type) {
+  if (!type || typeof type !== 'string') return false;
+  // Built-in sounds
+  if (VALID_SOUND_TYPES.includes(type)) return true;
+  // Custom sounds (format: custom:sound-id)
+  if (type.startsWith('custom:') && type.length > 7) return true;
+  return false;
+}
+
+/**
  * Validate sound settings
  * Supports both old format (endEnabled: boolean) and new format (endType: string)
+ * Also supports custom sounds (format: custom:sound-id)
  */
 export function validateSound(sound) {
   if (!sound || typeof sound !== 'object') {
     return getDefaultSound();
   }
 
-  // Support both old and new format
+  // Support both old and new format, plus custom sounds
   let endType = 'none';
-  if (typeof sound.endType === 'string' && VALID_SOUND_TYPES.includes(sound.endType)) {
+  if (typeof sound.endType === 'string' && isValidSoundType(sound.endType)) {
     endType = sound.endType;
   } else if (sound.endEnabled === true) {
     // Migrate old format: 'on' becomes 'chime'
@@ -289,9 +302,9 @@ function validateDefaultSettings(defaults) {
     };
   }
 
-  // Support both old and new format
+  // Support both old and new format, plus custom sounds
   let soundType = 'none';
-  if (typeof defaults.soundType === 'string' && VALID_SOUND_TYPES.includes(defaults.soundType)) {
+  if (typeof defaults.soundType === 'string' && isValidSoundType(defaults.soundType)) {
     soundType = defaults.soundType;
   } else if (defaults.soundEnabled === true) {
     // Migrate old format
