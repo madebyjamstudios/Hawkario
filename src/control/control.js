@@ -7151,22 +7151,22 @@ function init() {
 
   // ResizeObserver for reliable resize detection (works with window snapping)
   const previewResizeObserver = new ResizeObserver(() => {
+    // Double RAF to ensure all layouts have recalculated
     requestAnimationFrame(() => {
-      const containerWidth = els.previewSection.offsetWidth;
-      const currentWidth = els.previewWrapper.offsetWidth;
-      // Shrink preview if it exceeds available space (min 150px)
-      if (currentWidth > containerWidth && containerWidth >= 150) {
-        els.previewWrapper.style.width = containerWidth + 'px';
-      }
-      fitPreviewTimer();
-      fitPreviewToD();
-      fitPreviewMessage();
+      requestAnimationFrame(() => {
+        const containerWidth = els.previewSection.offsetWidth;
+        const currentWidth = els.previewWrapper.offsetWidth;
+        // Shrink preview if it exceeds available space (min 150px)
+        if (currentWidth > containerWidth && containerWidth >= 150) {
+          els.previewWrapper.style.width = containerWidth + 'px';
+        }
+        fitPreviewTimer();
+        fitPreviewToD();
+        fitPreviewMessage();
+      });
     });
   });
-  if (els.livePreviewContentBox) {
-    previewResizeObserver.observe(els.livePreviewContentBox);
-  }
-  // Also observe previewSection for container width changes
+  // Observe previewSection for container width changes
   if (els.previewSection) {
     previewResizeObserver.observe(els.previewSection);
   }

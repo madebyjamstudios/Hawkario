@@ -72,13 +72,17 @@ function updateResolution() {
 // ResizeObserver for reliable resize detection (works with window snapping)
 const resizeObserver = new ResizeObserver(() => {
   updateResolution();
+  // Double RAF to ensure all layouts have recalculated
   requestAnimationFrame(() => {
-    fitTimerContent();
-    fitToDContent();
-    fitMessageContent();
+    requestAnimationFrame(() => {
+      fitTimerContent();
+      fitToDContent();
+      fitMessageContent();
+    });
   });
 });
-resizeObserver.observe(contentBoxEl);
+// Observe stage element (outermost) to catch all resize events
+resizeObserver.observe(stageEl);
 
 // Also listen to window resize for resolution display
 window.addEventListener('resize', updateResolution);
