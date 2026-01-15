@@ -3501,8 +3501,10 @@ function fitPreviewMessage() {
   const targetWidth = containerWidth * 0.95;
   const targetHeight = containerHeight * 0.95;
 
-  // Set maxWidth to container width - text wraps at container boundary
+  // Reset to small font and set maxWidth FIRST to ensure proper wrapping
+  els.livePreviewMessage.style.fontSize = '8px';
   els.livePreviewMessage.style.maxWidth = targetWidth + 'px';
+  void els.livePreviewMessage.offsetWidth; // Force reflow to establish wrap points
 
   // Binary search for largest font that fits (textFit algorithm)
   let min = 8;
