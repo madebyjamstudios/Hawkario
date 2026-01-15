@@ -103,7 +103,7 @@ html, body {
   overflow: visible;
 }
 
-/* When message visible: timer-section at top 34%, message at bottom 66% */
+/* When message visible: timer-section at top, 34% height */
 .content-box.with-message .timer-section {
   position: absolute;
   top: 0;
@@ -111,28 +111,6 @@ html, body {
   transform: none;
   width: 100%;
   height: 34%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-/* Timer+ToD within message mode: 75/25 split inside the 34% */
-.content-box.with-message .timer-section.with-tod {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-}
-
-.content-box.with-message .timer-section.with-tod .timer-box {
-  flex: 0 0 75%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.content-box.with-message .timer-section.with-tod .tod-box {
-  flex: 0 0 25%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -147,9 +125,6 @@ html, body {
   height: 66%;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  /* DEBUG */
-  outline: 2px dashed magenta;
 }
 
 /* ============ Timer Element ============ */
