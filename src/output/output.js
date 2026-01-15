@@ -283,10 +283,8 @@ function fitMessageContent() {
   const targetWidth = containerWidth * 0.95;
   const targetHeight = containerHeight * 0.95;
 
-  // Reset to small font and set maxWidth FIRST to ensure proper wrapping
-  messageOverlayEl.style.fontSize = '8px';
+  // Set maxWidth to container width - text wraps at container boundary
   messageOverlayEl.style.maxWidth = targetWidth + 'px';
-  void messageOverlayEl.offsetWidth; // Force reflow to establish wrap points
 
   // Binary search for largest font that fits (textFit algorithm)
   let min = 8;
