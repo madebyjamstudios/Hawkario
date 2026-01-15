@@ -241,6 +241,8 @@ function fitTimerContent() {
 
   const fontSize = Math.floor(100 * scale);
   timerEl.style.fontSize = fontSize + 'px';
+  // Force repaint (helps with Electron/macOS resize rendering)
+  void timerEl.offsetWidth;
 }
 
 /**

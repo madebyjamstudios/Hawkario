@@ -272,6 +272,7 @@ function createOutputWindow() {
     title: 'Ninja Timer - Output',
     fullscreen: hasSecondaryDisplay, // Auto-fullscreen on secondary display
     alwaysOnTop: outputAlwaysOnTop,
+    backgroundColor: '#000000', // Required for live resize rendering on macOS
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
