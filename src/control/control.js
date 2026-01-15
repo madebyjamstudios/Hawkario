@@ -2985,16 +2985,31 @@ function getRefText(format, durationSec) {
 
 /**
  * Fit preview timer to fill its container - scale until box touches edge
- * Timer-box wraps timer exactly, centered in timer-section
+ * Respects message mode (34% height) and ToD mode (75% of that)
  */
 function fitPreviewTimer() {
   if (!els.livePreviewTimer || !els.livePreviewTimerBox || !els.livePreviewContentBox) return;
 
   const hasToD = els.livePreviewTimerSection?.classList.contains('with-tod');
+  const hasMessage = els.livePreviewContentBox?.classList.contains('with-message');
 
-  // Container = content-box for timer-only, timer-section for with-tod
-  const containerWidth = hasToD ? els.livePreviewTimerSection.offsetWidth : els.livePreviewContentBox.offsetWidth;
-  const containerHeight = hasToD ? els.livePreviewTimerBox.offsetHeight : els.livePreviewContentBox.offsetHeight;
+  // Container width is always timer-section width
+  const containerWidth = els.livePreviewTimerSection?.offsetWidth || 0;
+
+  // Container height depends on mode:
+  // - Timer only (no message): content-box height
+  // - Timer only (with message): timer-section height (34%)
+  // - Timer+ToD (no message): timer-box height (75%)
+  // - Timer+ToD (with message): timer-box height (75% of 34%)
+  let containerHeight;
+  if (hasToD) {
+    containerHeight = els.livePreviewTimerBox.offsetHeight;
+  } else if (hasMessage) {
+    containerHeight = els.livePreviewTimerSection?.offsetHeight || 0;
+  } else {
+    containerHeight = els.livePreviewContentBox.offsetHeight;
+  }
+
   if (containerWidth <= 0 || containerHeight <= 0) return;
 
   const appSettings = loadAppSettings();

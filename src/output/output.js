@@ -164,15 +164,29 @@ function getRefText(format, durationMs) {
 
 /**
  * Fit timer to fill its container - scale until box touches edge
- * Timer-box wraps timer exactly, centered in timer-section
- * Scale until timer-box width = container width OR height = container height
+ * Respects message mode (34% height) and ToD mode (75% of that)
  */
 function fitTimerContent() {
   const hasToD = timerSectionEl.classList.contains('with-tod');
+  const hasMessage = contentBoxEl.classList.contains('with-message');
 
-  // Container = content-box for timer-only, timer-section for with-tod (75% of content-box)
-  const containerWidth = hasToD ? timerSectionEl.offsetWidth : contentBoxEl.offsetWidth;
-  const containerHeight = hasToD ? timerBoxEl.offsetHeight : contentBoxEl.offsetHeight;
+  // Container width is always timer-section width
+  const containerWidth = timerSectionEl.offsetWidth;
+
+  // Container height depends on mode:
+  // - Timer only (no message): content-box height
+  // - Timer only (with message): timer-section height (34%)
+  // - Timer+ToD (no message): timer-box height (75%)
+  // - Timer+ToD (with message): timer-box height (75% of 34%)
+  let containerHeight;
+  if (hasToD) {
+    containerHeight = timerBoxEl.offsetHeight;
+  } else if (hasMessage) {
+    containerHeight = timerSectionEl.offsetHeight;
+  } else {
+    containerHeight = contentBoxEl.offsetHeight;
+  }
+
   if (containerWidth <= 0 || containerHeight <= 0) return;
 
   const zoom = timerZoom / 100;
@@ -187,7 +201,7 @@ function fitTimerContent() {
   const naturalHeight = timerEl.offsetHeight;
   if (naturalWidth <= 0 || naturalHeight <= 0) return;
 
-  // Scale to fill width, but cap at height
+  // Scale to fill, cap at edges
   const scaleW = maxWidth / naturalWidth;
   const scaleH = maxHeight / naturalHeight;
   const scale = Math.min(scaleW, scaleH);
