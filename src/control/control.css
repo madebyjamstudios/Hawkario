@@ -329,7 +329,6 @@ button:disabled {
   display: inline-block;
   white-space: nowrap;
   line-height: 0.75;
-  font-family: 'JetBrains Mono', monospace;
   overflow: visible;
   user-select: none;
   -webkit-user-select: none;
@@ -371,7 +370,6 @@ button:disabled {
   display: inline-block;
   white-space: nowrap;
   line-height: 0.75;
-  font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;

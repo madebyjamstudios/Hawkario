@@ -133,7 +133,6 @@ html, body {
   display: inline-block;
   white-space: nowrap;
   line-height: 0.75;
-  font-family: 'JetBrains Mono', monospace;
 
   /* Tabular numbers: all digits same width */
   font-variant-numeric: tabular-nums lining-nums;
@@ -158,7 +157,6 @@ html, body {
   display: inline-block;
   white-space: nowrap;
   line-height: 0.75;
-  font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
