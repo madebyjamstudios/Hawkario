@@ -359,7 +359,7 @@ export class FlashAnimator {
   }
 
   restore() {
-    // Add quick fade transition for color (grey -> original)
+    // Add quick fade transition for color (white -> original)
     this.timerEl.style.transition = 'color 200ms ease-out';
 
     // Restore color with fade
@@ -368,18 +368,18 @@ export class FlashAnimator {
     // Restore shadow instantly (no transition - looks weird animated)
     this.timerEl.style.textShadow = this.originalShadow;
 
-    // Clear transition after animation completes
+    // Keep isFlashing true during fade-out so render loops don't override
+    // Clear transition and isFlashing after animation completes
     setTimeout(() => {
       this.timerEl.style.transition = '';
+      this.isFlashing = false;
+      this.startedAt = null;
+      this.lastPhase = null;
+
+      if (this.onComplete) {
+        this.onComplete();
+      }
     }, 250);
-
-    this.isFlashing = false;
-    this.startedAt = null;
-    this.lastPhase = null;
-
-    if (this.onComplete) {
-      this.onComplete();
-    }
   }
 
   stop() {
