@@ -430,6 +430,10 @@ button:disabled {
   padding-right: 16px;
 }
 
+.kv select {
+  width: 100%;
+}
+
 /* Inline controls (e.g., slider + value + color picker) */
 .kv-inline {
   display: grid;
@@ -2458,12 +2462,6 @@ h3 {
   color: #ef4444;
 }
 
-/* Timezone dropdown - auto-size with minimum width */
-#timezone {
-  width: fit-content;
-  min-width: 120px;
-  max-width: 100%;
-}
 
 /* Update section */
 .update-section {
