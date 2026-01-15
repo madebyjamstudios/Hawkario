@@ -2544,9 +2544,10 @@ function updateLivePreviewMessage(message) {
     els.livePreviewMessage.classList.remove('visible', 'bold', 'italic', 'uppercase');
     lastPreviewMessageText = '';
 
-    // Refit timer since it now has full height
+    // Refit timer and ToD since they now have full height
     if (wasVisible) {
       fitPreviewTimer();
+      fitPreviewToD();
     }
     return;
   }
@@ -2564,9 +2565,10 @@ function updateLivePreviewMessage(message) {
       fitPreviewMessage();
     }
 
-    // Refit timer if message just became visible (area changed)
+    // Refit timer and ToD if message just became visible (area changed)
     if (!wasVisible) {
       fitPreviewTimer();
+      fitPreviewToD();
     }
   });
 }
@@ -7331,6 +7333,9 @@ function init() {
   setupPreviewResize();
   restorePreviewWidth();
 
+  // Debounce timer for message fitting during resize
+  let previewMessageResizeTimeout = null;
+
   // ResizeObserver for reliable resize detection (works with window snapping)
   const previewResizeObserver = new ResizeObserver(() => {
     // Double RAF to ensure all layouts have recalculated
@@ -7344,7 +7349,9 @@ function init() {
         }
         fitPreviewTimer();
         fitPreviewToD();
-        fitPreviewMessage();
+        // Debounce message fit to avoid jitter during continuous resize
+        clearTimeout(previewMessageResizeTimeout);
+        previewMessageResizeTimeout = setTimeout(fitPreviewMessage, 100);
       });
     });
   });

@@ -69,6 +69,9 @@ function updateResolution() {
   }
 }
 
+// Debounce timer for message fitting during resize
+let messageResizeTimeout = null;
+
 // ResizeObserver for reliable resize detection (works with window snapping)
 const resizeObserver = new ResizeObserver(() => {
   updateResolution();
@@ -77,7 +80,9 @@ const resizeObserver = new ResizeObserver(() => {
     requestAnimationFrame(() => {
       fitTimerContent();
       fitToDContent();
-      fitMessageContent();
+      // Debounce message fit to avoid jitter during continuous resize
+      clearTimeout(messageResizeTimeout);
+      messageResizeTimeout = setTimeout(fitMessageContent, 100);
     });
   });
 });
@@ -323,9 +328,10 @@ function handleMessageUpdate(message) {
     messageOverlayEl.classList.remove('visible', 'bold', 'italic', 'uppercase');
     contentBoxEl.classList.remove('with-message');
 
-    // Refit timer since it now has full height
+    // Refit timer and ToD since they now have full height
     if (wasVisible) {
       fitTimerContent();
+      fitToDContent();
     }
     return;
   }
@@ -348,9 +354,10 @@ function handleMessageUpdate(message) {
       fitMessageContent();
     }
 
-    // Refit timer if message just became visible (area changed)
+    // Refit timer and ToD if message just became visible (area changed)
     if (!wasVisible) {
       fitTimerContent();
+      fitToDContent();
     }
   });
 }
