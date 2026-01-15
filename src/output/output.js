@@ -352,16 +352,19 @@ function handleMessageUpdate(message) {
   // Enable split layout on content box
   contentBoxEl.classList.add('with-message');
 
-  // Fit message content (only when text changes)
-  if (message.text !== lastMessageText) {
-    lastMessageText = message.text;
-    fitMessageContent();
-  }
+  // Wait for layout to update, then fit content
+  requestAnimationFrame(() => {
+    // Fit message content (when text changes or message just became visible)
+    if (message.text !== lastMessageText || !wasVisible) {
+      lastMessageText = message.text;
+      fitMessageContent();
+    }
 
-  // Refit timer if message just became visible (area changed)
-  if (!wasVisible) {
-    fitTimerContent();
-  }
+    // Refit timer if message just became visible (area changed)
+    if (!wasVisible) {
+      fitTimerContent();
+    }
+  });
 }
 
 /**

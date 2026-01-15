@@ -2556,16 +2556,19 @@ function updateLivePreviewMessage(message) {
   els.livePreviewMessage.classList.add('visible');
   els.livePreviewContentBox.classList.add('with-message');
 
-  // Fit message content (only when text changes)
-  if (message.text !== lastPreviewMessageText) {
-    lastPreviewMessageText = message.text;
-    fitPreviewMessage();
-  }
+  // Wait for layout to update, then fit content
+  requestAnimationFrame(() => {
+    // Fit message content (when text changes or message just became visible)
+    if (message.text !== lastPreviewMessageText || !wasVisible) {
+      lastPreviewMessageText = message.text;
+      fitPreviewMessage();
+    }
 
-  // Refit timer if message just became visible (area changed)
-  if (!wasVisible) {
-    fitPreviewTimer();
-  }
+    // Refit timer if message just became visible (area changed)
+    if (!wasVisible) {
+      fitPreviewTimer();
+    }
+  });
 }
 
 function toggleMessageVisibility(messageId) {
