@@ -70,13 +70,11 @@ function updateResolution() {
 }
 
 // ResizeObserver for reliable resize detection (works with window snapping)
-const resizeObserver = new ResizeObserver((entries) => {
-  console.log('[ResizeObserver] Fired, stage size:', stageEl.offsetWidth, 'x', stageEl.offsetHeight);
+const resizeObserver = new ResizeObserver(() => {
   updateResolution();
   // Double RAF to ensure all layouts have recalculated
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      console.log('[ResizeObserver] Calling fit functions');
       fitTimerContent();
       fitToDContent();
       fitMessageContent();
@@ -85,7 +83,6 @@ const resizeObserver = new ResizeObserver((entries) => {
 });
 // Observe stage element (outermost) to catch all resize events
 resizeObserver.observe(stageEl);
-console.log('[ResizeObserver] Observing stage element');
 
 // Also listen to window resize for resolution display
 window.addEventListener('resize', updateResolution);
@@ -234,18 +231,13 @@ function fitTimerContent() {
  * Scale until tod-box touches edge
  */
 function fitToDContent() {
-  if (!timerSectionEl.classList.contains('with-tod')) {
-    console.log('[fitToDContent] Skipped - no with-tod class');
-    return;
-  }
+  if (!timerSectionEl.classList.contains('with-tod')) return;
 
   const containerWidth = todBoxEl.offsetWidth;
   const containerHeight = todBoxEl.offsetHeight;
-  console.log('[fitToDContent] todBox dimensions:', containerWidth, 'x', containerHeight);
 
   // If layout not ready, retry after short delay
   if (containerWidth <= 0 || containerHeight <= 0) {
-    console.log('[fitToDContent] Layout not ready, retrying in 50ms');
     setTimeout(fitToDContent, 50);
     return;
   }
@@ -553,18 +545,10 @@ function renderInternal() {
     todEl.style.visibility = 'hidden';
   }
 
-  // Refit when format, mode, or text length changes (font scales to fill fixed width)
+  // Always refit on every frame to handle window resizes
   // MUST be called AFTER innerHTML is set so we measure the new content
-  const currentFormat = canonicalState?.format || 'MM:SS';
-  const currentMode = canonicalState?.mode || 'countdown';
-  const textLength = text.length;
-  if (todModeChanged || currentFormat !== lastTimerFormat || currentMode !== lastTimerMode || textLength !== lastTimerLength) {
-    lastTimerFormat = currentFormat;
-    lastTimerMode = currentMode;
-    lastTimerLength = textLength;
-    fitTimerContent();
-    if (showToD) fitToDContent();
-  }
+  fitTimerContent();
+  if (showToD) fitToDContent();
 
   // Apply color and stroke (skip during flash animation)
   if (!flashAnimator?.isFlashing) {
@@ -779,6 +763,13 @@ function init() {
 
   // Start render loop
   render();
+
+  // Initial fit after layout settles (handles first open sizing)
+  setTimeout(() => {
+    fitTimerContent();
+    fitToDContent();
+    fitMessageContent();
+  }, 100);
 
   // Signal to main process that output window is fully initialized
   window.ninja.signalOutputReady();
