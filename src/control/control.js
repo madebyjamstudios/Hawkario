@@ -3106,7 +3106,7 @@ function openModal(presetIndex = null) {
     els.presetName.value = preset.name;
     applyConfig(preset.config);
   } else {
-    // Creating new preset
+    // Creating new preset - apply defaults
     els.modalTitle.textContent = 'New Timer';
     const presets = loadPresets();
     let counter = 1;
@@ -3116,6 +3116,8 @@ function openModal(presetIndex = null) {
       name = `Timer ${counter}`;
     }
     els.presetName.value = name;
+    // Apply default settings for new timers
+    applyConfig(getDefaultTimerConfig());
   }
 
   els.settingsModal.classList.remove('hidden');
