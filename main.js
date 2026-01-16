@@ -223,6 +223,9 @@ function createMainWindow() {
 
   mainWindow.loadFile('src/control/index.html');
 
+  // DEBUG: Open DevTools to see errors
+  mainWindow.webContents.openDevTools({ mode: 'detach' });
+
   // Handle close with confirmation if timer is running
   mainWindow.on('close', async (event) => {
     // Skip confirmation if force quitting or timer not running
