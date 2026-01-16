@@ -175,6 +175,10 @@ const els = {
   oscFeedbackPortRow: document.getElementById('oscFeedbackPortRow'),
   oscStatus: document.getElementById('oscStatus'),
 
+  // Keyboard Shortcuts
+  shortcutsModal: document.getElementById('shortcutsModal'),
+  shortcutsClose: document.getElementById('shortcutsClose'),
+
   // Confirm Dialog
   confirmDialog: document.getElementById('confirmDialog'),
   confirmTitle: document.getElementById('confirmTitle'),
@@ -2663,6 +2667,32 @@ function closeConfirmDialog(result) {
     confirmResolver = null;
   }
 }
+
+// ============ Keyboard Shortcuts Modal ============
+
+function toggleShortcutsModal() {
+  if (els.shortcutsModal.classList.contains('hidden')) {
+    els.shortcutsModal.classList.remove('hidden');
+  } else {
+    els.shortcutsModal.classList.add('hidden');
+  }
+}
+
+function setupShortcutsModal() {
+  // Close button
+  els.shortcutsClose.addEventListener('click', () => {
+    els.shortcutsModal.classList.add('hidden');
+  });
+
+  // Close on overlay click
+  els.shortcutsModal.addEventListener('click', (e) => {
+    if (e.target === els.shortcutsModal) {
+      els.shortcutsModal.classList.add('hidden');
+    }
+  });
+}
+
+// ============ Confirm Dialog ============
 
 function setupConfirmDialog() {
   els.confirmCancel.addEventListener('click', () => closeConfirmDialog(false));
@@ -6485,6 +6515,33 @@ function setupEventListeners() {
           }
         }
         break;
+
+      case 'f':
+        // Flash timer (only without modifier keys)
+        if (!e.metaKey && !e.ctrlKey) {
+          els.flashBtn.click();
+        }
+        break;
+
+      case '?':
+        // Toggle keyboard shortcuts help
+        toggleShortcutsModal();
+        break;
+    }
+  });
+
+  // Also handle ? on Shift+/ (for keyboards where ? requires shift)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && e.shiftKey) {
+      // Shift+/ = ? on most keyboards
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        toggleShortcutsModal();
+      }
+    }
+    // Also allow Escape to close shortcuts modal
+    if (e.key === 'Escape' && !els.shortcutsModal.classList.contains('hidden')) {
+      els.shortcutsModal.classList.add('hidden');
     }
   });
 
@@ -7326,6 +7383,9 @@ function init() {
 
   // Setup custom confirm dialog
   setupConfirmDialog();
+
+  // Setup keyboard shortcuts modal
+  setupShortcutsModal();
 
   // Setup global drag listeners for ghost positioning
   setupDragListeners();
