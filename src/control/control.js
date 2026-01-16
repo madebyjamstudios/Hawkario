@@ -5490,13 +5490,20 @@ function toggleLink(idx) {
     // Toggle the class directly without re-rendering to preserve hover state
     const linkZones = els.presetList.querySelectorAll('.link-zone');
     if (linkZones[idx]) {
+      const linkIcon = linkZones[idx].querySelector('.link-icon');
       if (wasLinked) {
         // Unlinking - remove the linked class
         linkZones[idx].classList.remove('linked');
+        if (linkIcon) {
+          linkIcon.title = 'Click to auto-start next timer when this one ends';
+        }
       } else {
         // Linking - add the linked class and pulse animation
         linkZones[idx].classList.add('linked');
         linkZones[idx].classList.add('just-linked');
+        if (linkIcon) {
+          linkIcon.title = 'Linked: Next timer starts automatically. Click to unlink.';
+        }
         setTimeout(() => {
           linkZones[idx].classList.remove('just-linked');
         }, 500);
@@ -5724,6 +5731,9 @@ function renderPresetList() {
       const linkIcon = document.createElement('div');
       linkIcon.className = 'link-icon';
       linkIcon.innerHTML = ICONS.link;
+      linkIcon.title = preset.linkedToNext
+        ? 'Linked: Next timer starts automatically. Click to unlink.'
+        : 'Click to auto-start next timer when this one ends';
 
       // Add click handler to both zone and icon for reliable clicking
       const handleLinkClick = (e) => {
