@@ -5479,7 +5479,7 @@ async function deleteProfile(id) {
   if (appSettings.confirmDelete) {
     const result = await showConfirmDialog({
       title: 'Delete Profile?',
-      message: `Delete "${profile.name}" and all its timers? This action cannot be undone.`,
+      message: `Delete "${profile.name}" and all its timers?`,
       showDontAsk: true
     });
 
