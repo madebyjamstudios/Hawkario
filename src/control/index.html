@@ -663,6 +663,13 @@
     <small>v1.1.0</small>
   </footer>
 
+  <script>
+    // Catch any unhandled errors (including module import errors)
+    window.onerror = function(msg, url, line, col, error) {
+      document.body.innerHTML = '<div style="color:red;padding:20px;font-size:14px;font-family:monospace;white-space:pre-wrap;">SCRIPT ERROR:\n' + msg + '\n\nFile: ' + url + '\nLine: ' + line + '\n\n' + (error ? error.stack : '') + '</div>';
+      return true;
+    };
+  </script>
   <script type="module" src="control.js"></script>
 </body>
 </html>
