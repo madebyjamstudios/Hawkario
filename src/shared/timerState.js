@@ -52,20 +52,6 @@ export function createTimerState(overrides = {}) {
 }
 
 /**
- * Get default style object
- */
-export function getDefaultStyle() {
-  return {
-    color: '#ffffff',
-    bgColor: '#000000',
-    strokeWidth: 0,
-    strokeColor: '#000000',
-    shadowSize: 0,
-    shadowColor: '#000000'
-  };
-}
-
-/**
  * Fixed style constants (not user-configurable)
  */
 export const FIXED_STYLE = {
