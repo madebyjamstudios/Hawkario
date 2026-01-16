@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'unsafe-inline';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self';" />
   <title>Ninja Timer — Control</title>
   <link rel="stylesheet" href="../shared/fonts.css" />
   <link rel="stylesheet" href="../shared/base.css" />
@@ -663,18 +663,6 @@
     <small>v1.1.0</small>
   </footer>
 
-  <script>
-    // Catch any unhandled errors
-    window.onerror = function(msg, url, line, col, error) {
-      document.body.innerHTML = '<div style="color:red;padding:20px;font-size:14px;font-family:monospace;white-space:pre-wrap;">SCRIPT ERROR:\n' + msg + '\n\nFile: ' + url + '\nLine: ' + line + '\n\n' + (error ? error.stack : '') + '</div>';
-      return true;
-    };
-    // Catch module import errors (Promise rejections)
-    window.addEventListener('unhandledrejection', function(event) {
-      var err = event.reason;
-      document.body.innerHTML = '<div style="color:red;padding:20px;font-size:14px;font-family:monospace;white-space:pre-wrap;">MODULE ERROR:\n' + (err.message || err) + '\n\n' + (err.stack || '') + '</div>';
-    });
-  </script>
   <script type="module" src="control.js"></script>
 </body>
 </html>
