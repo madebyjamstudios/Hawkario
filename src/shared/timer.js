@@ -86,6 +86,30 @@ export function formatTime(ms, format = 'MM:SS', roundUp = false) {
 }
 
 /**
+ * Format time as plain text (no HTML, for textContent usage)
+ * @param {number} ms - Milliseconds
+ * @param {string} format - Display format ('HH:MM:SS', 'MM:SS')
+ * @param {boolean} roundUp - If true, use ceil instead of floor
+ * @returns {string} Plain text formatted time
+ */
+export function formatTimePlain(ms, format = 'MM:SS', roundUp = false) {
+  const total = Math.max(0, roundUp ? Math.ceil(ms / 1000) : Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+
+  const pad = n => String(n).padStart(2, '0');
+
+  switch (format) {
+    case 'HH:MM:SS':
+      return `${h}:${pad(m)}:${pad(s)}`;
+    case 'MM:SS':
+    default:
+      return `${m + (h * 60)}:${pad(s)}`;
+  }
+}
+
+/**
  * Convert hex color to rgba string
  * @param {string} hex - Hex color string
  * @param {number} opacity - Opacity value (0-1)
