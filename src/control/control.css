@@ -3455,7 +3455,7 @@ button.danger:active {
 }
 
 .format-btn:hover {
-  background: #444;
+  background: var(--color-bg-tertiary);
 }
 
 .format-btn.active {
@@ -3474,9 +3474,9 @@ button.danger:active {
   width: 32px;
   height: 32px;
   padding: 0;
-  border: 1px solid #444;
-  border-radius: 6px;
-  background: #333;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
   cursor: pointer;
 }
 
@@ -3495,35 +3495,35 @@ button.danger:active {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: #333;
-  border: 2px solid #555;
-  border-radius: 6px;
-  color: #fff;
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-standard);
   position: relative;
   overflow: hidden;
 }
 
 .message-toggle-btn:hover {
-  background: #444;
-  border-color: #666;
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-text-secondary);
 }
 
 .message-indicator {
   width: 8px;
   height: 8px;
-  background: #444;
+  background: var(--color-bg-elevated);
   border-radius: 50%;
-  border: 1px solid #666;
+  border: 1px solid var(--color-text-secondary);
   transition: all 0.5s ease;
   position: relative;
 }
 
 .message-toggle-btn.active {
-  background: #1a1a1a;
+  background: var(--color-bg-secondary);
   border-color: #dc2626;
 }
 
@@ -3652,7 +3652,7 @@ button.danger:active {
 }
 
 .message-empty {
-  color: #666;
+  color: var(--color-text-tertiary);
   text-align: center;
   padding: 30px 20px;
   font-size: 13px;
@@ -3660,12 +3660,12 @@ button.danger:active {
 
 /* ============ Keyboard Shortcuts Dialog ============ */
 .shortcuts-dialog {
-  background: #1a1a1a;
-  border-radius: 12px;
-  border: 1px solid #333;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
   width: 360px;
   max-width: 90vw;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-xl);
   animation: modalSlideIn 0.2s ease-out;
 }
 
@@ -3674,29 +3674,29 @@ button.danger:active {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .shortcuts-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .shortcuts-header .close-btn {
   background: none;
   border: none;
   font-size: 24px;
-  color: #666;
+  color: var(--color-text-tertiary);
   cursor: pointer;
   padding: 0;
   line-height: 1;
-  transition: color 0.15s;
+  transition: color var(--transition-quick);
 }
 
 .shortcuts-header .close-btn:hover {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .shortcuts-content {
@@ -3715,7 +3715,7 @@ button.danger:active {
   margin: 0 0 8px 0;
   font-size: 11px;
   font-weight: 600;
-  color: #888;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -3730,14 +3730,14 @@ button.danger:active {
 }
 
 .shortcut-row kbd {
-  background: #2a2a2a;
-  border: 1px solid #444;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   padding: 3px 8px;
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text-primary);
   min-width: 24px;
   text-align: center;
 }
@@ -3748,21 +3748,21 @@ button.danger:active {
 
 .shortcuts-footer {
   padding: 12px 20px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--color-border);
   text-align: center;
 }
 
 .shortcuts-hint {
   font-size: 11px;
-  color: #666;
+  color: var(--color-text-tertiary);
 }
 
 .shortcuts-hint kbd {
-  background: #2a2a2a;
-  border: 1px solid #444;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-strong);
   border-radius: 3px;
   padding: 2px 6px;
   font-family: inherit;
   font-size: 10px;
-  color: #888;
+  color: var(--color-text-secondary);
 }
