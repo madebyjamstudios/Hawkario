@@ -23,12 +23,6 @@ export const WEIGHT_LABELS = {
   900: 'Black'
 };
 
-// Default font settings
-export const DEFAULT_FONT = {
-  family: 'Inter',
-  weight: 700
-};
-
 /**
  * Get available weights for a font family
  * @param {string} family - Font family name
@@ -50,15 +44,6 @@ export function getAvailableWeights(family, customFonts = []) {
 
   // Fallback - return common weights
   return [400, 700];
-}
-
-/**
- * Get weight label for display
- * @param {number} weight - Font weight value
- * @returns {string} Human-readable label
- */
-export function getWeightLabel(weight) {
-  return WEIGHT_LABELS[weight] || `Weight ${weight}`;
 }
 
 /**
