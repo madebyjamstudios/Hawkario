@@ -7434,6 +7434,9 @@ function init() {
 
   // Check for updates on startup (silent, shows badge if available)
   checkForUpdatesOnStartup();
+
+  // Signal that app is fully initialized (closes splash screen)
+  window.ninja.signalAppReady();
 }
 
 // Start when DOM is ready

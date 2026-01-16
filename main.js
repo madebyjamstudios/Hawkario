@@ -28,6 +28,7 @@ try {
 
 let mainWindow = null;
 let outputWindow = null;
+let splashWindow = null;
 
 // Store last config to send to new output windows
 let lastTimerConfig = null;
@@ -184,6 +185,25 @@ function applyOSCSettings() {
   }
 }
 
+function createSplashWindow() {
+  splashWindow = new BrowserWindow({
+    width: 300,
+    height: 200,
+    frame: false,
+    transparent: true,
+    center: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  splashWindow.loadFile('src/splash/splash.html');
+}
+
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 400,
@@ -191,6 +211,7 @@ function createMainWindow() {
     minWidth: 280,
     minHeight: 400,
     center: true,
+    show: false,  // Hidden until app signals ready
     title: 'Ninja Timer',
     webPreferences: {
       nodeIntegration: false,
@@ -1294,10 +1315,25 @@ ipcMain.on('timer:running-status', (_event, isRunning) => {
   timerIsRunning = isRunning;
 });
 
+// IPC handler for app ready signal from control window
+ipcMain.on('app:ready', () => {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.close();
+    splashWindow = null;
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+  }
+});
+
 app.whenReady().then(() => {
   const menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
 
+  // Show splash screen first
+  createSplashWindow();
+
+  // Create main window (hidden until ready)
   createMainWindow();
 
   app.on('activate', () => {

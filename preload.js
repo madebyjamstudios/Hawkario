@@ -119,6 +119,9 @@ contextBridge.exposeInMainWorld('ninja', {
   downloadUpdates: (url) => ipcRenderer.invoke('app:download-updates', url),
   restartApp: () => ipcRenderer.send('app:restart'),
 
+  // Signal that control window is fully initialized (closes splash screen)
+  signalAppReady: () => ipcRenderer.send('app:ready'),
+
   // Report timer running status to main process (for quit confirmation)
   reportTimerRunning: (isRunning) => {
     ipcRenderer.send('timer:running-status', isRunning);
