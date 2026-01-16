@@ -854,17 +854,19 @@ function setActiveTimerConfig(config) {
   };
 }
 
-// Undo stack for reverting changes
+// Undo/Redo stacks for reverting changes
 const undoStack = [];
+const redoStack = [];
 const MAX_UNDO_STATES = 20;
 
 /**
- * Save current presets state to undo stack
+ * Save current state to undo stack
  * @param {boolean} includeProfiles - If true, saves full profiles state (for profile deletion)
  */
 function saveUndoState(includeProfiles = false) {
   const state = {
     presets: JSON.parse(JSON.stringify(loadPresets())),
+    messages: JSON.parse(JSON.stringify(loadMessages())),
     activePresetIndex: activePresetIndex
   };
 
@@ -876,6 +878,9 @@ function saveUndoState(includeProfiles = false) {
   }
 
   undoStack.push(state);
+
+  // Clear redo stack when new action is performed
+  redoStack.length = 0;
 
   // Limit stack size
   if (undoStack.length > MAX_UNDO_STATES) {
@@ -892,10 +897,22 @@ function undo() {
     return false;
   }
 
+  // Save current state to redo stack before restoring
+  const currentState = {
+    presets: JSON.parse(JSON.stringify(loadPresets())),
+    messages: JSON.parse(JSON.stringify(loadMessages())),
+    activePresetIndex: activePresetIndex
+  };
+
   const previousState = undoStack.pop();
 
   // Handle profile-level undo (e.g., profile deletion)
   if (previousState.isProfileUndo) {
+    currentState.profiles = JSON.parse(JSON.stringify(profiles));
+    currentState.activeProfileId = activeProfileId;
+    currentState.isProfileUndo = true;
+    redoStack.push(currentState);
+
     profiles = previousState.profiles;
     activeProfileId = previousState.activeProfileId;
     saveProfiles();
@@ -907,9 +924,17 @@ function undo() {
     return true;
   }
 
-  // Handle preset-level undo
+  redoStack.push(currentState);
+
+  // Restore presets
   savePresets(previousState.presets);
   activePresetIndex = previousState.activePresetIndex;
+
+  // Restore messages
+  if (previousState.messages) {
+    saveMessagesToStorage(previousState.messages);
+    renderMessageList();
+  }
 
   // If we have an active preset, apply its config
   if (activePresetIndex !== null && previousState.presets[activePresetIndex]) {
@@ -919,7 +944,67 @@ function undo() {
   }
 
   renderPresetList();
-  showToast('Undone', 'success');
+  showToast('Undone (Shift+Z to redo)', 'success');
+  return true;
+}
+
+/**
+ * Redo last undone change
+ */
+function redo() {
+  if (redoStack.length === 0) {
+    showToast('Nothing to redo', 'info');
+    return false;
+  }
+
+  // Save current state to undo stack before redoing
+  const currentState = {
+    presets: JSON.parse(JSON.stringify(loadPresets())),
+    messages: JSON.parse(JSON.stringify(loadMessages())),
+    activePresetIndex: activePresetIndex
+  };
+
+  const redoState = redoStack.pop();
+
+  // Handle profile-level redo
+  if (redoState.isProfileUndo) {
+    currentState.profiles = JSON.parse(JSON.stringify(profiles));
+    currentState.activeProfileId = activeProfileId;
+    currentState.isProfileUndo = true;
+    undoStack.push(currentState);
+
+    profiles = redoState.profiles;
+    activeProfileId = redoState.activeProfileId;
+    saveProfiles();
+    updateProfileButton();
+    activePresetIndex = redoState.activePresetIndex;
+    renderPresetList();
+    renderMessageList();
+    showToast('Redone', 'success');
+    return true;
+  }
+
+  undoStack.push(currentState);
+
+  // Restore presets
+  savePresets(redoState.presets);
+  activePresetIndex = redoState.activePresetIndex;
+
+  // Restore messages
+  if (redoState.messages) {
+    saveMessagesToStorage(redoState.messages);
+    renderMessageList();
+  }
+
+  // If we have an active preset, apply its config
+  if (activePresetIndex !== null && redoState.presets[activePresetIndex]) {
+    const config = redoState.presets[activePresetIndex].config;
+    setActiveTimerConfig(config);
+    applyConfig(config);
+  }
+
+  renderPresetList();
+  showToast('Redone', 'success');
   return true;
 }
 
@@ -2594,6 +2679,9 @@ async function deleteMessage(messageId) {
     }
   }
 
+  // Save state for undo before deleting
+  saveUndoState();
+
   // If this message was visible, hide it first
   if (msg.visible) {
     activeMessage = null;
@@ -2604,6 +2692,8 @@ async function deleteMessage(messageId) {
   messages.splice(idx, 1);
   saveMessagesToStorage(messages);
   renderMessageList();
+
+  showToast('Message deleted (Cmd/Ctrl+Z to undo)', 'success');
 }
 
 function addNewMessage() {
@@ -5788,7 +5878,7 @@ function showPresetMenu(idx, preset, anchorEl) {
     if (appSettings.confirmDelete) {
       const result = await showConfirmDialog({
         title: 'Delete Timer?',
-        message: `Delete "${preset.name}"? This action cannot be undone.`,
+        message: `Delete "${preset.name}"?`,
         showDontAsk: true
       });
 
@@ -5819,6 +5909,7 @@ function showPresetMenu(idx, preset, anchorEl) {
         activePresetIndex--;
       }
       renderPresetList();
+      showToast('Timer deleted (Cmd/Ctrl+Z to undo)', 'success');
     }
   };
 
@@ -6507,15 +6598,19 @@ function setupEventListeners() {
     }
   });
 
-  // Global undo shortcut (Cmd+Z / Ctrl+Z)
+  // Global undo/redo shortcuts (Cmd+Z / Ctrl+Z and Cmd+Shift+Z / Ctrl+Shift+Z)
   document.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-      // Don't undo if in a text input
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+      // Don't undo/redo if in a text input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         return;
       }
       e.preventDefault();
-      undo();
+      if (e.shiftKey) {
+        redo();
+      } else {
+        undo();
+      }
     }
   });
 
@@ -7170,6 +7265,7 @@ function setupMessageDragListeners() {
     const toIndex = messageDragState.currentSlot;
 
     if (fromIndex !== null && toIndex !== null && fromIndex !== toIndex) {
+      saveUndoState(); // Save state before reorder for undo
       const messages = loadMessages();
       const [moved] = messages.splice(fromIndex, 1);
       messages.splice(toIndex, 0, moved);
