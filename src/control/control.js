@@ -262,6 +262,56 @@ function parseTimeValue(val) {
   return { h, m, s };
 }
 
+/**
+ * Smart parse informal duration strings
+ * Supports: "530" → 5:30, "90" → 1:30, "13000" → 1:30:00, "5:30" → 5:30, etc.
+ * Returns { h, m, s } or null if not parseable
+ */
+function parseSmartDuration(val) {
+  if (!val) return null;
+  const str = val.trim();
+
+  // Already formatted as HH:MM:SS or H:MM:SS
+  if (/^\d{1,3}:\d{1,2}:\d{1,2}$/.test(str)) {
+    const parts = str.split(':');
+    return { h: parseInt(parts[0], 10), m: parseInt(parts[1], 10), s: parseInt(parts[2], 10) };
+  }
+
+  // Formatted as MM:SS or M:SS
+  if (/^\d{1,2}:\d{1,2}$/.test(str)) {
+    const parts = str.split(':');
+    return { h: 0, m: parseInt(parts[0], 10), s: parseInt(parts[1], 10) };
+  }
+
+  // Just digits - smart parse based on length
+  if (/^\d+$/.test(str)) {
+    const num = str;
+    if (num.length <= 2) {
+      // 1-2 digits: treat as seconds (e.g., "30" → 0:00:30)
+      const totalSec = parseInt(num, 10);
+      return { h: 0, m: Math.floor(totalSec / 60), s: totalSec % 60 };
+    } else if (num.length <= 4) {
+      // 3-4 digits: treat as MMSS (e.g., "530" → 0:05:30, "1230" → 0:12:30)
+      const ss = parseInt(num.slice(-2), 10);
+      const mm = parseInt(num.slice(0, -2), 10);
+      // Handle overflow (e.g., "90" as seconds)
+      const totalSec = mm * 60 + ss;
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return { h, m, s };
+    } else {
+      // 5-6 digits: treat as HHMMSS (e.g., "13000" → 1:30:00, "123456" → 12:34:56)
+      const ss = parseInt(num.slice(-2), 10);
+      const mm = parseInt(num.slice(-4, -2), 10);
+      const hh = parseInt(num.slice(0, -4), 10) || 0;
+      return { h: hh, m: mm, s: ss };
+    }
+  }
+
+  return null;
+}
+
 function getDurationSeconds() {
   const { h, m, s } = parseTimeValue(els.duration.value);
   return h * 3600 + m * 60 + s;
@@ -690,25 +740,27 @@ function initTimeInput(input) {
     input.setSelectionRange(start, end);
   });
 
-  // Prevent invalid paste, try to parse time from paste
+  // Smart paste - accepts many formats: "530", "5:30", "1:30:00", etc.
   input.addEventListener('paste', (e) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text');
-    // Try to parse as HH:MM:SS or similar
-    const match = text.match(/(\d{1,2}):(\d{1,2}):(\d{1,2})/);
-    if (match) {
-      const h = parseInt(match[1], 10);
-      const m = parseInt(match[2], 10);
-      const s = parseInt(match[3], 10);
-      input.value = formatTimeValue(h, m, s);
+    const parsed = parseSmartDuration(text);
+    if (parsed) {
+      input.value = formatTimeValue(parsed.h, parsed.m, parsed.s);
       input.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
 
-  // Ensure value is always valid format on blur
+  // Smart blur - accepts informal input and normalizes
   input.addEventListener('blur', () => {
-    const { h, m, s } = parseTimeValue(input.value);
-    input.value = formatTimeValue(h, m, s);
+    const parsed = parseSmartDuration(input.value);
+    if (parsed) {
+      input.value = formatTimeValue(parsed.h, parsed.m, parsed.s);
+    } else {
+      // Fallback to strict parsing
+      const { h, m, s } = parseTimeValue(input.value);
+      input.value = formatTimeValue(h, m, s);
+    }
   });
 }
 
@@ -5834,7 +5886,8 @@ function showDurationEditPopup(idx, preset, anchorEl) {
   saveBtn.textContent = 'Save';
 
   const saveDuration = () => {
-    const { h, m, s } = parseTimeValue(input.value);
+    const parsed = parseSmartDuration(input.value) || parseTimeValue(input.value);
+    const { h, m, s } = parsed;
     const totalSec = h * 3600 + m * 60 + s;
     removeEditing();
     saveUndoState();

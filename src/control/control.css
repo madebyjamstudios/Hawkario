@@ -2102,13 +2102,19 @@ footer small {
   /* Font size set dynamically by autoFitText */
 }
 
-/* Duration controls - per-digit buttons */
+/* Duration controls - per-digit buttons (compact fine-tune controls) */
 .duration-controls {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 8px 0 12px 0;
+  padding: 4px 0 8px 0;
   gap: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.duration-controls:hover {
+  opacity: 1;
 }
 
 .digit-group {
@@ -2120,7 +2126,7 @@ footer small {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 20px;
+  min-width: 16px;
   /* Width set dynamically by alignDurationButtons() */
 }
 
@@ -2130,15 +2136,15 @@ footer small {
 }
 
 .digit-btn {
-  width: 20px;
-  height: 18px;
+  width: 16px;
+  height: 14px;
   padding: 0;
-  font-size: 9px;
+  font-size: 8px;
   line-height: 1;
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 3px;
-  color: #ccc;
+  border-radius: 2px;
+  color: #888;
   cursor: pointer;
   transition: all 0.15s;
   display: flex;
@@ -2158,16 +2164,16 @@ footer small {
 }
 
 .digit-separator {
-  font-size: 20px;
-  color: #666;
+  font-size: 14px;
+  color: #555;
   font-weight: 600;
-  padding: 0 3px;
+  padding: 0 2px;
   align-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  margin-top: -9px;
+  margin-top: -6px;
 }
 
 .duration-input {
@@ -2176,6 +2182,12 @@ footer small {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+}
+
+/* Duration input hint */
+.duration-input::placeholder {
+  color: #555;
+  font-weight: 400;
 }
 
 /* Hide hours group and its separator when format is MM:SS */
