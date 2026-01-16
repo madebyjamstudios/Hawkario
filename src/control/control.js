@@ -57,6 +57,7 @@ const els = {
   allowOvertimeRow: document.getElementById('allowOvertimeRow'),
 
   // Appearance (simplified)
+  fontPicker: document.getElementById('fontPicker'),
   fontFamily: document.getElementById('fontFamily'),
   fontWeight: document.getElementById('fontWeight'),
   fontColor: document.getElementById('fontColor'),
@@ -1493,9 +1494,60 @@ function saveAppSettingsFromForm() {
   closeAppSettings();
 }
 
-// ============ Custom Fonts Management ============
+// ============ Font Picker ============
 
-// Cache for custom fonts list
+/**
+ * Render the Apple-style font picker in the timer modal
+ */
+function renderFontPicker() {
+  if (!els.fontPicker) return;
+
+  const currentFont = els.fontFamily?.value || 'Inter';
+
+  els.fontPicker.innerHTML = BUILT_IN_FONTS.map(font => `
+    <div class="font-option${font.family === currentFont ? ' selected' : ''}" data-font="${font.family}">
+      <div class="font-option-preview" style="font-family: '${font.family}', sans-serif; font-weight: ${font.weights[font.weights.length - 1]};">12</div>
+      <div class="font-option-name">${font.family}</div>
+      <div class="font-option-desc">${font.description}</div>
+    </div>
+  `).join('');
+
+  // Add click handlers
+  els.fontPicker.querySelectorAll('.font-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const fontFamily = option.dataset.font;
+      selectFont(fontFamily);
+    });
+  });
+}
+
+/**
+ * Select a font in the font picker
+ */
+function selectFont(fontFamily) {
+  if (!els.fontPicker || !els.fontFamily) return;
+
+  // Update hidden input
+  els.fontFamily.value = fontFamily;
+
+  // Update visual selection
+  els.fontPicker.querySelectorAll('.font-option').forEach(option => {
+    option.classList.toggle('selected', option.dataset.font === fontFamily);
+  });
+
+  // Update available weights
+  updateFontWeightOptions(fontFamily);
+
+  // Scroll selected option into view
+  const selectedOption = els.fontPicker.querySelector('.font-option.selected');
+  if (selectedOption) {
+    selectedOption.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  // Update modal preview
+  updateModalPreview();
+}
+
 /**
  * Update font weight dropdown options based on selected font family
  */
@@ -4043,12 +4095,24 @@ function applyConfig(config) {
 
   if (config.style) {
     // Font settings
+    const fontFamily = config.style.fontFamily || 'Inter';
     if (els.fontFamily) {
-      els.fontFamily.value = config.style.fontFamily || 'Inter';
+      els.fontFamily.value = fontFamily;
+    }
+    // Update font picker visual selection
+    if (els.fontPicker) {
+      els.fontPicker.querySelectorAll('.font-option').forEach(option => {
+        option.classList.toggle('selected', option.dataset.font === fontFamily);
+      });
+      // Scroll selected into view
+      const selectedOption = els.fontPicker.querySelector('.font-option.selected');
+      if (selectedOption) {
+        selectedOption.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+      }
     }
     if (els.fontWeight) {
+      updateFontWeightOptions(fontFamily);
       els.fontWeight.value = config.style.fontWeight ?? 700;
-      updateFontWeightOptions(config.style.fontFamily || 'Inter');
     }
     els.fontColor.value = config.style.color || '#ffffff';
     els.strokeWidth.value = config.style.strokeWidth ?? 0;
@@ -6113,12 +6177,8 @@ function setupEventListeners() {
     els.shadowSize.addEventListener('input', updateRangeDisplays);
   }
 
-  // Font family change - update available weights
-  if (els.fontFamily) {
-    els.fontFamily.addEventListener('change', () => {
-      updateFontWeightOptions(els.fontFamily.value);
-    });
-  }
+  // Initialize font picker
+  renderFontPicker();
 
   // Sound selection - show/hide volume row
   if (els.soundEnd) {

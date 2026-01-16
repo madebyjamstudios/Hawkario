@@ -252,16 +252,13 @@
             </svg>
           </h3>
           <div class="section-content">
-            <div class="kv">
-              <label for="fontFamily">Font</label>
-              <select id="fontFamily">
-                <option value="Inter">Inter</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Open Sans">Open Sans</option>
-                <option value="Montserrat">Montserrat</option>
-                <option value="Lato">Lato</option>
-                <option value="Oswald">Oswald</option>
-              </select>
+            <!-- Apple-style Font Picker -->
+            <div class="font-picker-section">
+              <label class="font-picker-label">Font</label>
+              <div id="fontPicker" class="font-picker">
+                <!-- Font options populated by JavaScript -->
+              </div>
+              <input type="hidden" id="fontFamily" value="Inter" />
             </div>
             <div class="kv">
               <label for="fontWeight">Weight</label>
@@ -474,12 +471,14 @@
           <div class="kv">
             <label for="defaultFontFamily">Font</label>
             <select id="defaultFontFamily">
-              <option value="Inter">Inter</option>
-              <option value="Roboto">Roboto</option>
-              <option value="Open Sans">Open Sans</option>
-              <option value="Montserrat">Montserrat</option>
-              <option value="Lato">Lato</option>
-              <option value="Oswald">Oswald</option>
+              <option value="Inter">Inter - Modern & Clean</option>
+              <option value="Roboto">Roboto - Versatile</option>
+              <option value="JetBrains Mono">JetBrains Mono - Monospace</option>
+              <option value="Oswald">Oswald - Bold Condensed</option>
+              <option value="Bebas Neue">Bebas Neue - Classic Display</option>
+              <option value="Orbitron">Orbitron - Futuristic</option>
+              <option value="Teko">Teko - Modern Condensed</option>
+              <option value="Share Tech Mono">Share Tech Mono - Digital</option>
             </select>
           </div>
           <div class="kv">
