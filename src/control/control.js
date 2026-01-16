@@ -7618,25 +7618,33 @@ function init() {
 }
 
 // Start when DOM is ready
+console.log('[Control] Script loaded, readyState:', document.readyState);
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Control] DOMContentLoaded fired');
     try {
-      // Signal ready immediately when DOM loads (closes splash screen)
+      console.log('[Control] Calling signalAppReady...');
       window.ninja.signalAppReady();
+      console.log('[Control] Calling init...');
       init();
+      console.log('[Control] Init completed successfully');
     } catch (err) {
       console.error('[Control] Initialization error:', err);
-      // Still try to signal ready even if init fails
+      document.body.innerHTML = '<div style="color:red;padding:20px;font-size:16px;">Init Error: ' + err.message + '<br><br>' + err.stack + '</div>';
       try { window.ninja.signalAppReady(); } catch (e) { /* ignore */ }
     }
   });
 } else {
+  console.log('[Control] DOM already ready');
   try {
-    // Signal ready immediately
+    console.log('[Control] Calling signalAppReady...');
     window.ninja.signalAppReady();
+    console.log('[Control] Calling init...');
     init();
+    console.log('[Control] Init completed successfully');
   } catch (err) {
     console.error('[Control] Initialization error:', err);
+    document.body.innerHTML = '<div style="color:red;padding:20px;font-size:16px;">Init Error: ' + err.message + '<br><br>' + err.stack + '</div>';
     try { window.ninja.signalAppReady(); } catch (e) { /* ignore */ }
   }
 }
