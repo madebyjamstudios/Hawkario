@@ -214,6 +214,7 @@ function createMainWindow() {
     center: true,
     show: false,  // Hidden until app signals ready
     title: 'Ninja Timer',
+    backgroundColor: '#000000',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
