@@ -4125,6 +4125,7 @@ function renderLivePreviewInternal() {
   // Determine mode type
   const isCountdown = mode === 'countdown' || mode === 'countdown-tod';
   const isCountup = mode === 'countup' || mode === 'countup-tod';
+  const isPureToD = mode === 'tod';
   const showToD = mode === 'countdown-tod' || mode === 'countup-tod';
 
   if (!isRunning && timerState.pausedAcc === 0 && timerState.startedAt === null) {
@@ -4281,29 +4282,31 @@ function renderLivePreviewInternal() {
   const warnYellowSec = activeTimerConfig.warnYellowSec ?? 60;
   const warnOrangeSec = activeTimerConfig.warnOrangeSec ?? 15;
 
-  // Determine warning/overtime color
+  // Determine warning/overtime color (skip for pure ToD mode - just shows current time)
   let timerColor = fontColor;
   let colorState = 'normal';
 
-  if (timerState.overtime) {
-    timerColor = '#dc2626'; // Red for overtime
-    colorState = 'overtime';
-  } else if ((isCountdown || isCountup) && remainingSec <= 0) {
-    timerColor = '#dc2626'; // Red for timer ended
-    colorState = 'ended';
-  } else if ((isCountdown || isCountup) && remainingSec <= warnOrangeSec && remainingSec > 0) {
-    timerColor = '#E64A19'; // Orange for critical warning
-    colorState = 'warning-orange';
-  } else if ((isCountdown || isCountup) && remainingSec <= warnYellowSec) {
-    timerColor = '#eab308'; // Yellow for warning
-    colorState = 'warning-yellow';
+  if (!isPureToD) {
+    if (timerState.overtime) {
+      timerColor = '#dc2626'; // Red for overtime
+      colorState = 'overtime';
+    } else if ((isCountdown || isCountup) && remainingSec <= 0) {
+      timerColor = '#dc2626'; // Red for timer ended
+      colorState = 'ended';
+    } else if ((isCountdown || isCountup) && remainingSec <= warnOrangeSec && remainingSec > 0) {
+      timerColor = '#E64A19'; // Orange for critical warning
+      colorState = 'warning-orange';
+    } else if ((isCountdown || isCountup) && remainingSec <= warnYellowSec) {
+      timerColor = '#eab308'; // Yellow for warning
+      colorState = 'warning-yellow';
+    }
   }
 
   // Color states (skip during flash animation - let FlashAnimator control styles)
   if (!flashAnimator?.isFlashing) {
     els.livePreviewTimer.style.color = timerColor;
     els.livePreviewTimer.style.opacity = FIXED_STYLE.opacity;
-    els.livePreview.classList.toggle('overtime', timerState.overtime);
+    els.livePreview.classList.toggle('overtime', !isPureToD && timerState.overtime);
     // Apply same color to ToD
     if (showToD && els.livePreviewToD) {
       els.livePreviewToD.style.color = timerColor;

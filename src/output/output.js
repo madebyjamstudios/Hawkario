@@ -530,14 +530,19 @@ function renderInternal() {
     showToD = display.showToD;
     overtime = display.overtime || canonicalState.overtime;
 
-    // Calculate warning color based on remaining time
+    // Calculate warning color based on remaining time (skip for pure ToD mode)
     const baseColor = canonicalState.style?.color || '#ffffff';
     const warnYellowSec = canonicalState.warnYellowSec ?? 60;
     const warnOrangeSec = canonicalState.warnOrangeSec ?? 15;
     const remainingSec = Math.ceil(display.remainingMs / 1000);
     const isCountdown = canonicalState.mode === 'countdown' || canonicalState.mode === 'countdown-tod';
+    const isPureToD = canonicalState.mode === 'tod';
 
-    if (overtime) {
+    if (isPureToD) {
+      // Pure ToD mode - just use base color, no warnings or overtime colors
+      color = baseColor;
+      overtime = false; // Don't show overtime state for pure ToD
+    } else if (overtime) {
       color = '#dc2626'; // Red for overtime
     } else if (isCountdown && remainingSec <= 0) {
       color = '#dc2626'; // Red for timer ended
