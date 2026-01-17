@@ -34,10 +34,52 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+.icon-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  transform: rotate(-90deg);
+}
+
+.progress-arc {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 226;
+  stroke-dashoffset: 226;
+  animation: arcDraw 2.5s ease-out forwards;
+}
+
 .icon {
   width: 64px;
   height: 64px;
   object-fit: contain;
+  animation: breathe 2s ease-in-out infinite, eyeGlow 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes eyeGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 235, 59, 0.3)); }
+  50% { filter: drop-shadow(0 0 12px rgba(255, 235, 59, 0.7)); }
+}
+
+@keyframes arcDraw {
+  0% { stroke-dashoffset: 226; }
+  100% { stroke-dashoffset: 0; }
 }
 
 .loading-bar {
