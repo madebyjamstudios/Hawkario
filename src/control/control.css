@@ -78,9 +78,17 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-/* Header icon - dark ring for light mode */
-[data-theme="light"] .hawk-icon path:first-of-type {
-  fill: #2a2a2a;
+/* Header icon - toggle between dark/light versions */
+.hawk-icon .icon-light {
+  display: none;
+}
+
+[data-theme="light"] .hawk-icon .icon-dark {
+  display: none;
+}
+
+[data-theme="light"] .hawk-icon .icon-light {
+  display: block;
 }
 
 /* Header settings button */
