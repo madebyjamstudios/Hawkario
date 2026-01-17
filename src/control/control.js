@@ -6744,6 +6744,29 @@ function setupEventListeners() {
   document.getElementById('downloadUpdates').addEventListener('click', downloadUpdates);
   document.getElementById('restartApp')?.addEventListener('click', restartApp);
 
+  // Send Feedback button
+  document.getElementById('sendFeedback')?.addEventListener('click', () => {
+    const feedbackType = document.getElementById('feedbackType')?.value || 'other';
+    const feedbackMessage = document.getElementById('feedbackMessage')?.value?.trim() || '';
+
+    const typeLabels = {
+      feature: 'Feature Request',
+      bug: 'Bug Report',
+      idea: 'General Idea',
+      other: 'Feedback'
+    };
+
+    const subject = `[Ninja Timer] ${typeLabels[feedbackType] || 'Feedback'}`;
+    const body = feedbackMessage || '(No message provided)';
+
+    // Open email client with pre-filled content
+    const mailtoUrl = `mailto:madebyjamstudios@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl);
+
+    // Clear the form after sending
+    document.getElementById('feedbackMessage').value = '';
+  });
+
   // Tab navigation
   els.timersTabBtn.addEventListener('click', () => switchTab('timers'));
   els.messagesTabBtn.addEventListener('click', () => switchTab('messages'));
