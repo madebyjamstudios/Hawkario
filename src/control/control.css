@@ -2296,11 +2296,14 @@ footer small {
 }
 
 .modal-preview .timer-preview {
+  display: inline-block;
   white-space: nowrap;
+  line-height: 0.75;
   overflow: visible;
-  padding: 0.1em 0.15em;
-  text-align: center;
-  /* Font size set dynamically by autoFitText */
+  user-select: none;
+  -webkit-user-select: none;
+  /* DEBUG: outline to see boundaries */
+  outline: 1px dashed orange;
 }
 
 /* Modal preview structure - fuller content-box for limited space */
