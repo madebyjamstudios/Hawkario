@@ -540,22 +540,39 @@ button:disabled {
   gap: 8px;
 }
 
-/* Number stepper inputs for stroke/shadow */
+/* Number stepper inputs - Apple-style: subtle, spinners hidden until hover */
 .number-stepper {
   width: 60px;
   padding: 6px 8px;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-secondary);
+  background: transparent;
   color: var(--color-text-primary);
   font-size: 13px;
   text-align: center;
+  transition: border-color var(--transition-quick);
+}
+
+.number-stepper:hover {
+  border-color: var(--color-border-strong);
+}
+
+.number-stepper:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
 }
 
 .number-stepper::-webkit-inner-spin-button,
 .number-stepper::-webkit-outer-spin-button {
-  opacity: 1;
+  opacity: 0;
   height: 24px;
+  transition: opacity var(--transition-quick);
+}
+
+.number-stepper:hover::-webkit-inner-spin-button,
+.number-stepper:hover::-webkit-outer-spin-button {
+  opacity: 1;
 }
 
 .unit-label {
