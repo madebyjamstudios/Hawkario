@@ -360,11 +360,10 @@ button:disabled {
 
 /* ============ Content Box System ============ */
 /* The big box - positioned relative to preview container, not virtual canvas */
-/* Height reduced from 64% to 56% to give headroom for text with line-height: 0.75 */
 .live-preview .content-box {
   position: absolute;
   width: 90%;
-  height: 56%;
+  height: 64%;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);

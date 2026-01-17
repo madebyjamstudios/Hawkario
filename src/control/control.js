@@ -3965,8 +3965,8 @@ function broadcastDisplayState(state) {
     elapsed: state.elapsed || '',
     remaining: state.remaining || '',
     style: {
-      fontFamily: FIXED_STYLE.fontFamily,
-      fontWeight: FIXED_STYLE.fontWeight,
+      fontFamily: style.fontFamily,
+      fontWeight: style.fontWeight,
       strokeWidth: style.strokeWidth,
       strokeColor: style.strokeColor,
       textShadow: getShadowCSS(style.shadowSize, style.shadowColor),
