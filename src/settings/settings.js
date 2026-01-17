@@ -122,7 +122,7 @@ function loadTimerData(data) {
   els.mode.value = config.mode || 'countdown';
   els.format.value = config.format || 'MM:SS';
   els.duration.value = formatDuration(config.durationSec || 600);
-  els.allowOvertime.value = config.allowOvertime !== false ? 'on' : 'off';
+  els.allowOvertime.checked = config.allowOvertime !== false;
 
   // Appearance
   selectFont(config.style?.fontFamily || 'Inter');
@@ -178,7 +178,7 @@ function getCurrentConfig() {
     mode: els.mode.value,
     durationSec: parseDuration(els.duration.value),
     format: els.format.value,
-    allowOvertime: els.allowOvertime.value === 'on',
+    allowOvertime: els.allowOvertime.checked,
     style: {
       fontFamily: els.fontFamily.value,
       fontWeight: parseInt(els.fontWeight.value, 10),

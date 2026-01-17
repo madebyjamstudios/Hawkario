@@ -1536,7 +1536,7 @@ function openAppSettings() {
 
   // Load allow overtime setting (default to true for backwards compatibility)
   if (els.defaultAllowOvertime) {
-    els.defaultAllowOvertime.value = settings.defaults.allowOvertime !== false ? 'on' : 'off';
+    els.defaultAllowOvertime.checked = settings.defaults.allowOvertime !== false;
   }
 
   // Load sound volume
@@ -1589,14 +1589,14 @@ function openAppSettings() {
   }
 
   // Load window stay on top settings from saved settings
-  els.outputOnTop.value = settings.outputOnTop ? 'on' : 'off';
-  els.controlOnTop.value = settings.controlOnTop ? 'on' : 'off';
+  els.outputOnTop.checked = settings.outputOnTop || false;
+  els.controlOnTop.checked = settings.controlOnTop || false;
 
   // Load OSC settings
   const osc = settings.osc || {};
-  els.oscEnabled.value = osc.enabled ? 'on' : 'off';
+  els.oscEnabled.checked = osc.enabled || false;
   els.oscListenPort.value = osc.listenPort || 8000;
-  els.oscFeedbackEnabled.value = osc.feedbackEnabled ? 'on' : 'off';
+  els.oscFeedbackEnabled.checked = osc.feedbackEnabled || false;
   els.oscFeedbackHost.value = osc.feedbackHost || '127.0.0.1';
   els.oscFeedbackPort.value = osc.feedbackPort || 9000;
   updateOSCVisibility();
@@ -1633,14 +1633,14 @@ function closeAppSettings() {
 }
 
 function saveAppSettingsFromForm() {
-  const outputOnTop = els.outputOnTop.value === 'on';
-  const controlOnTop = els.controlOnTop.value === 'on';
+  const outputOnTop = els.outputOnTop.checked;
+  const controlOnTop = els.controlOnTop.checked;
 
   // Build OSC settings from form
   const oscSettings = {
-    enabled: els.oscEnabled.value === 'on',
+    enabled: els.oscEnabled.checked,
     listenPort: parseInt(els.oscListenPort.value, 10) || 8000,
-    feedbackEnabled: els.oscFeedbackEnabled.value === 'on',
+    feedbackEnabled: els.oscFeedbackEnabled.checked,
     feedbackHost: els.oscFeedbackHost.value || '127.0.0.1',
     feedbackPort: parseInt(els.oscFeedbackPort.value, 10) || 9000
   };
@@ -1661,7 +1661,7 @@ function saveAppSettingsFromForm() {
       format: els.defaultFormat.value,
       soundType: els.defaultSound.value || 'none',
       soundVolume: parseFloat(els.defaultSoundVolume?.value) || 0.7,
-      allowOvertime: els.defaultAllowOvertime?.value === 'on',
+      allowOvertime: els.defaultAllowOvertime?.checked ?? true,
       // Appearance defaults
       fontFamily: els.defaultFontFamily?.value || 'Inter',
       fontWeight: parseInt(els.defaultFontWeight?.value, 10) || 700,
@@ -2007,8 +2007,8 @@ async function initOSC() {
  * Update OSC visibility based on enabled state
  */
 function updateOSCVisibility() {
-  const enabled = els.oscEnabled.value === 'on';
-  const feedbackEnabled = els.oscFeedbackEnabled.value === 'on';
+  const enabled = els.oscEnabled.checked;
+  const feedbackEnabled = els.oscFeedbackEnabled.checked;
 
   // Show/hide port row based on enabled
   if (els.oscListenPortRow) {
@@ -2030,8 +2030,8 @@ function updateOSCVisibility() {
 function updateOSCStatus() {
   if (!els.oscStatus) return;
 
-  const enabled = els.oscEnabled.value === 'on';
-  const feedbackEnabled = els.oscFeedbackEnabled.value === 'on';
+  const enabled = els.oscEnabled.checked;
+  const feedbackEnabled = els.oscFeedbackEnabled.checked;
 
   if (!enabled && !feedbackEnabled) {
     els.oscStatus.textContent = '';
@@ -4478,7 +4478,7 @@ function getCurrentConfig() {
     mode: els.mode.value,
     durationSec: getDurationSeconds(),
     format: els.format.value,
-    allowOvertime: els.allowOvertime?.value !== 'off',
+    allowOvertime: els.allowOvertime?.checked ?? true,
     style: {
       fontFamily: els.fontFamily?.value || 'Inter',
       fontWeight: parseInt(els.fontWeight?.value, 10) || 700,
@@ -4557,7 +4557,7 @@ function applyConfig(config) {
 
   // Overtime setting (default to true for backwards compatibility)
   if (els.allowOvertime) {
-    els.allowOvertime.value = config.allowOvertime !== false ? 'on' : 'off';
+    els.allowOvertime.checked = config.allowOvertime !== false;
   }
 
   applyPreview();

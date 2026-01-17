@@ -262,10 +262,7 @@
             </div>
             <div class="kv" id="allowOvertimeRow">
               <label for="allowOvertime">Overtime</label>
-              <select id="allowOvertime">
-                <option value="on">On</option>
-                <option value="off">Off</option>
-              </select>
+              <input type="checkbox" id="allowOvertime" class="toggle-switch" checked />
             </div>
           </div>
 
@@ -430,17 +427,11 @@
           <h3 class="settings-section-title">Window</h3>
           <div class="kv">
             <label for="outputOnTop">Output stays on top</label>
-            <select id="outputOnTop">
-              <option value="off">Off</option>
-              <option value="on">On</option>
-            </select>
+            <input type="checkbox" id="outputOnTop" class="toggle-switch" />
           </div>
           <div class="kv">
             <label for="controlOnTop">Control stays on top</label>
-            <select id="controlOnTop">
-              <option value="off">Off</option>
-              <option value="on">On</option>
-            </select>
+            <input type="checkbox" id="controlOnTop" class="toggle-switch" />
           </div>
         </div>
 
@@ -483,10 +474,7 @@
           </div>
           <div class="kv">
             <label for="defaultAllowOvertime">Overtime</label>
-            <select id="defaultAllowOvertime">
-              <option value="on">On</option>
-              <option value="off">Off</option>
-            </select>
+            <input type="checkbox" id="defaultAllowOvertime" class="toggle-switch" checked />
           </div>
           <div class="kv">
             <label for="defaultSoundVolume">Sound Volume</label>
@@ -594,10 +582,7 @@
           <p class="settings-hint">Control Ninja Timer from Companion, Millumin, etc.</p>
           <div class="kv">
             <label for="oscEnabled">OSC Control</label>
-            <select id="oscEnabled">
-              <option value="off">Disabled</option>
-              <option value="on">Enabled</option>
-            </select>
+            <input type="checkbox" id="oscEnabled" class="toggle-switch" />
           </div>
           <div class="kv" id="oscListenPortRow">
             <label for="oscListenPort">Listen Port</label>
@@ -605,10 +590,7 @@
           </div>
           <div class="kv">
             <label for="oscFeedbackEnabled">Send Feedback</label>
-            <select id="oscFeedbackEnabled">
-              <option value="off">Disabled</option>
-              <option value="on">Enabled</option>
-            </select>
+            <input type="checkbox" id="oscFeedbackEnabled" class="toggle-switch" />
           </div>
           <div class="kv" id="oscFeedbackHostRow">
             <label for="oscFeedbackHost">Feedback Host</label>
