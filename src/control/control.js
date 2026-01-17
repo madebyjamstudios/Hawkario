@@ -1248,6 +1248,25 @@ function saveAppSettings(settings) {
   }
 }
 
+// ============ Theme Management ============
+
+function applyTheme(appearance) {
+  let theme = appearance;
+  if (appearance === 'auto') {
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    theme = prefersLight ? 'light' : 'dark'; // Default to dark if no preference
+  }
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
+// Listen for system theme changes (for auto mode)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  const settings = loadAppSettings();
+  if (settings.appearance === 'auto') {
+    applyTheme('auto');
+  }
+});
+
 // Store update check result (whether update available or up to date)
 let updateResult = null;
 
@@ -1489,6 +1508,11 @@ function openAppSettings() {
     els.timezone.value = settings.timezone || 'auto';
   }
 
+  // Appearance setting
+  if (els.appearance) {
+    els.appearance.value = settings.appearance || 'auto';
+  }
+
   els.confirmDelete.value = settings.confirmDelete ? 'on' : 'off';
   els.defaultMode.value = settings.defaults.mode;
   setDefaultDurationInputs(settings.defaults.durationSec);
@@ -1613,9 +1637,12 @@ function saveAppSettingsFromForm() {
     feedbackPort: parseInt(els.oscFeedbackPort.value, 10) || 9000
   };
 
+  const appearance = els.appearance?.value || 'auto';
+
   const settings = {
     todFormat: els.todFormat.value,
     timezone: els.timezone?.value || 'auto',
+    appearance: appearance,
     confirmDelete: els.confirmDelete.value === 'on',
     outputOnTop: outputOnTop,
     controlOnTop: controlOnTop,
@@ -1653,6 +1680,9 @@ function saveAppSettingsFromForm() {
   });
 
   saveAppSettings(settings);
+
+  // Apply theme immediately
+  applyTheme(appearance);
 
   // Apply zoom to preview immediately
   fitPreviewTimer();
@@ -3441,6 +3471,8 @@ function updateModalPreview() {
   } else {
     els.modalPreviewTimerSection?.classList.remove('with-tod');
   }
+  // Force layout recalculation after class change
+  void els.modalPreviewTimerSection?.offsetHeight;
 
   if (mode === 'tod') {
     // Pure ToD mode - show time of day as main display
@@ -7768,6 +7800,9 @@ function init() {
   const appSettings = loadAppSettings();
   window.ninja.setAlwaysOnTop('output', appSettings.outputOnTop);
   window.ninja.setAlwaysOnTop('control', appSettings.controlOnTop);
+
+  // Apply saved theme
+  applyTheme(appSettings.appearance || 'auto');
 
   // Load custom sounds
   loadAllCustomSounds();

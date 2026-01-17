@@ -69,6 +69,16 @@
   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.2);
 }
 
+/* Light theme form element overrides */
+[data-theme="light"] select:hover,
+[data-theme="light"] select:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] input[type="range"]::-webkit-slider-runnable-track {
+  background: var(--color-bg-tertiary);
+}
+
 /* ============ Base Layout ============ */
 html, body {
   height: 100%;
@@ -2199,8 +2209,8 @@ footer small {
 }
 
 .modal-popout {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   background: transparent;
   border: none;
@@ -2219,8 +2229,8 @@ footer small {
 }
 
 .modal-popout svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 .modal-body {
@@ -3015,6 +3025,17 @@ h3 {
 
 .settings-row button {
   flex: 1;
+}
+
+/* Settings Actions Section (Export/Import) - Apple style distinct section */
+.settings-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-actions .settings-row {
+  margin-top: 8px;
 }
 
 /* Confirm Dialog */
