@@ -379,8 +379,7 @@ function updateOvertimeVisibility() {
 }
 
 function updateVolumeVisibility() {
-  const sound = els.soundEnd.value;
-  els.volumeRow.style.display = sound !== 'none' ? '' : 'none';
+  // No-op: volume slider always visible
 }
 
 // ============ Preview ============
