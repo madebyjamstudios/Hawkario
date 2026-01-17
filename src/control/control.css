@@ -3025,12 +3025,12 @@ button.danger:active {
 }
 
 .quick-edit-buttons .cancel-btn {
-  background: var(--color-bg-elevated);
+  background: transparent;
   color: var(--color-text-secondary);
 }
 
 .quick-edit-buttons .cancel-btn:hover {
-  background: var(--color-bg-tertiary);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .quick-edit-buttons .save-btn {
@@ -3060,7 +3060,7 @@ button.danger:active {
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   border-radius: var(--radius-sm);
   color: var(--color-text-tertiary);
   cursor: pointer;
@@ -3095,9 +3095,7 @@ button.danger:active {
 }
 
 .tab-icon-btn.active {
-  background: rgba(31, 111, 235, 0.15);
-  border-color: var(--color-accent);
-  color: var(--color-text-primary);
+  color: var(--color-accent);
 }
 
 .bottom-bar .add-timer-btn {
