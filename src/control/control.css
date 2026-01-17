@@ -2303,16 +2303,14 @@ footer small {
   /* Font size set dynamically by autoFitText */
 }
 
-/* Modal preview structure - matches output.css exactly */
+/* Modal preview structure - fuller content-box for limited space */
 .modal-preview .content-box {
   position: absolute;
-  width: 90%;
-  height: 64%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 4px; /* Small padding from edges */
   display: flex;
   flex-direction: column;
+  /* DEBUG: outline to see boundaries */
+  outline: 1px dashed red;
 }
 
 .modal-preview .timer-section {
@@ -2322,19 +2320,25 @@ footer small {
   align-items: center;
   justify-content: center;
   overflow: visible;
+  /* DEBUG: outline to see boundaries */
+  outline: 1px dashed lime;
 }
 
 .modal-preview .timer-box {
   display: inline-block;
+  /* DEBUG: outline to see boundaries */
+  outline: 1px dashed cyan;
 }
 
 .modal-preview .tod-box {
   display: none;
   width: 100%;
   position: relative;
+  /* DEBUG: outline to see boundaries */
+  outline: 1px dashed yellow;
 }
 
-/* When ToD is enabled: 75/25 split like output */
+/* When ToD is enabled: 75/25 split */
 .modal-preview .timer-section.with-tod {
   position: absolute;
   top: 0;
@@ -2366,6 +2370,8 @@ footer small {
   overflow: visible;
   text-align: center;
   font-weight: 600;
+  /* DEBUG: outline to see boundaries */
+  outline: 1px dashed magenta;
 }
 
 /* Duration controls - per-digit buttons (compact fine-tune controls) */

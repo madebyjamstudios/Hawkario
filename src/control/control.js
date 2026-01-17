@@ -3514,13 +3514,13 @@ function updateModalPreview() {
 }
 
 /**
- * Fit modal preview timer and ToD content - matches fitPreviewTimer exactly
- * Uses content-box dimensions (90% x 64% of modal-preview)
+ * Fit modal preview timer and ToD content
+ * Uses full content-box dimensions (fills modal-preview with small padding)
  */
 function fitModalPreviewContent(hasToD) {
   if (!els.modalPreviewTimer || !els.modalPreviewContentBox) return;
 
-  // Get content-box dimensions (matches output structure: 90% x 64%)
+  // Get content-box dimensions (fills modal-preview with 4px inset padding)
   const contentBoxWidth = els.modalPreviewContentBox.offsetWidth;
   const contentBoxHeight = els.modalPreviewContentBox.offsetHeight;
 
