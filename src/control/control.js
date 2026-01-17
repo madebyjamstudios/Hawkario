@@ -126,6 +126,7 @@ const els = {
   // Timer Modal
   settingsModal: document.getElementById('settingsModal'),
   modalTitle: document.getElementById('modalTitle'),
+  modalPopout: document.getElementById('modalPopout'),
   modalClose: document.getElementById('modalClose'),
   modalCancel: document.getElementById('modalCancel'),
   modalSave: document.getElementById('modalSave'),
@@ -797,6 +798,8 @@ function setRunning(running) {
 }
 let editingPresetIndex = null; // Track which preset is being edited
 let activePresetIndex = null; // Track which preset is currently playing
+let settingsWindowOpen = false; // Track if settings window is open
+let settingsWindowTimerIndex = null; // Track which timer is being edited in settings window
 
 // Active timer config - stored separately so modal editing doesn't affect live preview
 let activeTimerConfig = {
@@ -5846,6 +5849,11 @@ function renderPresetList() {
           activePresetIndex = idx;
           sendCommand('reset');
           renderPresetList();
+
+          // Notify settings window if open
+          if (settingsWindowOpen) {
+            window.ninja.sendSettingsLoadTimer(idx);
+          }
         }
       });
     }
@@ -5859,7 +5867,12 @@ function renderPresetList() {
     editBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
-      openModal(idx);
+      // If settings window is open, focus it and load this timer
+      if (settingsWindowOpen) {
+        window.ninja.openSettingsWindow(idx);
+      } else {
+        openModal(idx);
+      }
     });
 
     // Play/Pause button
@@ -6681,6 +6694,15 @@ function setupEventListeners() {
   els.modalCancel.addEventListener('click', closeModal);
   els.modalSave.addEventListener('click', saveModal);
 
+  // Pop-out button - open settings in separate window
+  els.modalPopout?.addEventListener('click', () => {
+    if (editingPresetIndex !== null) {
+      window.ninja.openSettingsWindow(editingPresetIndex);
+      settingsWindowTimerIndex = editingPresetIndex;
+      closeModal();
+    }
+  });
+
   // Close modal on backdrop click
   els.settingsModal.addEventListener('click', (e) => {
     if (e.target === els.settingsModal) {
@@ -6897,6 +6919,63 @@ function setupEventListeners() {
   // Output window closed notification
   window.ninja.onOutputWindowClosed(() => {
     outputWindowReady = false;
+  });
+
+  // ============ Settings Window IPC ============
+
+  // Settings window ready notification
+  window.ninja.onSettingsWindowReady(() => {
+    settingsWindowOpen = true;
+  });
+
+  // Settings window closed notification
+  window.ninja.onSettingsWindowClosed(() => {
+    settingsWindowOpen = false;
+    settingsWindowTimerIndex = null;
+  });
+
+  // Settings window requests timer data
+  window.ninja.onSettingsTimerRequest((timerIndex) => {
+    const presets = loadPresets();
+    if (timerIndex >= 0 && timerIndex < presets.length) {
+      const preset = presets[timerIndex];
+      window.ninja.sendSettingsTimerData({
+        index: timerIndex,
+        preset: preset
+      });
+    }
+  });
+
+  // Settings window saves timer
+  window.ninja.onSettingsTimerSave((data) => {
+    if (data && data.index !== undefined && data.preset) {
+      const presets = loadPresets();
+      if (data.index >= 0 && data.index < presets.length) {
+        // Preserve linkedToNext if it exists
+        const linkedToNext = presets[data.index].linkedToNext || false;
+        presets[data.index] = {
+          name: data.preset.name,
+          config: data.preset.config,
+          linkedToNext
+        };
+        savePresets(presets);
+        renderPresetList();
+
+        // If editing the active timer, update live display
+        if (data.index === activePresetIndex) {
+          setActiveTimerConfig(data.preset.config);
+          applyConfig(data.preset.config);
+        }
+
+        // Update settings window timer index
+        settingsWindowTimerIndex = data.index;
+      }
+    }
+  });
+
+  // Settings window bounds changed - save to localStorage
+  window.ninja.onSettingsWindowBounds?.((bounds) => {
+    localStorage.setItem('ninja:settingsWindowBounds', JSON.stringify(bounds));
   });
 
   // Timer state request - output window asks for full state (on load/reload)

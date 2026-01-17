@@ -159,6 +159,83 @@ contextBridge.exposeInMainWorld('ninja', {
     ipcRenderer.on('message:request-state', () => callback());
   },
 
+  // ============ Settings Window ============
+
+  // Open settings window with a specific timer
+  openSettingsWindow: (timerIndex) => {
+    ipcRenderer.send('window:open-settings', timerIndex);
+  },
+
+  // Close settings window
+  closeSettingsWindow: () => {
+    ipcRenderer.send('window:close-settings');
+  },
+
+  // Listen for settings window ready (control receives)
+  onSettingsWindowReady: (callback) => {
+    ipcRenderer.on('window:settings-ready', () => callback());
+  },
+
+  // Listen for settings window closed (control receives)
+  onSettingsWindowClosed: (callback) => {
+    ipcRenderer.on('window:settings-closed', () => callback());
+  },
+
+  // Signal that settings window is ready (settings window calls this)
+  signalSettingsReady: () => {
+    ipcRenderer.send('settings:ready');
+  },
+
+  // Settings window requests timer data
+  requestSettingsTimer: (timerIndex) => {
+    ipcRenderer.send('settings:request-timer', timerIndex);
+  },
+
+  // Listen for timer data request (control receives, responds with timer data)
+  onSettingsTimerRequest: (callback) => {
+    ipcRenderer.on('settings:request-timer', (_event, timerIndex) => callback(timerIndex));
+  },
+
+  // Send timer data to settings window (control sends)
+  sendSettingsTimerData: (data) => {
+    ipcRenderer.send('settings:timer-data', data);
+  },
+
+  // Listen for timer data (settings window receives)
+  onSettingsTimerData: (callback) => {
+    ipcRenderer.on('settings:timer-data', (_event, data) => callback(data));
+  },
+
+  // Save timer from settings window
+  saveSettingsTimer: (data) => {
+    ipcRenderer.send('settings:save-timer', data);
+  },
+
+  // Listen for timer save (control receives)
+  onSettingsTimerSave: (callback) => {
+    ipcRenderer.on('settings:save-timer', (_event, data) => callback(data));
+  },
+
+  // Tell settings window to load a different timer (control sends when selection changes)
+  sendSettingsLoadTimer: (timerIndex) => {
+    ipcRenderer.send('settings:load-timer', timerIndex);
+  },
+
+  // Listen for load timer request (settings window receives)
+  onSettingsLoadTimer: (callback) => {
+    ipcRenderer.on('settings:load-timer', (_event, timerIndex) => callback(timerIndex));
+  },
+
+  // Listen for initial timer index (settings window receives on window creation)
+  onSettingsInit: (callback) => {
+    ipcRenderer.on('settings:init', (_event, timerIndex) => callback(timerIndex));
+  },
+
+  // Listen for window bounds update (control receives, saves to localStorage)
+  onSettingsWindowBounds: (callback) => {
+    ipcRenderer.on('settings:window-bounds', (_event, bounds) => callback(bounds));
+  },
+
   // ============ OSC Integration ============
 
   // Get OSC settings
@@ -200,10 +277,18 @@ contextBridge.exposeInMainWorld('ninja', {
     ipcRenderer.removeAllListeners('display:update');
     ipcRenderer.removeAllListeners('window:output-ready');
     ipcRenderer.removeAllListeners('window:output-closed');
+    ipcRenderer.removeAllListeners('window:settings-ready');
+    ipcRenderer.removeAllListeners('window:settings-closed');
     ipcRenderer.removeAllListeners('keyboard:shortcut');
     ipcRenderer.removeAllListeners('blackout:toggle');
     ipcRenderer.removeAllListeners('blackout:state');
     ipcRenderer.removeAllListeners('message:update');
     ipcRenderer.removeAllListeners('osc:command');
+    ipcRenderer.removeAllListeners('settings:request-timer');
+    ipcRenderer.removeAllListeners('settings:timer-data');
+    ipcRenderer.removeAllListeners('settings:save-timer');
+    ipcRenderer.removeAllListeners('settings:load-timer');
+    ipcRenderer.removeAllListeners('settings:init');
+    ipcRenderer.removeAllListeners('settings:window-bounds');
   }
 });

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self';">
+  <title>Timer Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700;900&family=Share+Tech+Mono&family=Teko:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="settings-window">
+    <!-- Header -->
+    <header class="settings-header">
+      <h1 id="windowTitle">Timer Settings</h1>
+      <div class="header-actions">
+        <button id="closeBtn" class="close-btn" title="Close (Esc)">&times;</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="settings-content">
+      <!-- Preview Section -->
+      <div class="preview-section">
+        <div class="preview-wrapper">
+          <div id="preview" class="preview">
+            <div id="previewTimer" class="timer-preview">10:00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duration Controls -->
+      <div class="duration-controls" id="durationControls">
+        <!-- Hours (hidden when format is MM:SS) -->
+        <div class="digit-group hours-group" id="hoursGroup">
+          <div class="digit-col h0-col" id="h0Col">
+            <button type="button" class="digit-btn digit-up" data-digit="h0">&#9650;</button>
+            <button type="button" class="digit-btn digit-down" data-digit="h0">&#9660;</button>
+          </div>
+          <div class="digit-col">
+            <button type="button" class="digit-btn digit-up" data-digit="h1">&#9650;</button>
+            <button type="button" class="digit-btn digit-down" data-digit="h1">&#9660;</button>
+          </div>
+          <div class="digit-col">
+            <button type="button" class="digit-btn digit-up" data-digit="h2">&#9650;</button>
+            <button type="button" class="digit-btn digit-down" data-digit="h2">&#9660;</button>
+          </div>
+        </div>
+        <span class="digit-separator hours-sep">:</span>
+        <!-- Minutes -->
+        <div class="digit-group minutes-group">
+          <div class="digit-col">
+            <button type="button" class="digit-btn digit-up" data-digit="m1">&#9650;</button>
+            <button type="button" class="digit-btn digit-down" data-digit="m1">&#9660;</button>
+          </div>
+          <div class="digit-col">
+            <button type="button" class="digit-btn digit-up" data-digit="m2">&#9650;</button>
+            <button type="button" class="digit-btn digit-down" data-digit="m2">&#9660;</button>
+          </div>
+        </div>
+        <span class="digit-separator minutes-sep">:</span>
+        <!-- Seconds -->
+        <div class="digit-group seconds-group">
+          <div class="digit-col">
+            <button type="button" class="digit-btn digit-up" data-digit="s1">&#9650;</button>
+            <button type="button" class="digit-btn digit-down" data-digit="s1">&#9660;</button>
+          </div>
+          <div class="digit-col">
+            <button type="button" class="digit-btn digit-up" data-digit="s2">&#9650;</button>
+            <button type="button" class="digit-btn digit-down" data-digit="s2">&#9660;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab Bar -->
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="timer">Timer</button>
+        <button class="settings-tab" data-tab="appearance">Appearance</button>
+        <button class="settings-tab" data-tab="sound">Sound</button>
+        <button class="settings-tab" data-tab="warning">Warnings</button>
+      </div>
+
+      <!-- Tab Panels -->
+      <div class="settings-tab-panels">
+        <!-- Timer Tab -->
+        <div class="settings-tab-panel active" data-panel="timer">
+          <div class="kv">
+            <label for="presetName">Title</label>
+            <input id="presetName" type="text" placeholder="Timer 1" />
+          </div>
+          <div class="kv">
+            <label for="mode">Mode</label>
+            <select id="mode">
+              <option value="countdown">Countdown</option>
+              <option value="countup">Count Up</option>
+              <option value="tod">Time of Day</option>
+              <option value="countdown-tod">C/D + ToD</option>
+              <option value="countup-tod">C/U + ToD</option>
+            </select>
+          </div>
+          <div class="kv">
+            <label for="format">Format</label>
+            <select id="format">
+              <option value="HH:MM:SS">HH:MM:SS</option>
+              <option value="MM:SS" selected>MM:SS</option>
+            </select>
+          </div>
+          <div class="kv">
+            <label for="duration">Duration</label>
+            <input id="duration" type="text" class="time-input duration-input" value="00:10:00" maxlength="10" placeholder="e.g. 530 or 5:30" />
+          </div>
+          <div class="kv" id="allowOvertimeRow">
+            <label for="allowOvertime">Overtime</label>
+            <select id="allowOvertime">
+              <option value="on">On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Appearance Tab -->
+        <div class="settings-tab-panel" data-panel="appearance">
+          <!-- Font Picker -->
+          <div class="font-picker-section">
+            <label class="font-picker-label">Font</label>
+            <div id="fontPicker" class="font-picker">
+              <!-- Font options populated by JavaScript -->
+            </div>
+            <input type="hidden" id="fontFamily" value="Inter" />
+          </div>
+          <div class="kv">
+            <label for="fontWeight">Weight</label>
+            <select id="fontWeight">
+              <option value="300">Light</option>
+              <option value="400">Regular</option>
+              <option value="500">Medium</option>
+              <option value="600">Semi Bold</option>
+              <option value="700" selected>Bold</option>
+              <option value="800">Extra Bold</option>
+              <option value="900">Black</option>
+            </select>
+          </div>
+          <div class="kv">
+            <label for="fontColor">Text Color</label>
+            <input id="fontColor" type="color" value="#ffffff" />
+          </div>
+          <div class="kv kv-inline">
+            <label>Stroke</label>
+            <div class="inline-controls">
+              <input id="strokeWidth" type="number" min="0" max="20" step="1" value="0" class="number-stepper" />
+              <span class="unit-label">px</span>
+              <input id="strokeColor" type="color" value="#000000" />
+            </div>
+          </div>
+          <div class="kv kv-inline">
+            <label>Shadow</label>
+            <div class="inline-controls">
+              <input id="shadowSize" type="number" min="0" max="50" step="1" value="0" class="number-stepper" />
+              <span class="unit-label">px</span>
+              <input id="shadowColor" type="color" value="#000000" />
+            </div>
+          </div>
+          <div class="kv">
+            <label for="bgColor">Background</label>
+            <input id="bgColor" type="color" value="#000000" />
+          </div>
+        </div>
+
+        <!-- Sound Tab -->
+        <div class="settings-tab-panel" data-panel="sound">
+          <div class="kv">
+            <label for="soundEnd">End sound</label>
+            <div class="sound-select-row">
+              <select id="soundEnd">
+                <option value="none" selected>None</option>
+                <option value="chime">Chime</option>
+                <option value="bell">Bell</option>
+                <option value="alert">Alert</option>
+                <option value="gong">Gong</option>
+                <option value="soft">Soft</option>
+              </select>
+              <button type="button" id="soundPreview" class="icon-btn preview-btn" title="Preview sound">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="kv" id="volumeRow">
+            <label for="soundVolume">Volume</label>
+            <input id="soundVolume" type="range" min="0" max="1" step="0.1" value="0.7" />
+          </div>
+        </div>
+
+        <!-- Warning Tab -->
+        <div class="settings-tab-panel" data-panel="warning">
+          <div class="kv">
+            <label class="warn-label"><span class="warn-dot warn-dot-yellow"></span>Yellow at</label>
+            <input id="warnYellowSec" type="text" class="time-input time-input-ms" value="01:00" maxlength="5" />
+          </div>
+          <div class="kv">
+            <label class="warn-label"><span class="warn-dot warn-dot-orange"></span>Orange at</label>
+            <input id="warnOrangeSec" type="text" class="time-input time-input-ms" value="00:15" maxlength="5" />
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="settings-footer">
+      <button id="saveBtn" class="primary">Save Timer</button>
+    </footer>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

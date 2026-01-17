@@ -1,0 +1,515 @@
+/**
+ * Ninja Timer - Settings Window
+ * Detached timer settings editor
+ */
+
+// ============ State ============
+let currentTimerIndex = null;
+let currentTimerName = '';
+let isDirty = false;
+
+// ============ DOM Elements ============
+const els = {
+  windowTitle: document.getElementById('windowTitle'),
+  closeBtn: document.getElementById('closeBtn'),
+  saveBtn: document.getElementById('saveBtn'),
+  preview: document.getElementById('preview'),
+  previewTimer: document.getElementById('previewTimer'),
+  durationControls: document.getElementById('durationControls'),
+  hoursGroup: document.getElementById('hoursGroup'),
+  h0Col: document.getElementById('h0Col'),
+  toastContainer: document.getElementById('toastContainer'),
+
+  // Form fields
+  presetName: document.getElementById('presetName'),
+  mode: document.getElementById('mode'),
+  format: document.getElementById('format'),
+  duration: document.getElementById('duration'),
+  allowOvertime: document.getElementById('allowOvertime'),
+  allowOvertimeRow: document.getElementById('allowOvertimeRow'),
+  fontFamily: document.getElementById('fontFamily'),
+  fontPicker: document.getElementById('fontPicker'),
+  fontWeight: document.getElementById('fontWeight'),
+  fontColor: document.getElementById('fontColor'),
+  strokeWidth: document.getElementById('strokeWidth'),
+  strokeColor: document.getElementById('strokeColor'),
+  shadowSize: document.getElementById('shadowSize'),
+  shadowColor: document.getElementById('shadowColor'),
+  bgColor: document.getElementById('bgColor'),
+  soundEnd: document.getElementById('soundEnd'),
+  soundPreview: document.getElementById('soundPreview'),
+  soundVolume: document.getElementById('soundVolume'),
+  volumeRow: document.getElementById('volumeRow'),
+  warnYellowSec: document.getElementById('warnYellowSec'),
+  warnOrangeSec: document.getElementById('warnOrangeSec')
+};
+
+// ============ Font Options ============
+const FONTS = [
+  { family: 'Inter', name: 'Inter', desc: 'Modern' },
+  { family: 'Roboto', name: 'Roboto', desc: 'Versatile' },
+  { family: 'JetBrains Mono', name: 'JetBrains', desc: 'Mono' },
+  { family: 'Oswald', name: 'Oswald', desc: 'Condensed' },
+  { family: 'Bebas Neue', name: 'Bebas', desc: 'Display' },
+  { family: 'Orbitron', name: 'Orbitron', desc: 'Futuristic' },
+  { family: 'Teko', name: 'Teko', desc: 'Condensed' },
+  { family: 'Share Tech Mono', name: 'Share Tech', desc: 'Digital' }
+];
+
+// ============ Initialization ============
+function init() {
+  setupTabs();
+  setupFontPicker();
+  setupDurationControls();
+  setupFormListeners();
+  setupKeyboardShortcuts();
+
+  // Close button
+  els.closeBtn.addEventListener('click', handleClose);
+
+  // Save button
+  els.saveBtn.addEventListener('click', saveTimer);
+
+  // Signal that we're ready
+  window.ninja.signalSettingsReady();
+
+  // Listen for initial timer data
+  window.ninja.onSettingsInit((timerIndex) => {
+    currentTimerIndex = timerIndex;
+    requestTimerData(timerIndex);
+  });
+
+  // Listen for timer data from control
+  window.ninja.onSettingsTimerData((data) => {
+    loadTimerData(data);
+  });
+
+  // Listen for load timer requests (when selection changes in main window)
+  window.ninja.onSettingsLoadTimer((timerIndex) => {
+    // Auto-save current if dirty
+    if (isDirty && currentTimerIndex !== null) {
+      saveTimer(true); // silent save
+    }
+    currentTimerIndex = timerIndex;
+    requestTimerData(timerIndex);
+  });
+}
+
+// ============ Timer Data ============
+function requestTimerData(timerIndex) {
+  window.ninja.requestSettingsTimer(timerIndex);
+}
+
+function loadTimerData(data) {
+  if (!data || !data.preset) return;
+
+  const { index, preset } = data;
+  currentTimerIndex = index;
+  currentTimerName = preset.name;
+  const config = preset.config;
+
+  // Update window title
+  els.windowTitle.textContent = `Timer Settings — ${preset.name}`;
+
+  // Populate form fields
+  els.presetName.value = preset.name;
+  els.mode.value = config.mode || 'countdown';
+  els.format.value = config.format || 'MM:SS';
+  els.duration.value = formatDuration(config.durationSec || 600);
+  els.allowOvertime.value = config.allowOvertime !== false ? 'on' : 'off';
+
+  // Appearance
+  selectFont(config.style?.fontFamily || 'Inter');
+  els.fontWeight.value = config.style?.fontWeight || '700';
+  els.fontColor.value = config.style?.color || '#ffffff';
+  els.strokeWidth.value = config.style?.strokeWidth || 0;
+  els.strokeColor.value = config.style?.strokeColor || '#000000';
+  els.shadowSize.value = config.style?.shadowSize || 0;
+  els.shadowColor.value = config.style?.shadowColor || '#000000';
+  els.bgColor.value = config.style?.bgColor || '#000000';
+
+  // Sound
+  els.soundEnd.value = config.sound?.endType || 'none';
+  els.soundVolume.value = config.sound?.volume ?? 0.7;
+
+  // Warnings
+  els.warnYellowSec.value = formatWarningTime(config.warnYellowSec ?? 60);
+  els.warnOrangeSec.value = formatWarningTime(config.warnOrangeSec ?? 15);
+
+  // Update UI state
+  updateDurationControlsFormat();
+  updateOvertimeVisibility();
+  updateVolumeVisibility();
+  updatePreview();
+
+  isDirty = false;
+}
+
+function saveTimer(silent = false) {
+  const config = getCurrentConfig();
+  const name = els.presetName.value.trim() || 'Timer';
+
+  window.ninja.saveSettingsTimer({
+    index: currentTimerIndex,
+    preset: {
+      name,
+      config
+    }
+  });
+
+  currentTimerName = name;
+  els.windowTitle.textContent = `Timer Settings — ${name}`;
+  isDirty = false;
+
+  if (!silent) {
+    showToast(`Saved "${name}"`, 'success');
+  }
+}
+
+function getCurrentConfig() {
+  return {
+    mode: els.mode.value,
+    durationSec: parseDuration(els.duration.value),
+    format: els.format.value,
+    allowOvertime: els.allowOvertime.value === 'on',
+    style: {
+      fontFamily: els.fontFamily.value,
+      fontWeight: parseInt(els.fontWeight.value, 10),
+      color: els.fontColor.value,
+      strokeWidth: parseInt(els.strokeWidth.value, 10) || 0,
+      strokeColor: els.strokeColor.value,
+      shadowSize: parseInt(els.shadowSize.value, 10) || 0,
+      shadowColor: els.shadowColor.value,
+      bgColor: els.bgColor.value
+    },
+    sound: {
+      endType: els.soundEnd.value,
+      volume: parseFloat(els.soundVolume.value)
+    },
+    warnYellowSec: parseWarningTime(els.warnYellowSec.value),
+    warnOrangeSec: parseWarningTime(els.warnOrangeSec.value)
+  };
+}
+
+// ============ Tabs ============
+function setupTabs() {
+  const tabs = document.querySelectorAll('.settings-tab');
+  const panels = document.querySelectorAll('.settings-tab-panel');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetPanel = tab.dataset.tab;
+
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+
+      tab.classList.add('active');
+      document.querySelector(`[data-panel="${targetPanel}"]`).classList.add('active');
+    });
+  });
+}
+
+// ============ Font Picker ============
+function setupFontPicker() {
+  els.fontPicker.innerHTML = FONTS.map(font => `
+    <div class="font-option" data-font="${font.family}">
+      <div class="font-option-preview" style="font-family: '${font.family}'">12</div>
+      <div class="font-option-name">${font.name}</div>
+      <div class="font-option-desc">${font.desc}</div>
+    </div>
+  `).join('');
+
+  els.fontPicker.addEventListener('click', (e) => {
+    const option = e.target.closest('.font-option');
+    if (option) {
+      selectFont(option.dataset.font);
+      markDirty();
+      updatePreview();
+    }
+  });
+}
+
+function selectFont(fontFamily) {
+  els.fontFamily.value = fontFamily;
+
+  // Update selection UI
+  document.querySelectorAll('.font-option').forEach(opt => {
+    opt.classList.toggle('selected', opt.dataset.font === fontFamily);
+  });
+
+  // Scroll selected into view
+  const selected = document.querySelector('.font-option.selected');
+  if (selected) {
+    selected.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+}
+
+// ============ Duration Controls ============
+function setupDurationControls() {
+  // Digit buttons
+  document.querySelectorAll('.digit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const digit = btn.dataset.digit;
+      const isUp = btn.classList.contains('digit-up');
+      adjustDigit(digit, isUp ? 1 : -1);
+      markDirty();
+      updatePreview();
+    });
+  });
+
+  // Duration input direct edit
+  els.duration.addEventListener('change', () => {
+    markDirty();
+    updatePreview();
+  });
+}
+
+function adjustDigit(digit, delta) {
+  const currentSec = parseDuration(els.duration.value);
+  let h = Math.floor(currentSec / 3600);
+  let m = Math.floor((currentSec % 3600) / 60);
+  let s = currentSec % 60;
+
+  // Split hours into digits
+  let h0 = Math.floor(h / 100);
+  let h1 = Math.floor((h % 100) / 10);
+  let h2 = h % 10;
+  let m1 = Math.floor(m / 10);
+  let m2 = m % 10;
+  let s1 = Math.floor(s / 10);
+  let s2 = s % 10;
+
+  // Apply delta
+  switch (digit) {
+    case 'h0': h0 = Math.max(0, Math.min(9, h0 + delta)); break;
+    case 'h1': h1 = Math.max(0, Math.min(9, h1 + delta)); break;
+    case 'h2': h2 = Math.max(0, Math.min(9, h2 + delta)); break;
+    case 'm1': m1 = Math.max(0, Math.min(5, m1 + delta)); break;
+    case 'm2': m2 = Math.max(0, Math.min(9, m2 + delta)); break;
+    case 's1': s1 = Math.max(0, Math.min(5, s1 + delta)); break;
+    case 's2': s2 = Math.max(0, Math.min(9, s2 + delta)); break;
+  }
+
+  // Reconstruct
+  h = h0 * 100 + h1 * 10 + h2;
+  m = m1 * 10 + m2;
+  s = s1 * 10 + s2;
+  const newSec = h * 3600 + m * 60 + s;
+
+  els.duration.value = formatDuration(newSec);
+}
+
+function updateDurationControlsFormat() {
+  const format = els.format.value;
+  if (format === 'MM:SS') {
+    els.durationControls.classList.add('format-mmss');
+  } else {
+    els.durationControls.classList.remove('format-mmss');
+  }
+}
+
+// ============ Form Listeners ============
+function setupFormListeners() {
+  // All inputs trigger dirty state and preview update
+  const inputs = [
+    els.presetName, els.mode, els.format, els.duration, els.allowOvertime,
+    els.fontWeight, els.fontColor, els.strokeWidth, els.strokeColor,
+    els.shadowSize, els.shadowColor, els.bgColor,
+    els.soundEnd, els.soundVolume,
+    els.warnYellowSec, els.warnOrangeSec
+  ];
+
+  inputs.forEach(input => {
+    if (!input) return;
+    input.addEventListener('input', () => {
+      markDirty();
+      updatePreview();
+    });
+    input.addEventListener('change', () => {
+      markDirty();
+      updatePreview();
+    });
+  });
+
+  // Mode change affects overtime visibility and duration controls
+  els.mode.addEventListener('change', () => {
+    updateOvertimeVisibility();
+    updateDurationControlsFormat();
+  });
+
+  // Format change affects duration controls
+  els.format.addEventListener('change', () => {
+    updateDurationControlsFormat();
+  });
+
+  // Sound change affects volume visibility
+  els.soundEnd.addEventListener('change', () => {
+    updateVolumeVisibility();
+  });
+
+  // Sound preview
+  els.soundPreview?.addEventListener('click', () => {
+    // TODO: Play preview sound
+  });
+}
+
+function markDirty() {
+  isDirty = true;
+}
+
+function updateOvertimeVisibility() {
+  const mode = els.mode.value;
+  const showOvertime = mode === 'countdown' || mode === 'countdown-tod';
+  els.allowOvertimeRow.style.display = showOvertime ? '' : 'none';
+}
+
+function updateVolumeVisibility() {
+  const sound = els.soundEnd.value;
+  els.volumeRow.style.display = sound !== 'none' ? '' : 'none';
+}
+
+// ============ Preview ============
+function updatePreview() {
+  const config = getCurrentConfig();
+
+  // Update preview text
+  const mode = config.mode;
+  let text = '10:00';
+
+  if (mode === 'tod') {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    text = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  } else {
+    const sec = config.durationSec;
+    if (config.format === 'HH:MM:SS') {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      text = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    } else {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      text = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+  }
+
+  els.previewTimer.textContent = text;
+
+  // Update preview styles
+  const style = config.style;
+  els.previewTimer.style.fontFamily = `'${style.fontFamily}', sans-serif`;
+  els.previewTimer.style.fontWeight = style.fontWeight;
+  els.previewTimer.style.color = style.color;
+  els.preview.style.backgroundColor = style.bgColor;
+
+  // Stroke (text-shadow based)
+  if (style.strokeWidth > 0) {
+    const sw = style.strokeWidth;
+    const sc = style.strokeColor;
+    els.previewTimer.style.webkitTextStroke = `${sw}px ${sc}`;
+  } else {
+    els.previewTimer.style.webkitTextStroke = 'none';
+  }
+
+  // Shadow
+  if (style.shadowSize > 0) {
+    const ss = style.shadowSize;
+    const shc = style.shadowColor;
+    els.previewTimer.style.textShadow = `0 0 ${ss}px ${shc}`;
+  } else {
+    els.previewTimer.style.textShadow = 'none';
+  }
+}
+
+// ============ Keyboard Shortcuts ============
+function setupKeyboardShortcuts() {
+  document.addEventListener('keydown', (e) => {
+    // Escape to close
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+
+    // Cmd/Ctrl+S to save
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      e.preventDefault();
+      saveTimer();
+    }
+
+    // Cmd/Ctrl+W to close
+    if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
+      e.preventDefault();
+      handleClose();
+    }
+  });
+}
+
+function handleClose() {
+  // Auto-save if dirty
+  if (isDirty && currentTimerIndex !== null) {
+    saveTimer(true);
+  }
+  window.ninja.closeSettingsWindow();
+}
+
+// ============ Utilities ============
+function formatDuration(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function parseDuration(str) {
+  if (!str) return 600;
+
+  // Remove non-numeric except colons
+  str = str.replace(/[^\d:]/g, '');
+
+  const parts = str.split(':').map(p => parseInt(p, 10) || 0);
+
+  if (parts.length === 3) {
+    // HH:MM:SS
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  } else if (parts.length === 2) {
+    // MM:SS
+    return parts[0] * 60 + parts[1];
+  } else if (parts.length === 1) {
+    // Just seconds or minutes based on value
+    return parts[0] > 99 ? parts[0] : parts[0] * 60;
+  }
+
+  return 600;
+}
+
+function formatWarningTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function parseWarningTime(str) {
+  if (!str) return 0;
+  const parts = str.split(':').map(p => parseInt(p, 10) || 0);
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return parseInt(str, 10) || 0;
+}
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  els.toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => toast.remove(), 200);
+  }, 2000);
+}
+
+// ============ Start ============
+document.addEventListener('DOMContentLoaded', init);

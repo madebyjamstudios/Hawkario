@@ -28,6 +28,7 @@ try {
 
 let mainWindow = null;
 let outputWindow = null;
+let settingsWindow = null;
 let splashWindow = null;
 
 // Store last config to send to new output windows
@@ -318,6 +319,79 @@ function createOutputWindow() {
   });
 }
 
+// Settings window position persistence key
+const SETTINGS_WINDOW_BOUNDS_KEY = 'ninja:settingsWindowBounds';
+
+function createSettingsWindow(timerIndex) {
+  // Production Safety: Check if window exists AND is not destroyed
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.focus();
+    // Update to show requested timer
+    safeSend(settingsWindow, 'settings:load-timer', timerIndex);
+    return;
+  }
+
+  // Reset reference if window was destroyed
+  settingsWindow = null;
+
+  // Try to restore saved window position
+  let windowBounds = { width: 450, height: 700, x: undefined, y: undefined };
+  try {
+    const savedBounds = mainWindow?.webContents?.executeJavaScript(
+      `localStorage.getItem('${SETTINGS_WINDOW_BOUNDS_KEY}')`
+    );
+    // Note: We can't use async here easily, so we'll use defaults and let the window save on close
+  } catch (err) {
+    // Use defaults
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: windowBounds.width,
+    height: windowBounds.height,
+    minWidth: 380,
+    minHeight: 500,
+    center: true,
+    title: 'Timer Settings',
+    parent: mainWindow,  // Associate with main (macOS)
+    modal: false,
+    backgroundColor: '#1a1a1a',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+
+  settingsWindow.loadFile('src/settings/settings.html');
+
+  // Send the timer index once the window is ready
+  settingsWindow.webContents.on('did-finish-load', () => {
+    safeSend(settingsWindow, 'settings:init', timerIndex);
+  });
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+    // Notify control window that settings is closed
+    safeToMain('window:settings-closed');
+  });
+
+  // Save window position on move/resize
+  settingsWindow.on('moved', () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      const bounds = settingsWindow.getBounds();
+      safeToMain('settings:window-bounds', bounds);
+    }
+  });
+
+  settingsWindow.on('resized', () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      const bounds = settingsWindow.getBounds();
+      safeToMain('settings:window-bounds', bounds);
+    }
+  });
+}
+
 // ============ IPC Handlers (with Production Safety) ============
 
 // ---- Canonical Timer State (StageTimer-style sync) ----
@@ -418,6 +492,73 @@ ipcMain.on('window:focus-output', () => {
     }
   } catch (err) {
     console.error('[IPC:window:focus-output] Error:', err);
+  }
+});
+
+// ---- Settings Window Management ----
+
+// Open settings window
+ipcMain.on('window:open-settings', (_event, timerIndex) => {
+  try {
+    createSettingsWindow(timerIndex);
+  } catch (err) {
+    console.error('[IPC:window:open-settings] Error:', err);
+  }
+});
+
+// Close settings window
+ipcMain.on('window:close-settings', () => {
+  try {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.close();
+    }
+  } catch (err) {
+    console.error('[IPC:window:close-settings] Error:', err);
+  }
+});
+
+// Settings window signals ready
+ipcMain.on('settings:ready', () => {
+  try {
+    safeToMain('window:settings-ready');
+  } catch (err) {
+    console.error('[IPC:settings:ready] Error:', err);
+  }
+});
+
+// Settings window requests timer data: settings -> main -> control
+ipcMain.on('settings:request-timer', (_event, timerIndex) => {
+  try {
+    safeToMain('settings:request-timer', timerIndex);
+  } catch (err) {
+    console.error('[IPC:settings:request-timer] Error:', err);
+  }
+});
+
+// Control sends timer data to settings: control -> main -> settings
+ipcMain.on('settings:timer-data', (_event, data) => {
+  try {
+    safeSend(settingsWindow, 'settings:timer-data', data);
+  } catch (err) {
+    console.error('[IPC:settings:timer-data] Error:', err);
+  }
+});
+
+// Settings saves timer: settings -> main -> control
+ipcMain.on('settings:save-timer', (_event, data) => {
+  try {
+    safeToMain('settings:save-timer', data);
+  } catch (err) {
+    console.error('[IPC:settings:save-timer] Error:', err);
+  }
+});
+
+// Control tells settings to load a different timer (when selection changes)
+ipcMain.on('settings:load-timer', (_event, timerIndex) => {
+  try {
+    safeSend(settingsWindow, 'settings:load-timer', timerIndex);
+  } catch (err) {
+    console.error('[IPC:settings:load-timer] Error:', err);
   }
 });
 
