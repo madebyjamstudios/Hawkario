@@ -6547,34 +6547,39 @@ function setupEventListeners() {
   initTimeInputMS(els.warnOrangeSec);
 
   // Duration control buttons - per-digit (h0, h1, h2, m1, m2, s1, s2)
+  // Each button adds/subtracts its place value with proper carry-over (e.g., 59:00 + 10min = 1:09:00)
   document.querySelectorAll('.digit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const digit = btn.dataset.digit;
       const isUp = btn.classList.contains('digit-up');
       const { h, m, s } = parseTimeValue(els.duration.value);
 
-      // Split into individual digits (3 for hours now: h0=hundreds, h1=tens, h2=ones)
-      let h0 = Math.floor(h / 100);
-      let h1 = Math.floor((h % 100) / 10), h2 = h % 10;
-      let m1 = Math.floor(m / 10), m2 = m % 10;
-      let s1 = Math.floor(s / 10), s2 = s % 10;
+      // Calculate total time in seconds
+      let totalSeconds = h * 3600 + m * 60 + s;
 
-      // Increment/decrement the specific digit
-      const delta = isUp ? 1 : -1;
-      switch (digit) {
-        case 'h0': h0 = (h0 + delta + 10) % 10; break;  // 0-9 for hundreds of hours
-        case 'h1': h1 = (h1 + delta + 10) % 10; break;
-        case 'h2': h2 = (h2 + delta + 10) % 10; break;
-        case 'm1': m1 = (m1 + delta + 6) % 6; break;  // 0-5 for tens of minutes
-        case 'm2': m2 = (m2 + delta + 10) % 10; break;
-        case 's1': s1 = (s1 + delta + 6) % 6; break;  // 0-5 for tens of seconds
-        case 's2': s2 = (s2 + delta + 10) % 10; break;
-      }
+      // Each digit represents a specific time value in seconds
+      const digitValues = {
+        h0: 100 * 3600,  // 100 hours = 360000 seconds
+        h1: 10 * 3600,   // 10 hours = 36000 seconds
+        h2: 1 * 3600,    // 1 hour = 3600 seconds
+        m1: 10 * 60,     // 10 minutes = 600 seconds
+        m2: 1 * 60,      // 1 minute = 60 seconds
+        s1: 10,          // 10 seconds
+        s2: 1            // 1 second
+      };
 
-      // Rebuild duration values
-      const newH = h0 * 100 + h1 * 10 + h2;
-      const newM = m1 * 10 + m2;
-      const newS = s1 * 10 + s2;
+      // Add or subtract the digit's value with proper carry-over
+      const delta = isUp ? digitValues[digit] : -digitValues[digit];
+      totalSeconds += delta;
+
+      // Clamp to valid range (0 to 999:59:59 = 3599999 seconds)
+      const maxSeconds = 999 * 3600 + 59 * 60 + 59;
+      totalSeconds = Math.max(0, Math.min(maxSeconds, totalSeconds));
+
+      // Convert back to h:m:s
+      const newH = Math.floor(totalSeconds / 3600);
+      const newM = Math.floor((totalSeconds % 3600) / 60);
+      const newS = totalSeconds % 60;
 
       els.duration.value = formatTimeValue(newH, newM, newS);
       updateDurationDigitDisplay();
