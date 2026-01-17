@@ -144,6 +144,7 @@ function loadTimerData(data) {
 
   // Update UI state
   updateDurationControlsFormat();
+  updateH0ColVisibility();
   updateOvertimeVisibility();
   updateVolumeVisibility();
   updatePreview();
@@ -266,6 +267,7 @@ function setupDurationControls() {
   // Duration input direct edit
   els.duration.addEventListener('change', () => {
     markDirty();
+    updateH0ColVisibility();
     updatePreview();
   });
 }
@@ -303,15 +305,22 @@ function adjustDigit(digit, delta) {
   const newSec = h * 3600 + m * 60 + s;
 
   els.duration.value = formatDuration(newSec);
+  updateH0ColVisibility();
+}
+
+function updateH0ColVisibility() {
+  // Show/hide h0 (hundreds of hours) column based on current duration
+  if (els.h0Col) {
+    const currentSec = parseDuration(els.duration.value);
+    const h = Math.floor(currentSec / 3600);
+    els.h0Col.style.display = h >= 100 ? '' : 'none';
+  }
 }
 
 function updateDurationControlsFormat() {
-  const format = els.format.value;
-  if (format === 'MM:SS') {
-    els.durationControls.classList.add('format-mmss');
-  } else {
-    els.durationControls.classList.remove('format-mmss');
-  }
+  // Duration controls always show HH:MM:SS for consistent editing
+  // The Format dropdown only affects the output window display
+  // (No class toggle - hours group always visible)
 }
 
 // ============ Form Listeners ============
@@ -378,29 +387,17 @@ function updateVolumeVisibility() {
 function updatePreview() {
   const config = getCurrentConfig();
 
-  // Update preview text
-  const mode = config.mode;
-  let text = '10:00';
+  // Always show duration in HH:MM:SS format for consistent editing
+  // This section is for adjusting time, not displaying time of day
+  const sec = config.durationSec;
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
 
-  if (mode === 'tod') {
-    const now = new Date();
-    const h = now.getHours();
-    const m = now.getMinutes();
-    const s = now.getSeconds();
-    text = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  } else {
-    const sec = config.durationSec;
-    if (config.format === 'HH:MM:SS') {
-      const h = Math.floor(sec / 3600);
-      const m = Math.floor((sec % 3600) / 60);
-      const s = sec % 60;
-      text = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    } else {
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      text = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-  }
+  // Handle HHH (100+ hours) display
+  const text = h >= 100
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
   els.previewTimer.textContent = text;
 

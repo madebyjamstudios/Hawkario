@@ -362,13 +362,10 @@ function updateDurationDigitDisplay() {
   }
 }
 
-// Show/hide hours group based on format selection
+// Modal duration controls always show HH:MM:SS for consistent editing
+// The Format dropdown only affects the output window display
 function updateDurationControlsFormat() {
-  const format = els.format?.value;
-  const controls = document.getElementById('durationControls');
-  if (controls) {
-    controls.classList.toggle('format-mmss', format === 'MM:SS');
-  }
+  // No-op: hours group always visible in modal
 }
 
 /**
@@ -3453,10 +3450,9 @@ function updateModalPreview() {
   );
   els.modalPreviewTimer.style.letterSpacing = FIXED_STYLE.letterSpacing + 'em';
 
-  // Update displayed time based on mode
+  // Update displayed time - modal preview always shows duration only (no ToD)
+  // This section is for adjusting time, not displaying time of day
   let displayText = '';
-  const isCountdown = mode === 'countdown' || mode === 'countdown-tod';
-  const showToD = mode === 'countdown-tod' || mode === 'countup-tod' || mode === 'tod';
 
   if (mode === 'hidden') {
     els.modalPreviewTimer.style.visibility = 'hidden';
@@ -3466,48 +3462,25 @@ function updateModalPreview() {
     els.modalPreviewTimer.style.visibility = 'visible';
   }
 
-  // Toggle ToD layout class (matches live preview structure)
-  if (showToD && mode !== 'tod') {
-    els.modalPreviewTimerSection?.classList.add('with-tod');
-  } else {
-    els.modalPreviewTimerSection?.classList.remove('with-tod');
-  }
-  // Force layout recalculation after class change
-  void els.modalPreviewTimerSection?.offsetHeight;
+  // Never show ToD layout in modal - duration only
+  els.modalPreviewTimerSection?.classList.remove('with-tod');
 
-  if (mode === 'tod') {
-    // Pure ToD mode - show time of day as main display
-    const appSettings = loadAppSettings();
-    displayText = formatTimeOfDay(appSettings.todFormat, appSettings.timezone);
-    els.modalPreviewTimer.innerHTML = displayText;
+  // Always show duration (even for ToD mode - user is editing the timer settings)
+  // Always use HH:MM:SS format in modal for consistent button alignment
+  displayText = formatTime(durationSec * 1000, 'HH:MM:SS');
 
-    // No separate ToD element needed in pure ToD mode
-    if (els.modalPreviewToD) {
-      els.modalPreviewToD.innerHTML = '';
-    }
-  } else {
-    // Timer modes - show duration
-    displayText = formatTime(durationSec * 1000, format);
+  // Pad first segment with leading zero for modal preview (button alignment)
+  displayText = displayText.replace(/^(\d)(<span)/, '0$1$2');
 
-    // Pad first segment with leading zero for modal preview (button alignment)
-    displayText = displayText.replace(/^(\d)(<span)/, '0$1$2');
+  els.modalPreviewTimer.innerHTML = displayText;
 
-    els.modalPreviewTimer.innerHTML = displayText;
-
-    // Update separate ToD element if in combined mode
-    if (showToD && els.modalPreviewToD) {
-      const appSettings = loadAppSettings();
-      els.modalPreviewToD.innerHTML = formatTimeOfDay(appSettings.todFormat, appSettings.timezone);
-      els.modalPreviewToD.style.fontFamily = `'${fontFamily}', ${FIXED_STYLE.fontFamily}`;
-      els.modalPreviewToD.style.fontWeight = 600;
-      els.modalPreviewToD.style.color = els.fontColor.value;
-    } else if (els.modalPreviewToD) {
-      els.modalPreviewToD.innerHTML = '';
-    }
+  // Clear ToD element - not used in modal
+  if (els.modalPreviewToD) {
+    els.modalPreviewToD.innerHTML = '';
   }
 
-  // Fit timer and ToD using calculated dimensions (like fitPreviewTimer)
-  fitModalPreviewContent(showToD && mode !== 'tod');
+  // Fit timer content (no ToD)
+  fitModalPreviewContent(false);
 
   // Align duration buttons to match timer digit positions
   alignDurationButtons();
