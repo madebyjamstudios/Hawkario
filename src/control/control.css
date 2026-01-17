@@ -2302,18 +2302,14 @@ footer small {
   overflow: visible;
   user-select: none;
   -webkit-user-select: none;
-  /* DEBUG: outline to see boundaries */
-  outline: 1px dashed orange;
 }
 
 /* Modal preview structure - fuller content-box for limited space */
 .modal-preview .content-box {
   position: absolute;
-  inset: 4px; /* Small padding from edges */
+  inset: 4px;
   display: flex;
   flex-direction: column;
-  /* DEBUG: outline to see boundaries */
-  outline: 1px dashed red;
 }
 
 .modal-preview .timer-section {
@@ -2323,22 +2319,16 @@ footer small {
   align-items: center;
   justify-content: center;
   overflow: visible;
-  /* DEBUG: outline to see boundaries */
-  outline: 1px dashed lime;
 }
 
 .modal-preview .timer-box {
   display: inline-block;
-  /* DEBUG: outline to see boundaries */
-  outline: 1px dashed cyan;
 }
 
 .modal-preview .tod-box {
   display: none;
   width: 100%;
   position: relative;
-  /* DEBUG: outline to see boundaries */
-  outline: 1px dashed yellow;
 }
 
 /* When ToD is enabled: 75/25 split */
@@ -2370,11 +2360,10 @@ footer small {
 .modal-preview .tod-preview {
   display: inline-block;
   white-space: nowrap;
+  line-height: 0.75;
   overflow: visible;
   text-align: center;
   font-weight: 600;
-  /* DEBUG: outline to see boundaries */
-  outline: 1px dashed magenta;
 }
 
 /* Duration controls - per-digit buttons (compact fine-tune controls) */
@@ -3057,15 +3046,34 @@ h3 {
   flex: 1;
 }
 
-/* Settings Actions Section (Export/Import) - Apple style distinct section */
+/* Settings Actions Section (Export/Import) */
 .settings-actions {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
+  /* No extra border-top - the previous section's border-bottom is enough */
 }
 
 .settings-actions .settings-row {
-  margin-top: 8px;
+  margin-top: 4px;
+}
+
+/* Apple-style outlined buttons for data actions */
+.settings-actions button {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.settings-actions button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--color-text-primary);
+}
+
+.settings-actions button:active {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 /* Confirm Dialog */
