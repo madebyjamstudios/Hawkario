@@ -3583,21 +3583,30 @@ function fitPreviewTimer() {
   const hasToD = els.livePreviewTimerSection?.classList.contains('with-tod');
   const hasMessage = els.livePreviewContentBox?.classList.contains('with-message');
 
-  // Container width is always timer-section width
-  const containerWidth = els.livePreviewTimerSection?.offsetWidth || 0;
+  // Calculate container dimensions from preview size (matches output.js approach)
+  // Content-box is 90% width × 64% height of preview area
+  const previewWidth = els.livePreview?.offsetWidth || 0;
+  const previewHeight = els.livePreview?.offsetHeight || 0;
+  const contentBoxWidth = previewWidth * 0.9;
+  const contentBoxHeight = previewHeight * 0.64;
 
-  // Container height depends on mode:
-  // - Timer only (no message): content-box height
-  // - Timer only (with message): timer-section height (34%)
-  // - Timer+ToD (no message): timer-box height (75%)
-  // - Timer+ToD (with message): timer-box height (75% of 34%)
+  // Container width is always content-box width
+  const containerWidth = contentBoxWidth;
+
+  // Container height depends on mode (matches output.js logic):
+  // - Timer only (no message): content-box height (64% of preview)
+  // - Timer only (with message): timer-section height (34% of content-box)
+  // - Timer+ToD (no message): timer-box height (75% of content-box)
+  // - Timer+ToD (with message): timer-box height (75% of 34% of content-box)
   let containerHeight;
-  if (hasToD) {
-    containerHeight = els.livePreviewTimerBox.offsetHeight;
+  if (hasToD && hasMessage) {
+    containerHeight = contentBoxHeight * 0.34 * 0.75;
+  } else if (hasToD) {
+    containerHeight = contentBoxHeight * 0.75;
   } else if (hasMessage) {
-    containerHeight = els.livePreviewTimerSection?.offsetHeight || 0;
+    containerHeight = contentBoxHeight * 0.34;
   } else {
-    containerHeight = els.livePreviewContentBox.offsetHeight;
+    containerHeight = contentBoxHeight;
   }
 
   // If layout not ready, retry after short delay (matches output behavior)
