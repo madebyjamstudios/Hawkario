@@ -3082,6 +3082,9 @@ function initProgressBarInteractivity() {
 function seekToTime(targetElapsedMs) {
   const chain = getLinkedTimerChain();
 
+  // Check if timer is in fresh/reset state (never started)
+  const timerIsReset = !isRunning && timerState.startedAt === null && timerState.pausedAcc === 0;
+
   // Handle linked timer chains
   if (chain.length > 1) {
     // Find which timer in the chain the target time falls into
@@ -3092,7 +3095,21 @@ function seekToTime(targetElapsedMs) {
         // Target is in this timer
         const timerElapsed = targetElapsedMs - cumulativeMs;
 
-        // Switch to this timer if different
+        // If timer is in reset state, don't allow switching to different timer via seek
+        // This prevents accidental timer switches when the user just selected a specific timer
+        if (timerIsReset && chain[i].index !== activePresetIndex) {
+          // Instead, seek within current timer only
+          const currentTimerIdx = chain.findIndex(c => c.index === activePresetIndex);
+          if (currentTimerIdx >= 0) {
+            const currentDuration = chain[currentTimerIdx].durationMs;
+            const clampedElapsed = Math.max(0, Math.min(targetElapsedMs, currentDuration));
+            timerState.pausedAcc = clampedElapsed;
+            timerState.startedAt = Date.now();
+          }
+          break;
+        }
+
+        // Switch to this timer if different (allowed when running or paused)
         if (chain[i].index !== activePresetIndex) {
           activePresetIndex = chain[i].index;
           setActiveTimerConfig(chain[i].preset.config);
