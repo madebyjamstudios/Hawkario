@@ -97,6 +97,10 @@ const els = {
   // Modal Preview
   modalPreview: document.getElementById('modalPreview'),
   modalPreviewTimer: document.getElementById('modalPreviewTimer'),
+  modalPreviewToD: document.getElementById('modalPreviewToD'),
+  modalPreviewTimerSection: document.querySelector('.modal-preview .timer-section'),
+  modalPreviewTimerBox: document.querySelector('.modal-preview .timer-box'),
+  modalPreviewToDBox: document.querySelector('.modal-preview .tod-box'),
 
   // Controls
   blackoutBtn: document.getElementById('blackoutBtn'),
@@ -1182,6 +1186,7 @@ const TIMEZONES = [
 const DEFAULT_APP_SETTINGS = {
   todFormat: '12h',
   timezone: 'auto',
+  appearance: 'auto',  // 'auto' | 'light' | 'dark'
   confirmDelete: true,
   outputOnTop: false,
   controlOnTop: false,
@@ -3419,38 +3424,62 @@ function updateModalPreview() {
   // Update displayed time based on mode
   let displayText = '';
   const isCountdown = mode === 'countdown' || mode === 'countdown-tod';
-  const showToD = mode === 'countdown-tod' || mode === 'countup-tod';
+  const showToD = mode === 'countdown-tod' || mode === 'countup-tod' || mode === 'tod';
 
   if (mode === 'hidden') {
     els.modalPreviewTimer.style.visibility = 'hidden';
+    els.modalPreviewTimerSection?.classList.remove('with-tod');
     return;
   } else {
     els.modalPreviewTimer.style.visibility = 'visible';
   }
 
+  // Toggle ToD layout class (matches live preview structure)
+  if (showToD && mode !== 'tod') {
+    els.modalPreviewTimerSection?.classList.add('with-tod');
+  } else {
+    els.modalPreviewTimerSection?.classList.remove('with-tod');
+  }
+
   if (mode === 'tod') {
+    // Pure ToD mode - show time of day as main display
     const appSettings = loadAppSettings();
     displayText = formatTimeOfDay(appSettings.todFormat, appSettings.timezone);
+    els.modalPreviewTimer.innerHTML = displayText;
+
+    // No separate ToD element needed in pure ToD mode
+    if (els.modalPreviewToD) {
+      els.modalPreviewToD.innerHTML = '';
+    }
   } else {
-    // Always show duration in modal preview so button clicks have visible feedback
-    // (countdown shows this at start, count-up uses it as the limit)
+    // Timer modes - show duration
     displayText = formatTime(durationSec * 1000, format);
 
     // Pad first segment with leading zero for modal preview (button alignment)
-    // formatTime returns "9<span..." but we need "09<span..." for buttons to align
     displayText = displayText.replace(/^(\d)(<span)/, '0$1$2');
 
-    if (showToD) {
+    els.modalPreviewTimer.innerHTML = displayText;
+
+    // Update separate ToD element if in combined mode
+    if (showToD && els.modalPreviewToD) {
       const appSettings = loadAppSettings();
-      displayText += '<br><span class="tod-line">' + formatTimeOfDay(appSettings.todFormat, appSettings.timezone) + '</span>';
+      els.modalPreviewToD.innerHTML = formatTimeOfDay(appSettings.todFormat, appSettings.timezone);
+      els.modalPreviewToD.style.fontFamily = `'${fontFamily}', ${FIXED_STYLE.fontFamily}`;
+      els.modalPreviewToD.style.fontWeight = 600;
+      els.modalPreviewToD.style.color = els.fontColor.value;
+    } else if (els.modalPreviewToD) {
+      els.modalPreviewToD.innerHTML = '';
     }
   }
 
-  els.modalPreviewTimer.innerHTML = displayText;
+  // Auto-fit timer text within timer-box
+  const timerContainer = showToD && mode !== 'tod' ? els.modalPreviewTimerBox : els.modalPreview;
+  autoFitText(els.modalPreviewTimer, timerContainer || els.modalPreview, 0.95);
 
-  // Auto-fit text - timer-only modes get more space (0.95), ToD+timer uses 0.9
-  const fitPercent = showToD ? 0.9 : 0.95;
-  autoFitText(els.modalPreviewTimer, els.modalPreview, fitPercent);
+  // Auto-fit ToD text within tod-box if visible
+  if (showToD && mode !== 'tod' && els.modalPreviewToD && els.modalPreviewToDBox) {
+    autoFitText(els.modalPreviewToD, els.modalPreviewToDBox, 0.9);
+  }
 
   // Align duration buttons to match timer digit positions
   alignDurationButtons();

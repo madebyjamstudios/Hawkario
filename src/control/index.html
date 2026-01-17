@@ -142,68 +142,74 @@
   <div id="settingsModal" class="modal-overlay hidden">
     <div class="modal">
       <div class="modal-header">
-        <h2 id="modalTitle">Edit Timer</h2>
-        <div class="modal-header-actions">
+        <div class="modal-title-group">
+          <h2 id="modalTitle">Edit Timer</h2>
           <button id="modalPopout" class="modal-popout" title="Open in new window">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
               <polyline points="15 3 21 3 21 9"></polyline>
               <line x1="10" y1="14" x2="21" y2="3"></line>
             </svg>
           </button>
-          <button id="modalClose" class="modal-close">&times;</button>
         </div>
+        <button id="modalClose" class="modal-close">&times;</button>
       </div>
 
       <div class="modal-body">
-        <!-- Preview in modal - sticky section -->
+        <!-- Preview in modal - sticky section with duration controls -->
         <div class="modal-preview-section">
           <div class="modal-preview-wrapper">
             <div id="modalPreview" class="modal-preview">
-              <div id="modalPreviewTimer" class="timer-preview">10:00</div>
+              <div class="timer-section">
+                <div class="timer-box">
+                  <div id="modalPreviewTimer" class="timer-preview">10:00</div>
+                </div>
+                <div class="tod-box">
+                  <div id="modalPreviewToD" class="tod-preview"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Duration controls - buttons + unified input -->
-        <div class="duration-controls" id="durationControls">
-          <!-- Hours (hidden when format is MM:SS) -->
-          <div class="digit-group hours-group" id="hoursGroup">
-            <div class="digit-col h0-col" id="h0Col">
-              <button type="button" class="digit-btn digit-up" data-digit="h0">▲</button>
-              <button type="button" class="digit-btn digit-down" data-digit="h0">▼</button>
+          <!-- Duration controls - now inside sticky section -->
+          <div class="duration-controls" id="durationControls">
+            <!-- Hours (hidden when format is MM:SS) -->
+            <div class="digit-group hours-group" id="hoursGroup">
+              <div class="digit-col h0-col" id="h0Col">
+                <button type="button" class="digit-btn digit-up" data-digit="h0">▲</button>
+                <button type="button" class="digit-btn digit-down" data-digit="h0">▼</button>
+              </div>
+              <div class="digit-col">
+                <button type="button" class="digit-btn digit-up" data-digit="h1">▲</button>
+                <button type="button" class="digit-btn digit-down" data-digit="h1">▼</button>
+              </div>
+              <div class="digit-col">
+                <button type="button" class="digit-btn digit-up" data-digit="h2">▲</button>
+                <button type="button" class="digit-btn digit-down" data-digit="h2">▼</button>
+              </div>
             </div>
-            <div class="digit-col">
-              <button type="button" class="digit-btn digit-up" data-digit="h1">▲</button>
-              <button type="button" class="digit-btn digit-down" data-digit="h1">▼</button>
+            <span class="digit-separator hours-sep">:</span>
+            <!-- Minutes -->
+            <div class="digit-group minutes-group">
+              <div class="digit-col">
+                <button type="button" class="digit-btn digit-up" data-digit="m1">▲</button>
+                <button type="button" class="digit-btn digit-down" data-digit="m1">▼</button>
+              </div>
+              <div class="digit-col">
+                <button type="button" class="digit-btn digit-up" data-digit="m2">▲</button>
+                <button type="button" class="digit-btn digit-down" data-digit="m2">▼</button>
+              </div>
             </div>
-            <div class="digit-col">
-              <button type="button" class="digit-btn digit-up" data-digit="h2">▲</button>
-              <button type="button" class="digit-btn digit-down" data-digit="h2">▼</button>
-            </div>
-          </div>
-          <span class="digit-separator hours-sep">:</span>
-          <!-- Minutes -->
-          <div class="digit-group minutes-group">
-            <div class="digit-col">
-              <button type="button" class="digit-btn digit-up" data-digit="m1">▲</button>
-              <button type="button" class="digit-btn digit-down" data-digit="m1">▼</button>
-            </div>
-            <div class="digit-col">
-              <button type="button" class="digit-btn digit-up" data-digit="m2">▲</button>
-              <button type="button" class="digit-btn digit-down" data-digit="m2">▼</button>
-            </div>
-          </div>
-          <span class="digit-separator minutes-sep">:</span>
-          <!-- Seconds -->
-          <div class="digit-group seconds-group">
-            <div class="digit-col">
-              <button type="button" class="digit-btn digit-up" data-digit="s1">▲</button>
-              <button type="button" class="digit-btn digit-down" data-digit="s1">▼</button>
-            </div>
-            <div class="digit-col">
-              <button type="button" class="digit-btn digit-up" data-digit="s2">▲</button>
-              <button type="button" class="digit-btn digit-down" data-digit="s2">▼</button>
+            <span class="digit-separator minutes-sep">:</span>
+            <!-- Seconds -->
+            <div class="digit-group seconds-group">
+              <div class="digit-col">
+                <button type="button" class="digit-btn digit-up" data-digit="s1">▲</button>
+                <button type="button" class="digit-btn digit-down" data-digit="s1">▼</button>
+              </div>
+              <div class="digit-col">
+                <button type="button" class="digit-btn digit-up" data-digit="s2">▲</button>
+                <button type="button" class="digit-btn digit-down" data-digit="s2">▼</button>
+              </div>
             </div>
           </div>
         </div>
@@ -372,6 +378,14 @@
             <label for="timezone">Timezone</label>
             <select id="timezone">
               <!-- Populated by JavaScript -->
+            </select>
+          </div>
+          <div class="kv">
+            <label for="appearance">Appearance</label>
+            <select id="appearance">
+              <option value="auto">Auto</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
             </select>
           </div>
           <div class="kv">
