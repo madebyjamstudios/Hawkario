@@ -341,7 +341,7 @@ button:disabled {
   min-width: 150px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .live-preview {
