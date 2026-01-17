@@ -462,8 +462,15 @@ function handleTimerState(state) {
   }
 
   // Handle flash - use startedAt from state for sync
+  // Flash includes ToD (if visible) in sync with timer, message never flashes
   if (state.flash?.active && !flashAnimator?.isFlashing) {
-    flashAnimator = new FlashAnimator(timerEl, stageEl, () => {
+    const elementsToFlash = [timerEl];
+    const hasToD = timerSectionEl.classList.contains('with-tod');
+    if (hasToD && todEl) {
+      elementsToFlash.push(todEl);
+    }
+
+    flashAnimator = new FlashAnimator(elementsToFlash, stageEl, () => {
       // Flash complete
     });
     flashAnimator.start(state.flash.startedAt);
@@ -664,9 +671,16 @@ function handleTimerUpdate(data) {
   const { command, config } = data;
 
   // Handle flash command
+  // Flash includes ToD (if visible) in sync with timer, message never flashes
   if (command === 'flash') {
     if (!flashAnimator?.isFlashing) {
-      flashAnimator = new FlashAnimator(timerEl, stageEl, () => {
+      const elementsToFlash = [timerEl];
+      const hasToD = timerSectionEl.classList.contains('with-tod');
+      if (hasToD && todEl) {
+        elementsToFlash.push(todEl);
+      }
+
+      flashAnimator = new FlashAnimator(elementsToFlash, stageEl, () => {
         // Flash complete
       });
       flashAnimator.start();
