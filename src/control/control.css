@@ -182,13 +182,15 @@
 
 /* ---- Profile Button ---- */
 [data-theme="light"] .profile-btn {
-  background: var(--color-bg-elevated);
-  border-color: transparent;
+  background: transparent;
 }
 
 [data-theme="light"] .profile-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-border);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .profile-btn.active {
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* ---- Add Timer Button ---- */
@@ -1409,13 +1411,13 @@ button:disabled {
   z-index: 1;
 }
 
-/* Profile button */
+/* Profile button - Apple-style: transparent, no border */
 .profile-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--color-bg-elevated);
-  border: 2px solid var(--color-text-tertiary);
+  background: transparent;
+  border: none;
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 12px;
@@ -1426,13 +1428,11 @@ button:disabled {
 }
 
 .profile-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .profile-btn.active {
-  background: var(--color-bg-secondary);
-  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* Profile color dot - shows profile color in button and dropdown */
