@@ -602,9 +602,38 @@ ipcMain.handle('osc:get-settings', () => {
   return { ...oscSettings };
 });
 
+// Validate OSC port number (1-65535)
+function isValidPort(port) {
+  const num = Number(port);
+  return Number.isInteger(num) && num >= 1 && num <= 65535;
+}
+
+// Validate OSC host (basic hostname/IP format)
+function isValidHost(host) {
+  if (!host || typeof host !== 'string') return false;
+  // Allow localhost, IPs, and hostnames
+  const hostPattern = /^(localhost|(\d{1,3}\.){3}\d{1,3}|[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*)$/;
+  return hostPattern.test(host) && host.length <= 255;
+}
+
 // Update OSC settings
 ipcMain.handle('osc:set-settings', (_event, newSettings) => {
   try {
+    // Validate port numbers if provided
+    if (newSettings.port !== undefined && !isValidPort(newSettings.port)) {
+      return { success: false, error: 'Invalid port number (must be 1-65535)' };
+    }
+    if (newSettings.feedbackPort !== undefined && !isValidPort(newSettings.feedbackPort)) {
+      return { success: false, error: 'Invalid feedback port number (must be 1-65535)' };
+    }
+    // Validate host if provided
+    if (newSettings.host !== undefined && !isValidHost(newSettings.host)) {
+      return { success: false, error: 'Invalid host address' };
+    }
+    if (newSettings.feedbackHost !== undefined && !isValidHost(newSettings.feedbackHost)) {
+      return { success: false, error: 'Invalid feedback host address' };
+    }
+
     oscSettings = { ...oscSettings, ...newSettings };
     applyOSCSettings();
     console.log('[OSC] Settings updated:', oscSettings);
@@ -1246,7 +1275,8 @@ const menuTemplate = [
     submenu: [
       { role: 'reload' },
       { role: 'forceReload' },
-      { role: 'toggleDevTools' },
+      // Only show DevTools in development (security: hide in production)
+      ...(!app.isPackaged ? [{ role: 'toggleDevTools' }] : []),
       { type: 'separator' },
       { role: 'resetZoom' },
       { role: 'zoomIn' },
