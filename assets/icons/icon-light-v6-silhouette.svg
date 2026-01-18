@@ -1,0 +1,8 @@
+<svg width="1024" height="1024" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- V6: Solid ninja silhouette -->
+  <rect width="24" height="24" rx="5" fill="#f5f5f7"/>
+  <path d="M12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z" fill="#2a2a2a"/>
+  <rect x="3" y="10" width="18" height="4" fill="#1a1a1a"/>
+  <ellipse cx="8.5" cy="12" rx="1.8" ry="1.2" fill="#ffeb3b"/>
+  <ellipse cx="15.5" cy="12" rx="1.8" ry="1.2" fill="#ffeb3b"/>
+</svg>

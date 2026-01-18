@@ -1,0 +1,8 @@
+<svg width="1024" height="1024" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- V13: Playful rounded ninja -->
+  <rect width="24" height="24" rx="5" fill="#f5f5f7"/>
+  <circle cx="12" cy="12" r="8" fill="#3a3a3a"/>
+  <path d="M4 11.5C4 11.5 8 10 12 10s8 1.5 8 1.5v3s-4 1.5-8 1.5-8-1.5-8-1.5v-3z" fill="#2a2a2a"/>
+  <ellipse cx="8.5" cy="12.5" rx="1.5" ry="1" fill="#ffeb3b"/>
+  <ellipse cx="15.5" cy="12.5" rx="1.5" ry="1" fill="#ffeb3b"/>
+</svg>
