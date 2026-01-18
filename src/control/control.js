@@ -8192,6 +8192,9 @@ function showTutorial() {
   overlay?.classList.remove('hidden');
   overlay?.classList.add('modal-active');
 
+  // Blur background content
+  document.body.classList.add('tutorial-modal-active');
+
   // Show step 1 (welcome modal)
   document.querySelector('.tutorial-step[data-step="1"]')?.classList.remove('hidden');
   document.querySelector('.tutorial-step[data-step="5"]')?.classList.add('hidden');
@@ -8318,6 +8321,9 @@ function showTutorialModal(stepNum) {
   spotlight?.classList.add('hidden');
   tooltip?.classList.add('hidden');
 
+  // Add background blur when showing modal
+  document.body.classList.add('tutorial-modal-active');
+
   document.querySelectorAll('.tutorial-step').forEach(el => {
     el.classList.toggle('hidden', el.dataset.step !== String(stepNum));
   });
@@ -8337,6 +8343,9 @@ function showTutorialSpotlight(step) {
   modal?.classList.add('hidden');
   spotlight?.classList.remove('hidden');
   tooltip?.classList.remove('hidden');
+
+  // Remove background blur during spotlight mode so user can interact with UI
+  document.body.classList.remove('tutorial-modal-active');
 
   // Find target element
   let target;
@@ -8556,6 +8565,9 @@ function completeTutorial() {
   overlay?.classList.add('fade-out');
   modal?.classList.add('fade-out');
 
+  // Remove background blur
+  document.body.classList.remove('tutorial-modal-active');
+
   // Hide elements after animation completes
   setTimeout(() => {
     overlay?.classList.add('hidden');
@@ -8700,20 +8712,54 @@ function init() {
 
   // Initialize onboarding tutorial
   initTutorial();
-  if (shouldShowTutorial()) {
-    // Small delay to let UI render first
-    setTimeout(showTutorial, 200);
+
+  // Hide loading overlay with fade transition
+  hideLoadingOverlay(() => {
+    // Show tutorial after loading overlay fades (if needed)
+    if (shouldShowTutorial()) {
+      setTimeout(showTutorial, 100);
+    }
+  });
+}
+
+/**
+ * Hide the loading overlay with a smooth fade transition
+ */
+function hideLoadingOverlay(onComplete) {
+  const overlay = document.getElementById('loadingOverlay');
+  if (!overlay) {
+    onComplete?.();
+    return;
   }
+
+  // Wait a minimum time for the animation to complete (2s ring animation)
+  const minDisplayTime = 1800;
+  const startTime = performance.now();
+
+  const fadeOut = () => {
+    const elapsed = performance.now() - startTime;
+    const remaining = Math.max(0, minDisplayTime - elapsed);
+
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+
+      // Remove from DOM after fade completes
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        window.ninja.signalAppReady();
+        onComplete?.();
+      }, 500);
+    }, remaining);
+  };
+
+  // Start fade out
+  fadeOut();
 }
 
 // Start when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.ninja.signalAppReady();
-    init();
-  });
+  document.addEventListener('DOMContentLoaded', init);
 } else {
-  window.ninja.signalAppReady();
   init();
 }
 
