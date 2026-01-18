@@ -173,7 +173,9 @@ html, body {
 
 .modal-preview-wrapper {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  height: 120px;
   overflow: hidden;
 }
 
@@ -240,10 +242,10 @@ html, body {
 /* ============ Duration Controls ============ */
 .duration-controls {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 2px;
-  margin-bottom: 16px;
+  align-items: center;
+  padding: 4px 0 8px 0;
+  gap: 0;
   opacity: 0.6;
   transition: opacity 0.2s;
 }
@@ -653,7 +655,18 @@ input[type="checkbox"].toggle-switch:focus {
 
 /* Time inputs */
 .time-input {
-  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'Consolas', 'Monaco', 'Liberation Mono', 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: center;
+  width: 90px;
+  padding: 6px 8px;
+}
+
+/* MM:SS time input (shorter) */
+.time-input-ms {
+  width: 65px;
 }
 
 .duration-input {
@@ -708,26 +721,29 @@ input[type="checkbox"].toggle-switch:focus {
 .warn-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .warn-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .warn-dot-yellow {
   background: var(--color-warning);
+  box-shadow: 0 0 4px rgba(234, 179, 8, 0.5);
 }
 
 .warn-dot-orange {
   background: var(--color-danger);
+  box-shadow: 0 0 4px rgba(230, 74, 25, 0.5);
 }
 
 /* ============ Font Picker ============ */
 .font-picker-section {
-  padding: 8px 0 12px 0;
+  padding: 8px 16px 12px 16px;
 }
 
 .font-picker-label {

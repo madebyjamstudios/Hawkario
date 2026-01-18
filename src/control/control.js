@@ -6833,10 +6833,18 @@ function setupEventListeners() {
       el.addEventListener('input', () => {
         debouncedPreview();
         updateModalPreview();
+        // Update h0 column visibility when duration changes
+        if (el === els.duration) {
+          updateDurationDigitDisplay();
+        }
       });
       el.addEventListener('change', () => {
         applyPreview();
         updateModalPreview();
+        // Update h0 column visibility when duration changes
+        if (el === els.duration) {
+          updateDurationDigitDisplay();
+        }
         // Send config update to output window
         if (outputWindowReady) {
           sendCommand('config');
