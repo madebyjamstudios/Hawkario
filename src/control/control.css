@@ -3814,6 +3814,11 @@ input[type="checkbox"].toggle-switch:focus {
   box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
 }
 
+/* Right-align toggles in form rows */
+.kv input[type="checkbox"].toggle-switch {
+  justify-self: end;
+}
+
 .confirm-buttons {
   display: flex;
   gap: 10px;
