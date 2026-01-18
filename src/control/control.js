@@ -15,6 +15,7 @@ import { autoFitMessage, applyMessageStyle } from '../shared/renderMessage.js';
 import { playSound } from '../shared/sounds.js';
 import { BUILT_IN_FONTS, WEIGHT_LABELS, getAvailableWeights, isBuiltInFont, verifyFonts } from '../shared/fontManager.js';
 import { BUILT_IN_SOUNDS, isBuiltInSound, isCustomSound, getCustomSoundId, createCustomSoundType, getAudioFormat, getAudioMimeType } from '../shared/soundManager.js';
+import { THEME_BACKGROUNDS } from '../shared/timer-constants.js';
 import {
   safeTimeout,
   safeInterval,
@@ -1294,11 +1295,7 @@ function saveAppSettings(settings) {
 
 // ============ Theme Management ============
 
-// Theme background colors (must match CSS variables)
-const THEME_BACKGROUNDS = {
-  light: '#faf9f6',  // Warm cream
-  dark: '#0a0a0a'    // Near black
-};
+// Theme background colors imported from timer-constants.js
 
 function applyTheme(appearance) {
   let theme = appearance;
@@ -7016,9 +7013,9 @@ function setupEventListeners() {
     const subject = `[Ninja Timer] ${typeLabels[feedbackType] || 'Feedback'}`;
     const body = feedbackMessage || '(No message provided)';
 
-    // Open email client with pre-filled content
+    // Open email client with pre-filled content (use location.href to avoid blank window in Electron)
     const mailtoUrl = `mailto:madebyjamstudios@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoUrl);
+    window.location.href = mailtoUrl;
 
     // Clear the form after sending
     document.getElementById('feedbackMessage').value = '';

@@ -1,0 +1,946 @@
+/**
+ * Ninja Timer - Timer Settings Styles
+ * Shared styles for timer settings modal and popout window
+ */
+
+/* ============ Form Element Base Styles ============ */
+
+label {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+/* Text inputs - subtle border */
+input[type="text"],
+input[type="number"] {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+  transition: border-color var(--transition-quick), box-shadow var(--transition-quick);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
+  outline: none;
+}
+
+/* Dropdowns - Apple-style: borderless, text + chevron */
+select {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 24px 8px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  transition: background-color var(--transition-quick);
+}
+
+select:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+select:focus {
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
+  outline: none;
+}
+
+/* Sliders - Apple-style: thin track, small thumb, accent fill */
+input[type="range"] {
+  width: 120px;
+  height: 20px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--color-bg-elevated);
+  border-radius: 2px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--color-text-primary);
+  border-radius: 50%;
+  margin-top: -6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform var(--transition-quick);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.3), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#volumeRow input[type="range"] {
+  width: 100%;
+}
+
+/* Color picker */
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  margin: 0;
+  cursor: pointer;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+/* Unified time input (HH:MM:SS) */
+.time-input {
+  font-family: 'SF Mono', 'Consolas', 'Monaco', 'Liberation Mono', 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: center;
+  width: 90px;
+  padding: 6px 8px;
+}
+
+/* MM:SS time input (shorter) */
+.time-input-ms {
+  width: 65px;
+}
+
+/* Datetime-local input for target time */
+input[type="datetime-local"] {
+  font-family: 'SF Mono', 'Consolas', 'Monaco', 'Liberation Mono', 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  padding: 6px 8px;
+  width: 185px;
+}
+
+input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* Calendar/clock icon color fix for dark mode */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+/* ============ Button Styles ============ */
+
+button {
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: filter var(--transition-quick);
+}
+
+button:hover {
+  filter: brightness(1.15);
+}
+
+button:active {
+  filter: brightness(0.9);
+}
+
+/* Secondary - text-only, subtle hover */
+button.secondary {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+button.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+button.secondary:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Primary button (save/confirm actions) */
+button.primary {
+  min-width: 100px;
+}
+
+/* Icon button base */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.icon-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.92);
+}
+
+.icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ============ Toggle Switch ============ */
+
+/* Apple-style toggle switch - must override base checkbox styles */
+input[type="checkbox"].toggle-switch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 42px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+input[type="checkbox"].toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+  border: none;
+}
+
+input[type="checkbox"].toggle-switch:checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+input[type="checkbox"].toggle-switch:checked::after {
+  transform: translateX(18px);
+  border: none;
+}
+
+input[type="checkbox"].toggle-switch:hover {
+  border-color: var(--color-text-tertiary);
+}
+
+input[type="checkbox"].toggle-switch:checked:hover {
+  border-color: var(--color-accent);
+}
+
+input[type="checkbox"].toggle-switch:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
+}
+
+/* Right-align toggles in form rows */
+.kv input[type="checkbox"].toggle-switch {
+  justify-self: end;
+}
+
+/* ============ Form Layout Helpers ============ */
+
+/* Key-value rows */
+.kv {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin: 6px 0;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.kv select {
+  width: 100%;
+}
+
+/* Inline controls (e.g., slider + value + color picker) */
+.kv-inline {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin: 6px 0;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.inline-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Number stepper inputs - Apple-style: subtle, spinners hidden until hover */
+.number-stepper {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  text-align: center;
+  transition: border-color var(--transition-quick);
+}
+
+.number-stepper:hover {
+  border-color: var(--color-border-strong);
+}
+
+.number-stepper:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
+}
+
+.number-stepper::-webkit-inner-spin-button,
+.number-stepper::-webkit-outer-spin-button {
+  opacity: 0;
+  height: 24px;
+  transition: opacity var(--transition-quick);
+}
+
+.number-stepper:hover::-webkit-inner-spin-button,
+.number-stepper:hover::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+.unit-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  min-width: 20px;
+}
+
+/* Hidden class */
+.hidden {
+  display: none !important;
+}
+
+/* ============ Volume Slider ============ */
+
+.volume-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.volume-slider input[type="range"] {
+  flex: 1;
+}
+
+.volume-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+/* ============ Warning Color Dots ============ */
+
+.warn-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.warn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.warn-dot-yellow {
+  background: var(--color-warning);
+  box-shadow: 0 0 4px rgba(234, 179, 8, 0.5);
+}
+
+.warn-dot-orange {
+  background: var(--color-danger);
+  box-shadow: 0 0 4px rgba(230, 74, 25, 0.5);
+}
+
+/* ============ Sound Select Row ============ */
+
+.sound-select-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sound-select-row select {
+  flex: 1;
+}
+
+.sound-select-row .preview-btn {
+  padding: 3px 5px;
+  min-width: 24px;
+  font-size: 12px;
+}
+
+/* ============ Timer Preview Section (Sticky) ============ */
+
+.modal-preview-section {
+  position: sticky;
+  top: -20px;
+  z-index: 10;
+  background: var(--color-bg-primary);
+  margin: -20px -20px 0 -20px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.modal-preview-wrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  height: 120px;
+  overflow: hidden;
+}
+
+.modal-preview {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  padding: 4px 8px;
+  box-sizing: border-box;
+}
+
+.modal-preview .timer-preview {
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 0.75;
+  overflow: visible;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Modal preview structure - fuller content-box for limited space */
+.modal-preview .content-box {
+  position: absolute;
+  inset: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-preview .timer-section {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.modal-preview .timer-box {
+  display: inline-block;
+}
+
+.modal-preview .tod-box {
+  display: none;
+  width: 100%;
+  position: relative;
+}
+
+/* When ToD is enabled: 75/25 split */
+.modal-preview .timer-section.with-tod {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: none;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-preview .timer-section.with-tod .timer-box {
+  flex: 0 0 75%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-preview .timer-section.with-tod .tod-box {
+  display: flex;
+  flex: 0 0 25%;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-preview .tod-preview {
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 0.75;
+  overflow: visible;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ============ Duration Controls ============ */
+
+.duration-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0 8px 0;
+  gap: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.duration-controls:hover {
+  opacity: 1;
+}
+
+.digit-group {
+  display: flex;
+  align-items: center;
+}
+
+.digit-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 16px;
+  /* Width set dynamically by alignDurationButtons() */
+}
+
+/* Hide hundreds-of-hours column by default (shown via JS when h >= 100) */
+.digit-col.h0-col {
+  display: none;
+}
+
+.digit-btn {
+  width: 16px;
+  height: 14px;
+  padding: 0;
+  font-size: 8px;
+  line-height: 1;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 2px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-quick);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.digit-btn:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-primary);
+}
+
+.digit-btn:active {
+  background: var(--color-bg-elevated);
+  transform: scale(0.95);
+}
+
+.digit-separator {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  font-weight: 600;
+  padding: 0 2px;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-top: -8px;
+}
+
+.duration-input {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Duration input hint */
+.duration-input::placeholder {
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+}
+
+/* Hide hours group and its separator when format is MM:SS */
+.duration-controls.format-mmss .hours-group,
+.duration-controls.format-mmss .hours-sep {
+  display: none;
+}
+
+/* ============ Settings Tabs ============ */
+
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 0 12px 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 16px;
+}
+
+.settings-tab {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-quick);
+}
+
+.settings-tab:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+
+.settings-tab.active {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.settings-tab-panels {
+  min-height: 200px;
+}
+
+.settings-tab-panel {
+  display: none;
+}
+
+.settings-tab-panel.active {
+  display: block;
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* ============ Apple-style Font Picker ============ */
+
+.font-picker-section {
+  padding: 8px 16px 12px 16px;
+}
+
+.font-picker-label {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.font-picker {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px 0;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.font-picker::-webkit-scrollbar {
+  height: 6px;
+}
+
+.font-picker::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+  border-radius: 3px;
+}
+
+.font-picker::-webkit-scrollbar-thumb {
+  background: var(--color-bg-elevated);
+  border-radius: 3px;
+}
+
+.font-picker::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+.font-option {
+  flex: 0 0 auto;
+  width: 80px;
+  padding: 8px 6px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-quick);
+  scroll-snap-align: start;
+}
+
+.font-option:hover {
+  border-color: var(--color-text-tertiary);
+  background: var(--color-bg-tertiary);
+}
+
+.font-option.selected {
+  border-color: var(--color-accent);
+  background: #1a2744;
+}
+
+.font-option-preview {
+  font-size: 32px;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+  /* Font family set via inline style */
+}
+
+.font-option-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.font-option-desc {
+  font-size: 9px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============ Toast Notifications ============ */
+
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.toast {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+  font-size: 14px;
+  animation: toast-in 0.2s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.toast.success {
+  background: var(--color-success);
+}
+
+.toast.error {
+  background: var(--color-danger);
+}
+
+.toast.fade-out {
+  animation: toast-out 0.2s ease forwards;
+}
+
+/* ============ Animations ============ */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+/* ============ Light Theme Overrides ============ */
+
+[data-theme="light"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+[data-theme="light"] select:hover,
+[data-theme="light"] select:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] input[type="range"]::-webkit-slider-runnable-track {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="light"] input[type="range"]::-webkit-slider-thumb {
+  background: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] input[type="color"] {
+  border: 1px solid var(--color-border-strong);
+  /* Add dark inset shadow so white swatches are visible */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+/* Light buttons */
+[data-theme="light"] button.secondary {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] button.secondary:hover {
+  background: var(--color-bg-secondary);
+  filter: brightness(0.95);
+}
+
+[data-theme="light"] .icon-btn {
+  background: var(--color-bg-tertiary);
+  border-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .icon-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* Light settings tabs */
+[data-theme="light"] .settings-tabs {
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .settings-tab {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .settings-tab:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="light"] .settings-tab.active {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+/* Light font picker */
+[data-theme="light"] .font-option {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .font-option:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-strong);
+}
+
+[data-theme="light"] .font-option.selected {
+  background: rgba(31, 111, 235, 0.1);
+  border-color: var(--color-accent);
+}
+
+/* Light duration controls */
+[data-theme="light"] .digit-btn {
+  background: var(--color-bg-tertiary);
+  border-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .digit-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* Light toast */
+[data-theme="light"] .toast {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* Light scrollbars */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}

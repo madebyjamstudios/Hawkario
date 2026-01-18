@@ -3,23 +3,21 @@
  * Detached timer settings editor
  */
 
-// Built-in fonts (duplicated from fontManager.js to avoid ES module import issues)
-const BUILT_IN_FONTS = [
-  { family: 'Inter', weights: [400, 600, 700], description: 'Modern & Clean' },
-  { family: 'Roboto', weights: [400, 700], description: 'Versatile' },
-  { family: 'JetBrains Mono', weights: [400, 600], description: 'Monospace' },
-  { family: 'Oswald', weights: [400, 700], description: 'Bold Condensed' },
-  { family: 'Bebas Neue', weights: [400], description: 'Classic Display' },
-  { family: 'Orbitron', weights: [400, 700], description: 'Futuristic' },
-  { family: 'Teko', weights: [400, 600], description: 'Modern Condensed' },
-  { family: 'Share Tech Mono', weights: [400], description: 'Digital' }
-];
-
-// Theme backgrounds for window color
-const THEME_BACKGROUNDS = {
-  light: '#faf9f6',
-  dark: '#0a0a0a'
-};
+// Import shared modules
+import { BUILT_IN_FONTS } from '../shared/fontManager.js';
+import { THEME_BACKGROUNDS } from '../shared/timer-constants.js';
+import {
+  formatTimeValue,
+  parseTimeValue,
+  secondsToTimeValue,
+  timeValueToSeconds,
+  formatMSValue,
+  parseMSValue,
+  secondsToMSValue,
+  msValueToSeconds,
+  initTimeInput,
+  initTimeInputMS
+} from '../shared/timer-utils.js';
 
 // ============ Theme Management ============
 function applyTheme(theme) {
@@ -302,6 +300,11 @@ function selectFont(fontFamily) {
 
 // ============ Duration Controls ============
 function setupDurationControls() {
+  // Initialize time inputs with section-based navigation (from shared utils)
+  initTimeInput(els.duration);
+  initTimeInputMS(els.warnYellowSec);
+  initTimeInputMS(els.warnOrangeSec);
+
   // Digit buttons
   document.querySelectorAll('.digit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -590,48 +593,23 @@ function handleClose() {
 }
 
 // ============ Utilities ============
+// Use shared utility functions
 function formatDuration(sec) {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return secondsToTimeValue(sec);
 }
 
 function parseDuration(str) {
   if (!str) return 600;
-
-  // Remove non-numeric except colons
-  str = str.replace(/[^\d:]/g, '');
-
-  const parts = str.split(':').map(p => parseInt(p, 10) || 0);
-
-  if (parts.length === 3) {
-    // HH:MM:SS
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  } else if (parts.length === 2) {
-    // MM:SS
-    return parts[0] * 60 + parts[1];
-  } else if (parts.length === 1) {
-    // Just seconds or minutes based on value
-    return parts[0] > 99 ? parts[0] : parts[0] * 60;
-  }
-
-  return 600;
+  return timeValueToSeconds(str);
 }
 
 function formatWarningTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return secondsToMSValue(sec);
 }
 
 function parseWarningTime(str) {
   if (!str) return 0;
-  const parts = str.split(':').map(p => parseInt(p, 10) || 0);
-  if (parts.length === 2) {
-    return parts[0] * 60 + parts[1];
-  }
-  return parseInt(str, 10) || 0;
+  return msValueToSeconds(str);
 }
 
 function showToast(message, type = 'info') {
