@@ -294,6 +294,7 @@ function createOutputWindow() {
     x: targetDisplay.bounds.x,
     y: targetDisplay.bounds.y,
     title: 'Ninja Timer - Output',
+    show: false, // Wait for ready-to-show (fixes macOS green button on first open)
     fullscreen: hasSecondaryDisplay, // Auto-fullscreen on secondary display
     alwaysOnTop: outputAlwaysOnTop,
     backgroundColor: '#000000', // Required for live resize rendering on macOS
@@ -302,6 +303,13 @@ function createOutputWindow() {
       contextIsolation: true,
       sandbox: true,  // Production Safety: Explicit sandbox mode
       preload: path.join(__dirname, 'preload.js')
+    }
+  });
+
+  // Show window once fully ready (fixes macOS green maximize button not working on first open)
+  outputWindow.once('ready-to-show', () => {
+    if (outputWindow && !outputWindow.isDestroyed()) {
+      outputWindow.show();
     }
   });
 
