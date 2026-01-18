@@ -5085,7 +5085,10 @@ let profileColorPickerCloseHandler = null;
  * Show color picker for a profile
  */
 function showProfileColorPicker(profileId, anchorEl) {
-  // Close any existing color picker
+  // Close other popups first
+  document.querySelector('.preset-menu')?.remove();
+  document.querySelector('.quick-edit-popup')?.remove();
+  document.querySelector('.duration-edit-popup')?.remove();
   hideProfileColorPicker();
 
   const profile = profiles.find(p => p.id === profileId);
@@ -5188,6 +5191,12 @@ function hideProfileColorPicker() {
  * @param {boolean} forceRefresh - If true, refresh the dropdown without toggling
  */
 function showProfileDropdown(forceRefresh = false) {
+  // Close other popups first (not profile dropdown itself)
+  document.querySelector('.preset-menu')?.remove();
+  document.querySelector('.quick-edit-popup')?.remove();
+  document.querySelector('.duration-edit-popup')?.remove();
+  hideProfileColorPicker();
+
   // If already open, either toggle or refresh
   if (profileDropdown) {
     if (forceRefresh) {
@@ -6265,11 +6274,24 @@ function renderPresetList() {
   updateTabBadges();
 }
 
+// Close all popup menus and dropdowns
+function closeAllPopups() {
+  // Close preset menu
+  document.querySelector('.preset-menu')?.remove();
+  // Close quick edit popup
+  document.querySelector('.quick-edit-popup')?.remove();
+  // Close duration edit popup
+  document.querySelector('.duration-edit-popup')?.remove();
+  // Close profile color picker
+  hideProfileColorPicker();
+  // Close profile dropdown
+  hideProfileDropdown();
+}
+
 // Dropdown menu for preset actions
 function showPresetMenu(idx, preset, anchorEl) {
-  // Remove any existing menu
-  const existing = document.querySelector('.preset-menu');
-  if (existing) existing.remove();
+  // Close any other open popups first
+  closeAllPopups();
 
   const menu = document.createElement('div');
   menu.className = 'preset-menu';
@@ -6368,9 +6390,8 @@ function showPresetMenu(idx, preset, anchorEl) {
 
 // Quick edit popup for timer name
 function showQuickEditPopup(idx, preset, anchorEl) {
-  // Remove any existing popup
-  const existing = document.querySelector('.quick-edit-popup');
-  if (existing) existing.remove();
+  // Close any other open popups first
+  closeAllPopups();
 
   const popup = document.createElement('div');
   popup.className = 'quick-edit-popup';
@@ -6448,12 +6469,14 @@ function showQuickEditPopup(idx, preset, anchorEl) {
 function showDurationEditPopup(idx, preset, anchorEl) {
   // Toggle: if already open for this element, close it
   const existing = document.querySelector('.duration-edit-popup');
-  if (existing) {
-    existing.remove();
-    if (anchorEl.classList.contains('editing')) {
-      anchorEl.classList.remove('editing');
-      return; // Was already open, just close
-    }
+  const wasOpen = existing && anchorEl.classList.contains('editing');
+
+  // Close all popups first (including this one if open)
+  closeAllPopups();
+
+  if (wasOpen) {
+    anchorEl.classList.remove('editing');
+    return; // Was already open, just close
   }
 
   // Add editing highlight

@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self';">
   <title>Timer Settings</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700;900&family=Share+Tech+Mono&family=Teko:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/fonts.css">
   <link rel="stylesheet" href="settings.css">
 </head>
 <body>
@@ -19,16 +17,24 @@
 
     <!-- Main Content -->
     <main class="settings-content">
-      <!-- Preview Section -->
-      <div class="preview-section">
-        <div class="preview-wrapper">
-          <div id="preview" class="preview">
-            <div id="previewTimer" class="timer-preview">10:00</div>
+      <!-- Preview Section (sticky) -->
+      <div class="modal-preview-section">
+        <div class="modal-preview-wrapper">
+          <div id="preview" class="modal-preview">
+            <div class="content-box">
+              <div class="timer-section">
+                <div class="timer-box">
+                  <div id="previewTimer" class="timer-preview">10:00</div>
+                </div>
+                <div class="tod-box">
+                  <div id="previewToD" class="tod-preview"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Duration Controls -->
+        <!-- Duration Controls -->
       <div class="duration-controls" id="durationControls">
         <!-- Hours (hidden when format is MM:SS) -->
         <div class="digit-group hours-group" id="hoursGroup">
