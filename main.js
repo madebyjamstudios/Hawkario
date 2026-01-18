@@ -29,9 +29,6 @@ try {
 let mainWindow = null;
 let outputWindow = null;
 let settingsWindow = null;
-let splashWindow = null;
-let splashCreatedAt = null;
-const SPLASH_MIN_DURATION = 5000; // Show splash for full 5 seconds
 
 // Store last config to send to new output windows
 let lastTimerConfig = null;
@@ -188,25 +185,7 @@ function applyOSCSettings() {
   }
 }
 
-function createSplashWindow() {
-  splashCreatedAt = Date.now();
-  splashWindow = new BrowserWindow({
-    width: 300,
-    height: 200,
-    frame: false,
-    transparent: true,
-    center: true,
-    resizable: false,
-    skipTaskbar: true,
-    alwaysOnTop: true,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true
-    }
-  });
-
-  splashWindow.loadFile('src/splash/splash.html');
-}
+// Splash window removed - using in-app loading overlay instead
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
@@ -216,7 +195,7 @@ function createMainWindow() {
     minHeight: 400,
     maxWidth: 500,
     center: true,
-    show: false,  // Hidden until app signals ready
+    show: true,  // Show immediately with in-app loading overlay
     title: 'Ninja Timer',
     backgroundColor: '#000000',
     webPreferences: {
@@ -1400,45 +1379,18 @@ ipcMain.on('timer:running-status', (_event, isRunning) => {
   timerIsRunning = isRunning;
 });
 
-// IPC handler for app ready signal from control window
+// IPC handler for app ready signal from control window (loading overlay handles this now)
 ipcMain.on('app:ready', () => {
-  const elapsed = splashCreatedAt ? Date.now() - splashCreatedAt : SPLASH_MIN_DURATION;
-  const remaining = Math.max(0, SPLASH_MIN_DURATION - elapsed);
-
-  setTimeout(() => {
-    if (splashWindow && !splashWindow.isDestroyed()) {
-      splashWindow.close();
-      splashWindow = null;
-    }
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.show();
-    }
-  }, remaining);
+  // In-app loading overlay handles the transition in the renderer
+  console.log('[App] App ready signal received');
 });
 
 app.whenReady().then(() => {
   const menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
 
-  // Show splash screen first
-  createSplashWindow();
-
-  // Create main window (hidden until ready)
+  // Create main window with in-app loading overlay
   createMainWindow();
-
-  // Safety timeout: close splash and show main window after 5 seconds max
-  // This prevents the app from being stuck on splash if something goes wrong
-  setTimeout(() => {
-    if (splashWindow && !splashWindow.isDestroyed()) {
-      console.log('[App] Safety timeout: closing splash screen');
-      splashWindow.close();
-      splashWindow = null;
-    }
-    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
-      console.log('[App] Safety timeout: showing main window');
-      mainWindow.show();
-    }
-  }, 5000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

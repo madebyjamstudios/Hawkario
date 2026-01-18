@@ -6181,7 +6181,7 @@ function renderPresetList() {
     // Edit button (settings icon)
     const editBtn = document.createElement('button');
     editBtn.type = 'button';
-    editBtn.className = 'icon-btn';
+    editBtn.className = 'icon-btn edit-btn';
     editBtn.innerHTML = ICONS.settings;
     editBtn.title = 'Edit settings';
     editBtn.addEventListener('click', (e) => {
@@ -8353,6 +8353,17 @@ function showTutorialSpotlight(step) {
   if (target) {
     positionSpotlight(target, spotlight);
     positionTooltip(target, tooltip, step.position);
+  } else {
+    // No target found - center tooltip on screen and hide spotlight
+    spotlight?.classList.add('hidden');
+    if (tooltip) {
+      tooltip.style.visibility = 'hidden';
+      tooltip.style.display = 'block';
+      const tooltipRect = tooltip.getBoundingClientRect();
+      tooltip.style.visibility = '';
+      tooltip.style.left = `${(window.innerWidth - tooltipRect.width) / 2}px`;
+      tooltip.style.top = `${(window.innerHeight - tooltipRect.height) / 2}px`;
+    }
   }
 
   if (tooltipText) {
