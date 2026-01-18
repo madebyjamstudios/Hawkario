@@ -3762,8 +3762,8 @@ input[type="checkbox"]:focus {
   height: 16px;
 }
 
-/* Apple-style toggle switch */
-.toggle-switch {
+/* Apple-style toggle switch - must override base checkbox styles */
+input[type="checkbox"].toggle-switch {
   -webkit-appearance: none;
   appearance: none;
   width: 42px;
@@ -3777,7 +3777,7 @@ input[type="checkbox"]:focus {
   flex-shrink: 0;
 }
 
-.toggle-switch::after {
+input[type="checkbox"].toggle-switch::after {
   content: '';
   position: absolute;
   top: 2px;
@@ -3788,26 +3788,28 @@ input[type="checkbox"]:focus {
   background: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease;
+  border: none;
 }
 
-.toggle-switch:checked {
+input[type="checkbox"].toggle-switch:checked {
   background: var(--color-accent);
   border-color: var(--color-accent);
 }
 
-.toggle-switch:checked::after {
+input[type="checkbox"].toggle-switch:checked::after {
   transform: translateX(18px);
+  border: none;
 }
 
-.toggle-switch:hover {
+input[type="checkbox"].toggle-switch:hover {
   border-color: var(--color-text-tertiary);
 }
 
-.toggle-switch:checked:hover {
+input[type="checkbox"].toggle-switch:checked:hover {
   border-color: var(--color-accent);
 }
 
-.toggle-switch:focus {
+input[type="checkbox"].toggle-switch:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
 }
