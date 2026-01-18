@@ -1307,6 +1307,9 @@ function applyTheme(appearance) {
   // Update window background color for smooth resizing
   const bgColor = THEME_BACKGROUNDS[theme] || THEME_BACKGROUNDS.dark;
   window.ninja.setBackgroundColor('control', bgColor);
+
+  // Broadcast theme to settings window
+  window.ninja.broadcastTheme(theme);
 }
 
 // Listen for system theme changes (for auto mode)

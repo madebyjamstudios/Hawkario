@@ -15,6 +15,18 @@ const BUILT_IN_FONTS = [
   { family: 'Share Tech Mono', weights: [400], description: 'Digital' }
 ];
 
+// Theme backgrounds for window color
+const THEME_BACKGROUNDS = {
+  light: '#faf9f6',
+  dark: '#0a0a0a'
+};
+
+// ============ Theme Management ============
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  window.ninja.setBackgroundColor('settings', THEME_BACKGROUNDS[theme] || THEME_BACKGROUNDS.dark);
+}
+
 // ============ State ============
 let currentTimerIndex = null;
 let currentTimerName = '';
@@ -110,6 +122,11 @@ function init() {
     }
     currentTimerIndex = timerIndex;
     requestTimerData(timerIndex);
+  });
+
+  // Listen for theme changes from control window
+  window.ninja.onThemeChange((theme) => {
+    applyTheme(theme);
   });
 }
 

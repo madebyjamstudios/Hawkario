@@ -142,6 +142,16 @@ contextBridge.exposeInMainWorld('ninja', {
     ipcRenderer.send('window:set-background-color', { window, color });
   },
 
+  // Broadcast theme change to other windows (control -> main -> settings)
+  broadcastTheme: (theme) => {
+    ipcRenderer.send('theme:broadcast', theme);
+  },
+
+  // Listen for theme changes (settings receives from control via main)
+  onThemeChange: (callback) => {
+    ipcRenderer.on('theme:change', (_event, theme) => callback(theme));
+  },
+
   // ============ Message Broadcasting ============
 
   // Send message to output (control -> main -> output)

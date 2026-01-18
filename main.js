@@ -358,6 +358,8 @@ function createSettingsWindow(timerIndex) {
     height: windowBounds.height,
     minWidth: 380,
     minHeight: 500,
+    maxWidth: 500,
+    maxHeight: 900,
     center: true,
     title: 'Timer Settings',
     parent: mainWindow,  // Associate with main (macOS)
@@ -1059,6 +1061,13 @@ ipcMain.on('window:set-background-color', (_event, { window, color }) => {
     }
   } catch (err) {
     console.error('[IPC:window:set-background-color] Error:', err);
+  }
+});
+
+// Forward theme changes from control to settings window
+ipcMain.on('theme:broadcast', (_event, theme) => {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    safeSend(settingsWindow, 'theme:change', theme);
   }
 });
 
