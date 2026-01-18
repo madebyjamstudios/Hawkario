@@ -4518,11 +4518,11 @@ button.danger:active {
 }
 
 .color-picker::-webkit-color-swatch-wrapper {
-  padding: 3px;
+  padding: 0;
 }
 
 .color-picker::-webkit-color-swatch {
-  border-radius: 7px;
+  border-radius: 9px;
   border: none;
 }
 
