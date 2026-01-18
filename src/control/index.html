@@ -432,6 +432,9 @@
             <button id="settingsExport" class="secondary">Export Timers</button>
             <button id="settingsImport" class="secondary">Import Timers</button>
           </div>
+          <div class="settings-row">
+            <button id="restartTutorial" class="secondary">Show Tutorial Again</button>
+          </div>
         </div>
 
         <!-- Window Section -->
@@ -775,7 +778,7 @@
   <!-- Onboarding Tutorial -->
   <div id="tutorialOverlay" class="tutorial-overlay hidden">
     <!-- Welcome/Done Modal (steps 1 and 5) -->
-    <div id="tutorialModal" class="tutorial-modal">
+    <div id="tutorialModal" class="tutorial-modal" role="dialog" aria-label="Tutorial">
       <div class="tutorial-content">
         <!-- Step 1: Welcome -->
         <div class="tutorial-step" data-step="1">
@@ -785,6 +788,13 @@
           <div class="tutorial-actions">
             <button id="tutorialStart" class="btn primary">Show me around!</button>
             <button id="tutorialSkip" class="btn secondary">No, I'll do it myself</button>
+          </div>
+          <div class="tutorial-progress">
+            <span class="progress-dot" data-step="1"></span>
+            <span class="progress-dot" data-step="2"></span>
+            <span class="progress-dot" data-step="3"></span>
+            <span class="progress-dot" data-step="4"></span>
+            <span class="progress-dot" data-step="5"></span>
           </div>
         </div>
 
@@ -796,6 +806,13 @@
           <p>Click <strong>Output</strong> to open your timer display window.</p>
           <div class="tutorial-actions">
             <button id="tutorialFinish" class="btn primary">Get Started</button>
+          </div>
+          <div class="tutorial-progress">
+            <span class="progress-dot" data-step="1"></span>
+            <span class="progress-dot" data-step="2"></span>
+            <span class="progress-dot" data-step="3"></span>
+            <span class="progress-dot" data-step="4"></span>
+            <span class="progress-dot" data-step="5"></span>
           </div>
         </div>
       </div>
@@ -815,6 +832,14 @@
 
   <!-- Spotlight highlight (rendered separately for z-index layering) -->
   <div id="tutorialSpotlight" class="tutorial-spotlight hidden"></div>
+
+  <!-- Tutorial success checkmark -->
+  <div id="tutorialCheckmark" class="tutorial-checkmark hidden">
+    <svg viewBox="0 0 24 24" class="checkmark-svg">
+      <circle class="checkmark-circle" cx="12" cy="12" r="10"/>
+      <path class="checkmark-check" d="M6 12l4 4 8-8"/>
+    </svg>
+  </div>
 
   <footer>
     <small>v1.1.0</small>

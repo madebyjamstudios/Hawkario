@@ -8026,6 +8026,7 @@ function stopCrashRecoverySaving() {
 
 let tutorialStep = 0;
 let tutorialActive = false;
+let tutorialKeydownHandler = null;
 
 const TUTORIAL_STEPS = [
   { type: 'modal', step: 1 }, // Welcome
@@ -8073,6 +8074,29 @@ function shouldShowTutorial() {
 }
 
 /**
+ * Handle keyboard events during tutorial
+ */
+function handleTutorialKeydown(e) {
+  if (!tutorialActive) return;
+
+  // Escape to skip/close
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    advanceTutorial(); // Skip current step
+    return;
+  }
+
+  // Block app shortcuts during tutorial
+  const blockedKeys = ['Space', ' ', '?', 'r', 'R', 'f', 'F', 'b', 'B'];
+  if (blockedKeys.includes(e.key) ||
+      (e.key >= '1' && e.key <= '9')) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}
+
+/**
  * Initialize tutorial event listeners
  */
 function initTutorial() {
@@ -8086,6 +8110,16 @@ function initTutorial() {
   document.getElementById('tutorialSkipStep')?.addEventListener('click', () => {
     advanceTutorial();
   });
+
+  // Restart tutorial from settings
+  document.getElementById('restartTutorial')?.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEYS.TUTORIAL_COMPLETE);
+    closeAppSettings();
+    showTutorial();
+  });
+
+  // Create keyboard handler for capturing during tutorial
+  tutorialKeydownHandler = handleTutorialKeydown;
 }
 
 /**
@@ -8102,6 +8136,36 @@ function showTutorial() {
   document.querySelector('.tutorial-step[data-step="1"]')?.classList.remove('hidden');
   document.querySelector('.tutorial-step[data-step="5"]')?.classList.add('hidden');
   document.getElementById('tutorialModal')?.classList.remove('hidden');
+
+  // Add keyboard handler (capture phase to intercept before other handlers)
+  document.addEventListener('keydown', tutorialKeydownHandler, true);
+
+  // Update progress dots
+  updateProgressDots();
+
+  // Auto-focus primary button for keyboard users
+  setTimeout(() => {
+    document.getElementById('tutorialStart')?.focus();
+  }, 100);
+}
+
+/**
+ * Update progress dot states
+ */
+function updateProgressDots() {
+  document.querySelectorAll('.progress-dot').forEach(dot => {
+    const dotStep = parseInt(dot.dataset.step);
+    dot.classList.remove('active', 'completed');
+
+    // Map tutorialStep index to visual step (1-5)
+    const currentVisualStep = tutorialStep + 1;
+
+    if (dotStep < currentVisualStep) {
+      dot.classList.add('completed');
+    } else if (dotStep === currentVisualStep) {
+      dot.classList.add('active');
+    }
+  });
 }
 
 /**
@@ -8109,6 +8173,9 @@ function showTutorial() {
  */
 function advanceTutorial() {
   tutorialStep++;
+
+  // Update progress dots
+  updateProgressDots();
 
   if (tutorialStep >= TUTORIAL_STEPS.length) {
     completeTutorial();
@@ -8119,6 +8186,12 @@ function advanceTutorial() {
 
   if (step.type === 'modal') {
     showTutorialModal(step.step);
+    // Auto-focus finish button on final modal
+    if (step.step === 5) {
+      setTimeout(() => {
+        document.getElementById('tutorialFinish')?.focus();
+      }, 100);
+    }
   } else if (step.type === 'spotlight') {
     showTutorialSpotlight(step);
   }
@@ -8305,6 +8378,9 @@ function completeTutorial() {
   overlay?.classList.remove('modal-active');
   spotlight?.classList.add('hidden');
   tooltip?.classList.add('hidden');
+
+  // Remove keyboard handler
+  document.removeEventListener('keydown', tutorialKeydownHandler, true);
 }
 
 // ============ Initialization ============

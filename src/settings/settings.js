@@ -3,6 +3,8 @@
  * Detached timer settings editor
  */
 
+import { playSound } from '../shared/sounds.js';
+
 // ============ State ============
 let currentTimerIndex = null;
 let currentTimerName = '';
@@ -364,7 +366,11 @@ function setupFormListeners() {
 
   // Sound preview
   els.soundPreview?.addEventListener('click', () => {
-    // TODO: Play preview sound
+    const soundType = els.soundEnd.value;
+    const volume = parseFloat(els.soundVolume.value) || 0.7;
+    if (soundType && soundType !== 'none') {
+      playSound(soundType, volume);
+    }
   });
 }
 
