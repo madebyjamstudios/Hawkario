@@ -5084,17 +5084,64 @@ button.danger:active {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Light mode */
+/* ============ Tutorial Light Mode ============ */
 [data-theme="light"] .tutorial-overlay.modal-active {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] .tutorial-modal {
-  background: var(--color-bg-primary);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
 }
 
 [data-theme="light"] .tutorial-spotlight {
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .tutorial-tooltip {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+}
+
+[data-theme="light"] .tutorial-tooltip-arrow {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-left: none;
+}
+
+[data-theme="light"] .tutorial-step kbd {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] .tutorial-tooltip-content kbd {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border-strong);
+}
+
+[data-theme="light"] .tutorial-actions .btn.primary {
+  background: var(--color-accent);
+  color: white;
+}
+
+[data-theme="light"] .tutorial-actions .btn.secondary {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] .tutorial-actions .btn.secondary:hover {
+  background: var(--color-bg-secondary);
+  filter: brightness(0.95);
+}
+
+[data-theme="light"] .progress-dot {
+  background: var(--color-text-tertiary);
+}
+
+[data-theme="light"] .tutorial-step-counter {
+  color: var(--color-text-secondary);
 }
 
 /* ============ Tutorial Enhancements ============ */
@@ -5112,16 +5159,27 @@ button.danger:active {
   height: 8px;
   border-radius: 50%;
   background: var(--color-text-tertiary);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .progress-dot.active {
   background: var(--color-accent);
   transform: scale(1.25);
+  box-shadow: 0 0 8px var(--color-accent);
 }
 
 .progress-dot.completed {
   background: var(--color-success);
+}
+
+/* Step counter text */
+.tutorial-step-counter {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
 /* Spring animations for modal */
@@ -5131,9 +5189,19 @@ button.danger:active {
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes modal-fade-out {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+
 @keyframes tooltip-slide {
   0% { transform: translateY(8px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes overlay-fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .tutorial-modal {
@@ -5141,9 +5209,18 @@ button.danger:active {
   will-change: transform;
 }
 
+.tutorial-modal.fade-out {
+  animation: modal-fade-out 0.3s ease-out forwards;
+}
+
+.tutorial-overlay.fade-out {
+  animation: overlay-fade-out 0.3s ease-out forwards;
+}
+
 .tutorial-tooltip {
   animation: tooltip-slide 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   will-change: transform;
+  border-left: 3px solid var(--color-accent);
 }
 
 /* Button hover effects */
@@ -5157,6 +5234,38 @@ button.danger:active {
 
 .tutorial-actions .btn:active {
   transform: scale(0.98);
+}
+
+.tutorial-actions .btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Pulsing glow on spotlight target */
+@keyframes spotlight-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 20px 4px rgba(31, 111, 235, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 30px 8px rgba(31, 111, 235, 0.6);
+  }
+}
+
+[data-theme="light"] .tutorial-spotlight {
+  animation: spotlight-glow-light 2s ease-in-out infinite;
+}
+
+@keyframes spotlight-glow-light {
+  0%, 100% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 20px 4px rgba(31, 111, 235, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 30px 8px rgba(31, 111, 235, 0.5);
+  }
+}
+
+.tutorial-spotlight:not(.hidden) {
+  animation: spotlight-glow 2s ease-in-out infinite;
 }
 
 /* Success checkmark animation */
@@ -5173,6 +5282,7 @@ button.danger:active {
 .checkmark-svg {
   width: 48px;
   height: 48px;
+  filter: drop-shadow(0 2px 8px rgba(34, 197, 94, 0.4));
 }
 
 .checkmark-circle {
@@ -5184,7 +5294,7 @@ button.danger:active {
 .checkmark-check {
   fill: none;
   stroke: white;
-  stroke-width: 2;
+  stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 24;
@@ -5200,4 +5310,70 @@ button.danger:active {
 
 @keyframes checkmark-draw {
   to { stroke-dashoffset: 0; }
+}
+
+/* Confetti celebration */
+.tutorial-confetti {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 603;
+  overflow: hidden;
+}
+
+.tutorial-confetti.hidden {
+  display: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  animation: confetti-fall 3s ease-out forwards;
+}
+
+.confetti-piece:nth-child(odd) {
+  border-radius: 50%;
+}
+
+.confetti-piece:nth-child(even) {
+  border-radius: 2px;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg) scale(0.5);
+  }
+}
+
+/* Tooltip hint styling */
+.tutorial-tooltip-hint {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tutorial-hint-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tutorial-hint-text kbd {
+  font-size: 10px;
+  padding: 2px 5px;
 }

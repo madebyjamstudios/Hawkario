@@ -782,12 +782,13 @@
       <div class="tutorial-content">
         <!-- Step 1: Welcome -->
         <div class="tutorial-step" data-step="1">
+          <span class="tutorial-step-counter" id="tutorialStepCounter">Step 1 of 5</span>
           <img src="../assets/icons/icon.svg" alt="Ninja Timer" class="tutorial-logo">
           <h2>Welcome to Ninja Timer</h2>
           <p>Professional countdown timers for broadcasts, events, and presentations</p>
           <div class="tutorial-actions">
             <button id="tutorialStart" class="btn primary">Show me around!</button>
-            <button id="tutorialSkip" class="btn secondary">No, I'll do it myself</button>
+            <button id="tutorialSkip" class="btn secondary">Skip Tutorial</button>
           </div>
           <div class="tutorial-progress">
             <span class="progress-dot" data-step="1"></span>
@@ -800,6 +801,7 @@
 
         <!-- Step 5: Done -->
         <div class="tutorial-step hidden" data-step="5">
+          <span class="tutorial-step-counter">Complete!</span>
           <img src="../assets/icons/icon.svg" alt="Ninja Timer" class="tutorial-logo">
           <h2>You're All Set!</h2>
           <p>Press <kbd>?</kbd> anytime for keyboard shortcuts.</p>
@@ -821,9 +823,11 @@
     <!-- Spotlight tooltip (steps 2-4) -->
     <div id="tutorialTooltip" class="tutorial-tooltip hidden">
       <div class="tutorial-tooltip-content">
+        <span class="tutorial-step-counter" id="tutorialTooltipCounter">Step 2 of 5</span>
         <p id="tutorialTooltipText"></p>
         <div class="tutorial-tooltip-hint">
-          <span id="tutorialSkipStep" class="tutorial-skip-link">Skip</span>
+          <span class="tutorial-hint-text"><kbd>Esc</kbd> to skip</span>
+          <span id="tutorialSkipStep" class="tutorial-skip-link">Skip step</span>
         </div>
       </div>
       <div class="tutorial-tooltip-arrow"></div>
@@ -840,6 +844,9 @@
       <path class="checkmark-check" d="M6 12l4 4 8-8"/>
     </svg>
   </div>
+
+  <!-- Tutorial confetti celebration -->
+  <div id="tutorialConfetti" class="tutorial-confetti hidden"></div>
 
   <footer>
     <small>v1.1.0</small>

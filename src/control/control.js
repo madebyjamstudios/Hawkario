@@ -8150,15 +8150,15 @@ function showTutorial() {
 }
 
 /**
- * Update progress dot states
+ * Update progress dot states and step counter
  */
 function updateProgressDots() {
+  const currentVisualStep = tutorialStep + 1;
+
+  // Update progress dots
   document.querySelectorAll('.progress-dot').forEach(dot => {
     const dotStep = parseInt(dot.dataset.step);
     dot.classList.remove('active', 'completed');
-
-    // Map tutorialStep index to visual step (1-5)
-    const currentVisualStep = tutorialStep + 1;
 
     if (dotStep < currentVisualStep) {
       dot.classList.add('completed');
@@ -8166,6 +8166,18 @@ function updateProgressDots() {
       dot.classList.add('active');
     }
   });
+
+  // Update step counter in modal
+  const stepCounter = document.getElementById('tutorialStepCounter');
+  if (stepCounter && currentVisualStep <= 5) {
+    stepCounter.textContent = `Step ${currentVisualStep} of 5`;
+  }
+
+  // Update step counter in tooltip
+  const tooltipCounter = document.getElementById('tutorialTooltipCounter');
+  if (tooltipCounter && currentVisualStep <= 5) {
+    tooltipCounter.textContent = `Step ${currentVisualStep} of 5`;
+  }
 }
 
 /**
@@ -8186,15 +8198,50 @@ function advanceTutorial() {
 
   if (step.type === 'modal') {
     showTutorialModal(step.step);
-    // Auto-focus finish button on final modal
+    // Auto-focus finish button on final modal and show confetti
     if (step.step === 5) {
       setTimeout(() => {
         document.getElementById('tutorialFinish')?.focus();
       }, 100);
+      // Trigger confetti celebration
+      showTutorialConfetti();
     }
   } else if (step.type === 'spotlight') {
     showTutorialSpotlight(step);
   }
+}
+
+/**
+ * Show confetti celebration effect
+ */
+function showTutorialConfetti() {
+  const container = document.getElementById('tutorialConfetti');
+  if (!container) return;
+
+  // Clear any existing confetti
+  container.innerHTML = '';
+  container.classList.remove('hidden');
+
+  // Confetti colors matching app accent colors
+  const colors = ['#1f6feb', '#22c55e', '#eab308', '#E64A19', '#a855f7', '#ec4899'];
+
+  // Create confetti pieces
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.top = '-20px';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = `${Math.random() * 0.5}s`;
+    piece.style.animationDuration = `${2 + Math.random() * 2}s`;
+    container.appendChild(piece);
+  }
+
+  // Hide container after animation
+  setTimeout(() => {
+    container.classList.add('hidden');
+    container.innerHTML = '';
+  }, 4000);
 }
 
 /**
@@ -8311,6 +8358,50 @@ function positionTooltip(target, tooltip, position) {
 }
 
 /**
+ * Show success checkmark at target location
+ */
+function showTutorialCheckmark(target) {
+  const checkmark = document.getElementById('tutorialCheckmark');
+  if (!checkmark || !target) return;
+
+  const rect = target.getBoundingClientRect();
+
+  // Position checkmark centered on target
+  checkmark.style.left = `${rect.left + rect.width / 2 - 24}px`;
+  checkmark.style.top = `${rect.top + rect.height / 2 - 24}px`;
+
+  // Show with fresh animation
+  checkmark.classList.remove('hidden');
+
+  // Force reflow to restart animation
+  const svg = checkmark.querySelector('.checkmark-svg');
+  if (svg) {
+    svg.style.animation = 'none';
+    svg.offsetHeight; // Force reflow
+    svg.style.animation = '';
+  }
+
+  // Reset and restart animations
+  const circle = checkmark.querySelector('.checkmark-circle');
+  const check = checkmark.querySelector('.checkmark-check');
+  if (circle) {
+    circle.style.animation = 'none';
+    circle.offsetHeight;
+    circle.style.animation = 'checkmark-circle-pop 0.4s ease-out';
+  }
+  if (check) {
+    check.style.animation = 'none';
+    check.offsetHeight;
+    check.style.animation = 'checkmark-draw 0.3s ease-out 0.2s forwards';
+  }
+
+  // Hide after animation
+  setTimeout(() => {
+    checkmark.classList.add('hidden');
+  }, 800);
+}
+
+/**
  * Tutorial action hook - call from existing functions to advance tutorial
  */
 function onTutorialAction(action) {
@@ -8318,8 +8409,22 @@ function onTutorialAction(action) {
 
   const currentStep = TUTORIAL_STEPS[tutorialStep];
   if (currentStep?.action === action) {
-    // Small delay to let UI update
-    setTimeout(() => advanceTutorial(), 300);
+    // Find target element for checkmark
+    let target;
+    if (currentStep.target) {
+      target = document.querySelector(currentStep.target);
+    } else if (currentStep.action === 'playTimer') {
+      target = document.querySelector('.preset-item .play-btn') ||
+               document.querySelector('.preset-item .pause-btn');
+    } else if (currentStep.action === 'openEdit') {
+      target = document.querySelector('.preset-item .edit-btn');
+    }
+
+    // Show checkmark, then advance
+    showTutorialCheckmark(target);
+
+    // Delay advancement to show checkmark animation
+    setTimeout(() => advanceTutorial(), 600);
   }
 }
 
@@ -8371,13 +8476,24 @@ function completeTutorial() {
   localStorage.setItem(STORAGE_KEYS.TUTORIAL_COMPLETE, 'true');
 
   const overlay = document.getElementById('tutorialOverlay');
+  const modal = document.getElementById('tutorialModal');
   const spotlight = document.getElementById('tutorialSpotlight');
   const tooltip = document.getElementById('tutorialTooltip');
+  const confetti = document.getElementById('tutorialConfetti');
 
-  overlay?.classList.add('hidden');
-  overlay?.classList.remove('modal-active');
-  spotlight?.classList.add('hidden');
-  tooltip?.classList.add('hidden');
+  // Add fade-out animation classes
+  overlay?.classList.add('fade-out');
+  modal?.classList.add('fade-out');
+
+  // Hide elements after animation completes
+  setTimeout(() => {
+    overlay?.classList.add('hidden');
+    overlay?.classList.remove('modal-active', 'fade-out');
+    modal?.classList.remove('fade-out');
+    spotlight?.classList.add('hidden');
+    tooltip?.classList.add('hidden');
+    confetti?.classList.add('hidden');
+  }, 300);
 
   // Remove keyboard handler
   document.removeEventListener('keydown', tutorialKeydownHandler, true);
