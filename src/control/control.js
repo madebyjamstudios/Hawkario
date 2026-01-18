@@ -1310,12 +1310,14 @@ function applyTheme(appearance) {
 }
 
 // Listen for system theme changes (for auto mode)
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const themeChangeHandler = () => {
   const settings = loadAppSettings();
   if (settings.appearance === 'auto') {
     applyTheme('auto');
   }
-});
+};
+themeMediaQuery.addEventListener('change', themeChangeHandler);
 
 // Store update check result (whether update available or up to date)
 let updateResult = null;
@@ -1866,25 +1868,42 @@ function renderCustomSoundsList() {
   customSounds.forEach(sound => {
     const item = document.createElement('div');
     item.className = 'custom-sound-item';
-    item.innerHTML = `
-      <div class="custom-sound-info">
-        <span class="custom-sound-name">${sound.name}</span>
-        <span class="custom-sound-meta">${sound.fileName}</span>
-      </div>
-      <div class="custom-sound-actions">
-        <button class="custom-sound-preview" data-sound-id="${sound.id}" title="Preview sound">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-          </svg>
-        </button>
-        <button class="custom-sound-delete" data-sound-id="${sound.id}" title="Delete sound">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          </svg>
-        </button>
-      </div>
-    `;
+
+    // Build DOM safely to prevent XSS from user-provided sound names
+    const info = document.createElement('div');
+    info.className = 'custom-sound-info';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'custom-sound-name';
+    nameSpan.textContent = sound.name; // Safe: uses textContent
+
+    const metaSpan = document.createElement('span');
+    metaSpan.className = 'custom-sound-meta';
+    metaSpan.textContent = sound.fileName; // Safe: uses textContent
+
+    info.appendChild(nameSpan);
+    info.appendChild(metaSpan);
+
+    const actions = document.createElement('div');
+    actions.className = 'custom-sound-actions';
+
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'custom-sound-preview';
+    previewBtn.dataset.soundId = sound.id;
+    previewBtn.title = 'Preview sound';
+    previewBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'custom-sound-delete';
+    deleteBtn.dataset.soundId = sound.id;
+    deleteBtn.title = 'Delete sound';
+    deleteBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+
+    actions.appendChild(previewBtn);
+    actions.appendChild(deleteBtn);
+
+    item.appendChild(info);
+    item.appendChild(actions);
     els.customSoundsList.appendChild(item);
   });
 
@@ -8719,6 +8738,9 @@ window.addEventListener('beforeunload', () => {
 
   // Remove IPC listeners
   window.ninja.removeAllListeners();
+
+  // Remove theme change listener
+  themeMediaQuery.removeEventListener('change', themeChangeHandler);
 
   console.log('[Cleanup] Control window cleanup complete');
 });
