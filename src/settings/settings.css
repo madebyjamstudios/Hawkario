@@ -85,6 +85,18 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+[data-theme="light"] .digit-btn {
+  background: var(--color-bg-tertiary);
+  border-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .digit-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
 /* ============ Base Styles ============ */
 * {
   box-sizing: border-box;
