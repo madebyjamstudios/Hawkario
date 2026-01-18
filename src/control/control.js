@@ -5716,7 +5716,7 @@ function createNewProfile() {
     name = `Profile ${counter}`;
   }
 
-  // Create profile with one default timer
+  // Create profile with one default timer and one default message
   const defaultConfig = getDefaultTimerConfig();
   const newProfile = {
     id: generateProfileId(),
@@ -5727,7 +5727,15 @@ function createNewProfile() {
       name: 'Timer 1',
       config: defaultConfig
     }],
-    messages: []
+    messages: [{
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text: '',
+      bold: false,
+      italic: false,
+      uppercase: false,
+      color: '#ffffff',
+      visible: false
+    }]
   };
 
   profiles.push(newProfile);
@@ -6355,17 +6363,10 @@ function showDurationEditPopup(idx, preset, anchorEl) {
 
 function createDefaultPreset() {
   const presets = loadPresets();
-  if (presets.length === 0) {
-    const defaultConfig = getDefaultTimerConfig();
+  // Don't auto-create timer for first profile (tutorial experience)
+  // User must manually add their first timer
 
-    presets.push({
-      name: 'Timer 1',
-      config: defaultConfig
-    });
-    savePresets(presets);
-  }
-
-  // Auto-select first timer on startup
+  // Auto-select first timer on startup (if any exist)
   if (presets.length > 0 && activePresetIndex === null) {
     activePresetIndex = 0;
     const firstPreset = presets[0];
@@ -6375,20 +6376,9 @@ function createDefaultPreset() {
 }
 
 function createDefaultMessage() {
-  const messages = loadMessages();
-  if (messages.length === 0) {
-    const defaultMsg = {
-      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      text: '',
-      bold: false,
-      italic: false,
-      uppercase: false,
-      color: '#ffffff',
-      visible: false
-    };
-    messages.push(defaultMsg);
-    saveMessagesToStorage(messages);
-  }
+  // Don't auto-create message for first profile (tutorial experience)
+  // User must manually add their first message
+  // New profiles created via createNewProfile() get a default message
 }
 
 function handleExport() {
