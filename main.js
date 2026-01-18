@@ -30,6 +30,8 @@ let mainWindow = null;
 let outputWindow = null;
 let settingsWindow = null;
 let splashWindow = null;
+let splashCreatedAt = null;
+const SPLASH_MIN_DURATION = 5000; // Show splash for full 5 seconds
 
 // Store last config to send to new output windows
 let lastTimerConfig = null;
@@ -187,6 +189,7 @@ function applyOSCSettings() {
 }
 
 function createSplashWindow() {
+  splashCreatedAt = Date.now();
   splashWindow = new BrowserWindow({
     width: 300,
     height: 200,
@@ -330,7 +333,7 @@ function createOutputWindow() {
 // Settings window position persistence key
 const SETTINGS_WINDOW_BOUNDS_KEY = 'ninja:settingsWindowBounds';
 
-function createSettingsWindow(timerIndex) {
+function createSettingsWindow(timerIndex, savedBounds = null) {
   // Production Safety: Check if window exists AND is not destroyed
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.focus();
@@ -342,25 +345,36 @@ function createSettingsWindow(timerIndex) {
   // Reset reference if window was destroyed
   settingsWindow = null;
 
-  // Try to restore saved window position
-  let windowBounds = { width: 450, height: 700, x: undefined, y: undefined };
-  try {
-    const savedBounds = mainWindow?.webContents?.executeJavaScript(
-      `localStorage.getItem('${SETTINGS_WINDOW_BOUNDS_KEY}')`
-    );
-    // Note: We can't use async here easily, so we'll use defaults and let the window save on close
-  } catch (err) {
-    // Use defaults
+  // Use saved bounds or defaults
+  const defaultBounds = { width: 450, height: 700 };
+  const bounds = savedBounds || defaultBounds;
+
+  // Validate bounds are within screen area
+  const displays = screen.getAllDisplays();
+  let validPosition = false;
+
+  if (bounds.x !== undefined && bounds.y !== undefined) {
+    // Check if the saved position is visible on any display
+    for (const display of displays) {
+      const { x, y, width, height } = display.bounds;
+      if (bounds.x >= x && bounds.x < x + width &&
+          bounds.y >= y && bounds.y < y + height) {
+        validPosition = true;
+        break;
+      }
+    }
   }
 
   settingsWindow = new BrowserWindow({
-    width: windowBounds.width,
-    height: windowBounds.height,
+    width: bounds.width || defaultBounds.width,
+    height: bounds.height || defaultBounds.height,
+    x: validPosition ? bounds.x : undefined,
+    y: validPosition ? bounds.y : undefined,
     minWidth: 380,
     minHeight: 500,
     maxWidth: 500,
     maxHeight: 900,
-    center: true,
+    center: !validPosition,
     title: 'Timer Settings',
     parent: mainWindow,  // Associate with main (macOS)
     modal: false,
@@ -508,9 +522,10 @@ ipcMain.on('window:focus-output', () => {
 // ---- Settings Window Management ----
 
 // Open settings window
-ipcMain.on('window:open-settings', (_event, timerIndex) => {
+ipcMain.on('window:open-settings', (_event, data) => {
   try {
-    createSettingsWindow(timerIndex);
+    const { timerIndex, savedBounds } = data;
+    createSettingsWindow(timerIndex, savedBounds);
   } catch (err) {
     console.error('[IPC:window:open-settings] Error:', err);
   }
@@ -1387,13 +1402,18 @@ ipcMain.on('timer:running-status', (_event, isRunning) => {
 
 // IPC handler for app ready signal from control window
 ipcMain.on('app:ready', () => {
-  if (splashWindow && !splashWindow.isDestroyed()) {
-    splashWindow.close();
-    splashWindow = null;
-  }
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.show();
-  }
+  const elapsed = splashCreatedAt ? Date.now() - splashCreatedAt : SPLASH_MIN_DURATION;
+  const remaining = Math.max(0, SPLASH_MIN_DURATION - elapsed);
+
+  setTimeout(() => {
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      splashWindow.close();
+      splashWindow = null;
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+    }
+  }, remaining);
 });
 
 app.whenReady().then(() => {

@@ -3406,6 +3406,22 @@ function updateProgressBarZones() {
 
 // ============ Modal Management ============
 
+// Get saved settings window bounds from localStorage
+function getSavedSettingsBounds() {
+  try {
+    const saved = localStorage.getItem('ninja:settingsWindowBounds');
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Open settings window with saved bounds
+function openSettingsWindowWithBounds(timerIndex) {
+  const savedBounds = getSavedSettingsBounds();
+  window.ninja.openSettingsWindow(timerIndex, savedBounds);
+}
+
 function openModal(presetIndex = null) {
   editingPresetIndex = presetIndex;
 
@@ -6173,7 +6189,7 @@ function renderPresetList() {
       e.preventDefault();
       // If settings window is open, focus it and load this timer
       if (settingsWindowOpen) {
-        window.ninja.openSettingsWindow(idx);
+        openSettingsWindowWithBounds(idx);
       } else {
         openModal(idx);
       }
@@ -7086,7 +7102,7 @@ function setupEventListeners() {
   // Pop-out button - open settings in separate window
   els.modalPopout?.addEventListener('click', () => {
     if (editingPresetIndex !== null) {
-      window.ninja.openSettingsWindow(editingPresetIndex);
+      openSettingsWindowWithBounds(editingPresetIndex);
       settingsWindowTimerIndex = editingPresetIndex;
       closeModal();
     }

@@ -176,9 +176,9 @@ contextBridge.exposeInMainWorld('ninja', {
 
   // ============ Settings Window ============
 
-  // Open settings window with a specific timer
-  openSettingsWindow: (timerIndex) => {
-    ipcRenderer.send('window:open-settings', timerIndex);
+  // Open settings window with a specific timer and optional saved bounds
+  openSettingsWindow: (timerIndex, savedBounds) => {
+    ipcRenderer.send('window:open-settings', { timerIndex, savedBounds });
   },
 
   // Close settings window
