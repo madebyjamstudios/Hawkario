@@ -742,9 +742,11 @@ ipcMain.handle('app:check-updates', async () => {
 
               try {
                 const release = JSON.parse(relData);
-                // Find .dmg asset
-                const dmgAsset = release.assets?.find(a => a.name.endsWith('.dmg'));
-                downloadUrl = dmgAsset?.browser_download_url || null;
+                // Find platform-appropriate asset
+                const isWindows = process.platform === 'win32';
+                const extension = isWindows ? '.exe' : '.dmg';
+                const installerAsset = release.assets?.find(a => a.name.endsWith(extension));
+                downloadUrl = installerAsset?.browser_download_url || null;
                 releaseName = release.name || release.tag_name || null;
               } catch (e) {
                 // No release found, that's okay

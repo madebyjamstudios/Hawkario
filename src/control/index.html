@@ -772,6 +772,50 @@
     </div>
   </div>
 
+  <!-- Onboarding Tutorial -->
+  <div id="tutorialOverlay" class="tutorial-overlay hidden">
+    <!-- Welcome/Done Modal (steps 1 and 5) -->
+    <div id="tutorialModal" class="tutorial-modal">
+      <div class="tutorial-content">
+        <!-- Step 1: Welcome -->
+        <div class="tutorial-step" data-step="1">
+          <img src="../assets/icons/icon.svg" alt="Ninja Timer" class="tutorial-logo">
+          <h2>Welcome to Ninja Timer</h2>
+          <p>Professional countdown timers for broadcasts, events, and presentations</p>
+          <div class="tutorial-actions">
+            <button id="tutorialStart" class="btn primary">Show me around!</button>
+            <button id="tutorialSkip" class="btn secondary">No, I'll do it myself</button>
+          </div>
+        </div>
+
+        <!-- Step 5: Done -->
+        <div class="tutorial-step hidden" data-step="5">
+          <img src="../assets/icons/icon.svg" alt="Ninja Timer" class="tutorial-logo">
+          <h2>You're All Set!</h2>
+          <p>Press <kbd>?</kbd> anytime for keyboard shortcuts.</p>
+          <p>Click <strong>Output</strong> to open your timer display window.</p>
+          <div class="tutorial-actions">
+            <button id="tutorialFinish" class="btn primary">Get Started</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight tooltip (steps 2-4) -->
+    <div id="tutorialTooltip" class="tutorial-tooltip hidden">
+      <div class="tutorial-tooltip-content">
+        <p id="tutorialTooltipText"></p>
+        <div class="tutorial-tooltip-hint">
+          <span id="tutorialSkipStep" class="tutorial-skip-link">Skip</span>
+        </div>
+      </div>
+      <div class="tutorial-tooltip-arrow"></div>
+    </div>
+  </div>
+
+  <!-- Spotlight highlight (rendered separately for z-index layering) -->
+  <div id="tutorialSpotlight" class="tutorial-spotlight hidden"></div>
+
   <footer>
     <small>v1.1.0</small>
   </footer>

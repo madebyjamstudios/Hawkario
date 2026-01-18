@@ -7,7 +7,9 @@
     "start": "electron .",
     "prebuild": "node scripts/embed-version.js",
     "build": "electron-builder --mac",
-    "build:dmg": "electron-builder --mac dmg"
+    "build:dmg": "electron-builder --mac dmg",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win"
   },
   "author": "Ninja Timer",
   "license": "MIT",
@@ -37,6 +39,19 @@
       "target": [
         "dmg"
       ]
+    },
+    "win": {
+      "icon": "assets/icons/icon.png",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icons/icon.ico",
+      "uninstallerIcon": "assets/icons/icon.ico"
     },
     "dmg": {
       "title": "Ninja Timer",

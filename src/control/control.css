@@ -687,24 +687,25 @@ input[type="color"] {
   appearance: none;
   width: 32px;
   height: 32px;
-  padding: 0;
+  padding: 3px;
   margin: 0;
   cursor: pointer;
-  background: transparent;
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-strong);
   border-radius: 10px;
-  overflow: hidden;
 }
 
 input[type="color"]::-webkit-color-swatch-wrapper {
   padding: 0;
   margin: 0;
   border: none;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 input[type="color"]::-webkit-color-swatch {
   border: none;
-  border-radius: 0;
+  border-radius: 6px;
 }
 
 /* Unified time input (HH:MM:SS) */
