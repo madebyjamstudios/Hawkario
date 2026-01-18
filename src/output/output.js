@@ -20,6 +20,7 @@ import {
   watchdogHeartbeat,
   stopWatchdog
 } from '../shared/safeUtils.js';
+import { verifyFonts } from '../shared/fontManager.js';
 
 // ============================================================================
 // DOM SAFEGUARDING (Production Safety)
@@ -870,6 +871,13 @@ function init() {
     fitToDContent();
     fitMessageContent();
   }, 100);
+
+  // Verify bundled fonts loaded successfully
+  verifyFonts().then(result => {
+    if (!result.success) {
+      console.warn('[Output] Some fonts failed - using system fallbacks');
+    }
+  });
 
   // Signal to main process that output window is fully initialized
   window.ninja.signalOutputReady();

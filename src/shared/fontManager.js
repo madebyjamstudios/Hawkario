@@ -54,3 +54,42 @@ export function getFontDescription(family) {
   const font = BUILT_IN_FONTS.find(f => f.family === family);
   return font ? font.description : '';
 }
+
+/**
+ * Verify that all bundled fonts loaded successfully
+ * Uses FontFace API to check each font family and weight
+ * @returns {Promise<{success: boolean, loaded: Array, failed: Array}>}
+ */
+export async function verifyFonts() {
+  await document.fonts.ready;
+
+  const loaded = [];
+  const failed = [];
+
+  for (const font of BUILT_IN_FONTS) {
+    for (const weight of font.weights) {
+      const fontSpec = `${weight} 12px "${font.family}"`;
+      const isLoaded = document.fonts.check(fontSpec);
+
+      if (isLoaded) {
+        loaded.push({ family: font.family, weight });
+      } else {
+        failed.push({ family: font.family, weight });
+      }
+    }
+  }
+
+  // Log results
+  const allSuccess = failed.length === 0;
+  console.group('[FontManager] Font Verification');
+  console.log(`Status: ${allSuccess ? 'All fonts loaded' : 'Some fonts failed'}`);
+  console.log(`Loaded: ${loaded.length}/${loaded.length + failed.length}`);
+
+  if (failed.length > 0) {
+    console.warn('Failed fonts:', failed.map(f => `${f.family} ${f.weight}`).join(', '));
+    console.log('Fallback: System fonts will be used');
+  }
+  console.groupEnd();
+
+  return { success: allSuccess, loaded, failed };
+}

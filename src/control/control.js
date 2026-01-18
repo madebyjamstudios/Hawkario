@@ -13,7 +13,7 @@ import { createTimerState, FIXED_STYLE } from '../shared/timerState.js';
 import { computeDisplay, getShadowCSS, getCombinedShadowCSS, FlashAnimator } from '../shared/renderTimer.js';
 import { autoFitMessage, applyMessageStyle } from '../shared/renderMessage.js';
 import { playSound } from '../shared/sounds.js';
-import { BUILT_IN_FONTS, WEIGHT_LABELS, getAvailableWeights, isBuiltInFont } from '../shared/fontManager.js';
+import { BUILT_IN_FONTS, WEIGHT_LABELS, getAvailableWeights, isBuiltInFont, verifyFonts } from '../shared/fontManager.js';
 import { BUILT_IN_SOUNDS, isBuiltInSound, isCustomSound, getCustomSoundId, createCustomSoundType, getAudioFormat, getAudioMimeType } from '../shared/soundManager.js';
 import {
   safeTimeout,
@@ -8623,6 +8623,13 @@ function init() {
 
   // Start crash recovery state saving
   startCrashRecoverySaving();
+
+  // Verify bundled fonts loaded successfully
+  verifyFonts().then(result => {
+    if (!result.success) {
+      console.warn('[Control] Some fonts failed - using system fallbacks');
+    }
+  });
 
   // Log version
   window.ninja.getVersion().then(version => {
