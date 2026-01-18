@@ -844,6 +844,10 @@ let activePresetIndex = null; // Track which preset is currently playing
 let settingsWindowOpen = false; // Track if settings window is open
 let settingsWindowTimerIndex = null; // Track which timer is being edited in settings window
 
+// Cached preset row elements for faster progress bar updates (invalidated on re-render)
+let cachedPresetRows = [];
+let cachedProgressBars = [];
+
 // Active timer config - stored separately so modal editing doesn't affect live preview
 let activeTimerConfig = {
   mode: 'countdown',
@@ -3110,20 +3114,17 @@ function updateProgressBar(currentElapsedMs, currentTotalMs) {
  * @param {number} progressPercent - Progress percentage (0-100)
  */
 function updateRowProgressBar(idx, progressPercent) {
-  const rows = els.presetList.querySelectorAll('.preset-item');
-  if (rows[idx]) {
-    const progressBar = rows[idx].querySelector('.row-progress-bar');
-    if (progressBar) {
-      progressBar.style.width = progressPercent + '%';
-    }
+  // Use cached progress bar for better performance during render loop
+  const progressBar = cachedProgressBars[idx];
+  if (progressBar) {
+    progressBar.style.width = progressPercent + '%';
   }
 }
 
 // Clear all row progress bars (used when switching timers)
 function clearAllRowProgressBars() {
-  const rows = els.presetList.querySelectorAll('.preset-item');
-  rows.forEach(row => {
-    const progressBar = row.querySelector('.row-progress-bar');
+  // Use cached progress bars for better performance
+  cachedProgressBars.forEach(progressBar => {
     if (progressBar) {
       progressBar.style.width = '0%';
     }
@@ -3135,8 +3136,9 @@ function clearAllRowProgressBars() {
  * Only updates innerHTML when state actually changes to avoid interfering with clicks
  */
 function updatePlayingRowState() {
-  const rows = els.presetList.querySelectorAll('.preset-item');
-  rows.forEach((row, idx) => {
+  // Use cached rows for better performance
+  cachedPresetRows.forEach((row, idx) => {
+    if (!row) return;
     const isSelected = activePresetIndex === idx;
     const isPlaying = isSelected && isRunning;
     const isPaused = isSelected && !isRunning && timerState.startedAt !== null;
@@ -6247,6 +6249,10 @@ function renderPresetList() {
   });
 
   updateTabBadges();
+
+  // Populate cache for faster progress bar updates
+  cachedPresetRows = Array.from(els.presetList.querySelectorAll('.preset-item'));
+  cachedProgressBars = cachedPresetRows.map(row => row.querySelector('.row-progress-bar'));
 }
 
 // Close all popup menus and dropdowns
@@ -7307,6 +7313,14 @@ function setupEventListeners() {
         index: timerIndex,
         preset: preset
       });
+
+      // Send current theme to settings window
+      const appSettings = loadAppSettings();
+      let theme = appSettings.appearance || 'dark';
+      if (theme === 'auto') {
+        theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      window.ninja.broadcastTheme(theme);
     }
   });
 
