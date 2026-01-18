@@ -51,7 +51,11 @@ const PROFILE_COLORS = [
 const els = {
   // Timer settings (in modal)
   mode: document.getElementById('mode'),
+  startMode: document.getElementById('startMode'),
+  targetTime: document.getElementById('targetTime'),
+  targetTimeRow: document.getElementById('targetTimeRow'),
   duration: document.getElementById('duration'),
+  durationRow: document.getElementById('durationRow'),
   format: document.getElementById('format'),
   allowOvertime: document.getElementById('allowOvertime'),
   allowOvertimeRow: document.getElementById('allowOvertimeRow'),
@@ -375,8 +379,27 @@ function updateDurationControlsFormat() {
 function updateOvertimeVisibility() {
   if (!els.allowOvertimeRow) return;
   const mode = els.mode?.value;
-  const showOvertime = mode === 'countdown' || mode === 'countdown-tod';
+  const startMode = els.startMode?.value || 'manual';
+  // Hide overtime for non-countdown modes AND for End By mode (always stops at target)
+  const showOvertime = (mode === 'countdown' || mode === 'countdown-tod') && startMode !== 'endBy';
   els.allowOvertimeRow.style.display = showOvertime ? '' : 'none';
+}
+
+function updateStartModeVisibility() {
+  const startMode = els.startMode?.value || 'manual';
+
+  // Show target time row for endBy and startAt modes
+  if (els.targetTimeRow) {
+    els.targetTimeRow.classList.toggle('hidden', startMode === 'manual');
+  }
+
+  // Hide duration row for endBy mode (duration is calculated from target time)
+  if (els.durationRow) {
+    els.durationRow.style.display = startMode === 'endBy' ? 'none' : '';
+  }
+
+  // Also update overtime visibility (hidden for endBy)
+  updateOvertimeVisibility();
 }
 
 function getDefaultDurationSeconds() {
@@ -3432,6 +3455,24 @@ function closeModal() {
 }
 
 function saveModal() {
+  // Validate target time for non-manual start modes
+  const startMode = els.startMode?.value || 'manual';
+  if (startMode !== 'manual') {
+    const targetTime = els.targetTime?.value;
+    if (!targetTime) {
+      showToast('Please set a target time', 'error');
+      els.targetTime?.focus();
+      return;
+    }
+    // Check if target time is in the future
+    const targetDate = new Date(targetTime);
+    if (targetDate <= new Date()) {
+      showToast('Target time must be in the future', 'error');
+      els.targetTime?.focus();
+      return;
+    }
+  }
+
   saveUndoState(); // Save state before changes for undo
 
   const name = els.presetName.value.trim() || 'Timer';
@@ -4146,6 +4187,8 @@ function broadcastTimerState() {
   window.ninja.sendTimerState({
     seq: stateSeq,
     mode: activeTimerConfig.mode,
+    startMode: activeTimerConfig.startMode || 'manual',
+    targetTime: activeTimerConfig.targetTime || null,
     durationMs: activeTimerConfig.durationSec * 1000,
     format: activeTimerConfig.format,
     startedAt: timerState.startedAt,
@@ -4236,7 +4279,28 @@ function renderLivePreview() {
 function renderLivePreviewInternal() {
   // Use stored active timer config (not form fields)
   const mode = activeTimerConfig.mode;
-  const durationSec = activeTimerConfig.durationSec;
+  const startMode = activeTimerConfig.startMode || 'manual';
+  const targetTime = activeTimerConfig.targetTime;
+
+  // Check for auto-start (Start At mode)
+  if (startMode === 'startAt' && targetTime && !isRunning && activePresetIndex !== null) {
+    const targetMs = new Date(targetTime).getTime();
+    const nowMs = Date.now();
+    if (nowMs >= targetMs && !timerState.ended) {
+      // Target time reached - auto-start the timer
+      sendCommand('start');
+    }
+  }
+
+  // Calculate effective duration based on start mode
+  let durationSec = activeTimerConfig.durationSec;
+  if (startMode === 'endBy' && targetTime) {
+    // End By mode: duration is time until target
+    const targetMs = new Date(targetTime).getTime();
+    const nowMs = Date.now();
+    durationSec = Math.max(0, Math.floor((targetMs - nowMs) / 1000));
+  }
+
   const format = activeTimerConfig.format;
   const fontColor = activeTimerConfig.style.color;
   const bgColor = activeTimerConfig.style.bgColor;
@@ -4413,7 +4477,9 @@ function renderLivePreviewInternal() {
           }, 1000);
         } else {
           // Check if overtime is allowed for this timer
-          if (activeTimerConfig.allowOvertime !== false) {
+          // Overtime is never allowed for "End By" mode (timer ends at target time)
+          const allowOvertime = activeTimerConfig.allowOvertime !== false && startMode !== 'endBy';
+          if (allowOvertime) {
             // Start overtime mode - keep running but count up
             timerState.overtime = true;
             timerState.overtimeStartedAt = Date.now();
@@ -4580,6 +4646,8 @@ function getCurrentConfig() {
 
   return {
     mode: els.mode.value,
+    startMode: els.startMode?.value || 'manual',
+    targetTime: els.targetTime?.value || null,
     durationSec: getDurationSeconds(),
     format: els.format.value,
     allowOvertime: els.allowOvertime?.checked ?? true,
@@ -4608,6 +4676,16 @@ function applyConfig(config) {
   if (!config) return;
 
   els.mode.value = config.mode || 'countdown';
+
+  // Start mode and target time
+  if (els.startMode) {
+    els.startMode.value = config.startMode || 'manual';
+  }
+  if (els.targetTime) {
+    els.targetTime.value = config.targetTime || '';
+  }
+  updateStartModeVisibility();
+
   setDurationInputs(config.durationSec || 1200);
   els.format.value = config.format || 'MM:SS';
 
@@ -6688,9 +6766,14 @@ function setupEventListeners() {
   // Mode change - show/hide overtime setting
   els.mode.addEventListener('change', updateOvertimeVisibility);
 
+  // Start mode change - show/hide target time and duration fields
+  if (els.startMode) {
+    els.startMode.addEventListener('change', updateStartModeVisibility);
+  }
+
   // Input change listeners (debounced) - update both live and modal preview
   const inputEls = [
-    els.mode, els.duration, els.format,
+    els.mode, els.startMode, els.targetTime, els.duration, els.format,
     els.fontFamily, els.fontWeight,
     els.fontColor, els.strokeWidth, els.strokeColor,
     els.shadowSize, els.shadowColor, els.bgColor,

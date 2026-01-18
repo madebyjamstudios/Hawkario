@@ -54,7 +54,15 @@ export function computeDisplay(state, now = Date.now()) {
  * Internal compute function (can throw, wrapped by computeDisplay)
  */
 function computeDisplayInternal(state, now) {
-  const { mode, durationMs, format, startedAt, pausedAccMs, isRunning, ended, overtime, overtimeStartedAt, todFormat, timezone } = state;
+  const { mode, format, startedAt, pausedAccMs, isRunning, ended, overtime, overtimeStartedAt, todFormat, timezone, startMode, targetTime } = state;
+
+  // Calculate effective duration based on start mode
+  let durationMs = state.durationMs;
+  if (startMode === 'endBy' && targetTime) {
+    // End By mode: duration is time until target
+    const targetMs = new Date(targetTime).getTime();
+    durationMs = Math.max(0, targetMs - now);
+  }
 
   // Hidden mode
   if (mode === 'hidden') {

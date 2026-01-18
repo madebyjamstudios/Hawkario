@@ -250,13 +250,25 @@
               </select>
             </div>
             <div class="kv">
+              <label for="startMode">Start</label>
+              <select id="startMode">
+                <option value="manual">Manual</option>
+                <option value="endBy">End By Time</option>
+                <option value="startAt">Start At Time</option>
+              </select>
+            </div>
+            <div class="kv hidden" id="targetTimeRow">
+              <label for="targetTime">Target Time</label>
+              <input id="targetTime" type="datetime-local" />
+            </div>
+            <div class="kv">
               <label for="format">Format</label>
               <select id="format">
                 <option value="HH:MM:SS">HH:MM:SS</option>
                 <option value="MM:SS" selected>MM:SS</option>
               </select>
             </div>
-            <div class="kv">
+            <div class="kv" id="durationRow">
               <label for="duration">Duration</label>
               <input id="duration" type="text" class="time-input duration-input" value="00:10:00" maxlength="10" placeholder="e.g. 530 or 5:30" />
             </div>

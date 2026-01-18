@@ -708,6 +708,31 @@ input[type="color"] {
   width: 65px;
 }
 
+/* Datetime-local input for target time */
+input[type="datetime-local"] {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  padding: 6px 8px;
+  width: 185px;
+}
+
+input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* Calendar/clock icon color fix for dark mode */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
 /* Warning color dots */
 .warn-label {
   display: flex;
