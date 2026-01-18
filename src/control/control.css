@@ -490,18 +490,15 @@
 }
 
 [data-theme="light"] .message-visibility-btn {
-  background: var(--color-bg-elevated);
-  border-color: transparent;
+  background: transparent;
 }
 
 [data-theme="light"] .message-visibility-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-border);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .message-visibility-btn.active {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: #22c55e;
+  background: rgba(230, 74, 25, 0.1);
 }
 
 [data-theme="light"] .message-delete-btn:hover {
@@ -509,18 +506,25 @@
 }
 
 [data-theme="light"] .message-toggle-btn {
-  background: var(--color-bg-elevated);
-  border-color: transparent;
+  background: transparent;
 }
 
 [data-theme="light"] .message-toggle-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-border);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .message-toggle-btn.active {
   background: rgba(220, 38, 38, 0.1);
-  border-color: #dc2626;
+}
+
+[data-theme="light"] .add-message-btn {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+[data-theme="light"] .add-message-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-primary);
 }
 
 [data-theme="light"] .message-compose {
@@ -4268,7 +4272,7 @@ button.danger:active {
   justify-content: center;
 }
 
-/* Visibility toggle button - green when showing */
+/* Visibility toggle button - Apple-style */
 .message-visibility-btn {
   display: flex;
   align-items: center;
@@ -4276,8 +4280,8 @@ button.danger:active {
   width: 32px;
   height: 32px;
   padding: 0;
-  background: var(--color-bg-elevated);
-  border: 2px solid var(--color-text-tertiary);
+  background: transparent;
+  border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-standard);
@@ -4308,13 +4312,11 @@ button.danger:active {
 }
 
 .message-visibility-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .message-visibility-btn.active {
-  background: #3d1a0a;
-  border-color: #E64A19;
+  background: rgba(230, 74, 25, 0.15);
 }
 
 /* Indicator pulse animation */
@@ -4499,14 +4501,14 @@ button.danger:active {
   border: none;
 }
 
-/* Message Toggle Button (like blackout) */
+/* Message Toggle Button - Apple-style */
 .message-toggle-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: var(--color-bg-elevated);
-  border: 2px solid var(--color-text-tertiary);
+  background: transparent;
+  border: none;
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   font-size: 13px;
@@ -4518,8 +4520,7 @@ button.danger:active {
 }
 
 .message-toggle-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .message-indicator {
@@ -4533,8 +4534,7 @@ button.danger:active {
 }
 
 .message-toggle-btn.active {
-  background: var(--color-bg-secondary);
-  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.15);
 }
 
 .message-toggle-btn.active .message-indicator {
@@ -4585,6 +4585,7 @@ button.danger:active {
   z-index: 1;
 }
 
+/* Add Message button - Apple-style */
 .add-message-btn {
   display: flex;
   align-items: center;
@@ -4593,8 +4594,8 @@ button.danger:active {
   width: auto;
   margin: 8px auto;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   border-radius: 6px;
   color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
@@ -4604,8 +4605,7 @@ button.danger:active {
 }
 
 .add-message-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.9);
 }
 
