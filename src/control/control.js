@@ -6744,9 +6744,18 @@ function setupEventListeners() {
   document.getElementById('downloadUpdates').addEventListener('click', downloadUpdates);
   document.getElementById('restartApp')?.addEventListener('click', restartApp);
 
+  // Feedback toggle buttons
+  document.querySelectorAll('.feedback-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.feedback-toggle').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
   // Send Feedback button
   document.getElementById('sendFeedback')?.addEventListener('click', () => {
-    const feedbackType = document.getElementById('feedbackType')?.value || 'other';
+    const activeToggle = document.querySelector('.feedback-toggle.active');
+    const feedbackType = activeToggle?.dataset.value || 'other';
     const feedbackMessage = document.getElementById('feedbackMessage')?.value?.trim() || '';
 
     const typeLabels = {

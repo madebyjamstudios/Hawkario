@@ -645,20 +645,22 @@
             </div>
           </div>
           <div class="feedback-form">
-            <select id="feedbackType" class="feedback-type">
-              <option value="feature">Feature Request</option>
-              <option value="bug">Bug Report</option>
-              <option value="idea">General Idea</option>
-              <option value="other">Other</option>
-            </select>
+            <div class="feedback-toggles" id="feedbackType">
+              <button type="button" class="feedback-toggle active" data-value="feature">Feature</button>
+              <button type="button" class="feedback-toggle" data-value="bug">Bug</button>
+              <button type="button" class="feedback-toggle" data-value="idea">Idea</button>
+              <button type="button" class="feedback-toggle" data-value="other">Other</button>
+            </div>
             <textarea id="feedbackMessage" class="feedback-message" placeholder="Tell us what's on your mind..." rows="3"></textarea>
-            <button id="sendFeedback" class="feedback-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-              Send Feedback
-            </button>
+            <div class="feedback-actions">
+              <button id="sendFeedback" class="feedback-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                Send Feedback
+              </button>
+            </div>
           </div>
         </div>
       </div>
