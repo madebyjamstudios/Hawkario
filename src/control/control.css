@@ -4513,6 +4513,7 @@ button.danger:active {
   width: 32px;
   height: 32px;
   padding: 0;
+  margin: 0;
   border: 1px solid var(--color-border-strong);
   border-radius: 10px;
   background: transparent;
@@ -4522,12 +4523,20 @@ button.danger:active {
 
 .color-picker::-webkit-color-swatch-wrapper {
   padding: 0;
-  border-radius: 10px;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .color-picker::-webkit-color-swatch {
-  border-radius: 10px;
   border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* Message Toggle Button - Apple-style */
